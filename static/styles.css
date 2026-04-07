@@ -563,7 +563,8 @@ code {
 .code-frame-header {
   display: flex;
   align-items: center;
-  gap: 7px;
+  justify-content: space-between;
+  gap: 12px;
   padding: 8px 12px;
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border-soft);
@@ -573,6 +574,24 @@ code {
   font-family: var(--font-mono);
   font-size: 11.5px;
   color: var(--fg-muted);
+}
+
+.code-frame-hint {
+  font-size: 11px;
+  color: var(--fg-muted);
+  font-style: italic;
+  text-align: right;
+}
+
+.lean-tip-demo {
+  font-style: normal;
+  border-bottom: 1px dotted var(--accent);
+  color: var(--accent);
+  padding: 0 1px;
+}
+
+@media (max-width: 720px) {
+  .code-frame-hint { display: none; }
 }
 
 .code-frame-body {
@@ -591,6 +610,190 @@ code {
   font-size: 12.5px;
   line-height: 1.55;
   white-space: pre;
+}
+
+/* ---------- Lean keyword tooltips ---------- */
+
+.lean-tip {
+  border-bottom: 1px dotted currentColor;
+  cursor: help;
+  outline: none;
+  border-radius: 2px;
+  transition: background-color 80ms ease;
+}
+
+.lean-tip:hover,
+.lean-tip:focus-visible {
+  background-color: rgba(31, 79, 139, 0.10);
+}
+
+@media (prefers-color-scheme: dark) {
+  .lean-tip:hover,
+  .lean-tip:focus-visible {
+    background-color: rgba(126, 178, 238, 0.18);
+  }
+}
+
+.lean-tip:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+
+.lean-tooltip-popover {
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  max-width: 320px;
+  padding: 10px 13px 11px;
+  background: var(--bg-elevated);
+  color: var(--fg-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: 1.55;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 100ms ease, transform 100ms ease;
+}
+
+.lean-tooltip-popover.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- Anatomy of a Proof explainer ---------- */
+
+.proof-explainer {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.proof-explainer-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  list-style: none;
+  cursor: pointer;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid transparent;
+  transition: background-color 120ms ease;
+}
+
+.proof-explainer-summary::-webkit-details-marker { display: none; }
+.proof-explainer-summary::marker { content: ''; }
+
+.proof-explainer-summary:hover {
+  background: var(--bg-page);
+}
+
+.proof-explainer-summary:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: -2px;
+}
+
+.proof-explainer[open] .proof-explainer-summary {
+  border-bottom-color: var(--border-soft);
+}
+
+.proof-explainer-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+}
+
+.proof-explainer-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--fg-secondary);
+  flex: 0 0 auto;
+}
+
+.proof-explainer-sub {
+  font-size: 11.5px;
+  color: var(--fg-muted);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.proof-explainer-chevron {
+  display: grid;
+  place-items: center;
+  flex: 0 0 14px;
+  color: var(--fg-muted);
+  transition: transform 150ms ease;
+}
+
+.proof-explainer[open] .proof-explainer-chevron {
+  transform: rotate(180deg);
+}
+
+.proof-explainer-body {
+  padding: 14px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.proof-explainer-row {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.proof-explainer-row code.proof-explainer-term {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  background: var(--bg-code);
+  border: 1px solid var(--border-soft);
+  padding: 5px 10px;
+  border-radius: 4px;
+  color: var(--accent-strong);
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  justify-self: start;
+}
+
+.proof-explainer-row p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--fg-secondary);
+  line-height: 1.6;
+}
+
+.proof-explainer-row p code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  background: var(--bg-code);
+  border: 1px solid var(--border-soft);
+  padding: 0 4px;
+  border-radius: 3px;
+  color: var(--fg-primary);
+}
+
+.proof-explainer-row p strong {
+  color: var(--fg-primary);
+}
+
+@media (max-width: 820px) {
+  .proof-explainer-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .proof-explainer-sub { display: none; }
 }
 
 /* ---------- Action Bar ---------- */
@@ -760,6 +963,58 @@ code {
 }
 
 .alert-danger .alert-icon { color: var(--danger); }
+
+/* ---------- Plain English Translation (inside alert) ---------- */
+
+.translation-block {
+  margin-top: 16px;
+  padding: 13px 16px 14px;
+  background: var(--bg-surface);
+  color: var(--fg-primary);
+  border: 1px solid var(--border-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.translation-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--fg-muted);
+  margin-bottom: 6px;
+}
+
+.translation-icon {
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+}
+
+.translation-body {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fg-primary);
+  font-weight: 400;
+}
+
+.translation-body em {
+  font-style: italic;
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .translation-body em {
+    color: var(--accent);
+  }
+}
 
 .alert-warning {
   background: var(--warning-soft);

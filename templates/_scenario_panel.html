@@ -57,6 +57,62 @@
         </header>
         <p class="guideline-body">{{ scenario.guideline_b.body | safe }}</p>
       </article>
+
+      <details class="proof-explainer" open>
+        <summary class="proof-explainer-summary">
+          <span class="proof-explainer-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 5h2v2h-2V7Zm0 4h2v6h-2v-6Z"/>
+            </svg>
+          </span>
+          <span class="proof-explainer-label">Anatomy of a Proof</span>
+          <span class="proof-explainer-sub">Reading guide for non-mathematicians</span>
+          <span class="proof-explainer-chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="14" height="14">
+              <path fill="currentColor" d="M7 10l5 5 5-5z"/>
+            </svg>
+          </span>
+        </summary>
+        <div class="proof-explainer-body">
+          <div class="proof-explainer-row">
+            <code class="proof-explainer-term">axiom</code>
+            <p>
+              An undeniable medical fact the kernel is allowed to start
+              from. Each <code>axiom</code> in this file is either a
+              <strong>published clinical guideline</strong> (e.g.
+              <code>AHA_ACC_HTN_8_1_5</code>) or one of the
+              <strong>patient's established findings</strong> drawn from
+              the chart (e.g. <code>obs_severe_dehydration</code>).
+              Lean accepts these as ground truth and never tries to
+              prove them.
+            </p>
+          </div>
+          <div class="proof-explainer-row">
+            <code class="proof-explainer-term">theorem&nbsp;/&nbsp;absurd</code>
+            <p>
+              A claim the kernel must <strong>verify</strong> before it
+              is accepted — unlike an axiom, a theorem is only true if
+              it is mechanically proven from the surrounding axioms.
+              The audit's final theorem is named <code>absurd</code>:
+              its goal is <code>False</code>, so successfully proving
+              it means the encoded treatment plan is a
+              <strong>logical impossibility</strong> for this patient.
+              That is the contradiction the audit exists to surface.
+            </p>
+          </div>
+          <div class="proof-explainer-row">
+            <code class="proof-explainer-term">Prop</code>
+            <p>
+              Short for <em>Proposition</em>: a statement Lean can
+              evaluate as strictly true or false. When the file
+              declares <code>Indicated&nbsp;:&nbsp;Patient&nbsp;&rarr;&nbsp;Treatment&nbsp;&rarr;&nbsp;Prop</code>,
+              it is saying "whether a treatment is indicated for a
+              patient is a true-or-false claim" — exactly the kind of
+              statement the kernel knows how to reason about.
+            </p>
+          </div>
+        </div>
+      </details>
     </section>
 
     <section class="column column-code" aria-labelledby="lean-heading">
@@ -64,11 +120,17 @@
       <div class="code-frame">
         <div class="code-frame-header">
           <span class="code-frame-title">{{ scenario.lean_filename }}</span>
+          <span class="code-frame-hint" aria-hidden="true">
+            hover the
+            <span class="lean-tip-demo">underlined</span>
+            terms for plain-English definitions
+          </span>
         </div>
         <div class="code-frame-body">
           {{ highlighted_lean | safe }}
         </div>
       </div>
+
       <p class="audit-summary">{{ scenario.audit_summary | safe }}</p>
     </section>
   </div>

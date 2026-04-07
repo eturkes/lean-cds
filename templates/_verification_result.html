@@ -30,6 +30,17 @@
       <li><code>{{ ax }}</code></li>
       {% endfor %}
     </ul>
+    <aside class="translation-block" aria-label="Plain English translation">
+      <div class="translation-label">
+        <span class="translation-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 5h2v2h-2V7Zm0 4h2v6h-2v-6Z"/>
+          </svg>
+        </span>
+        Plain English Translation
+      </div>
+      <p class="translation-body">{{ scenario.plain_english | safe }}</p>
+    </aside>
   </div>
 </div>
 {% elif result.verdict and result.verdict.name == 'ProofUnsound' %}

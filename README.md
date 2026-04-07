@@ -69,7 +69,8 @@ Verification**.
 │   └── _verification_result.html   # Compiler-result alert + terminal
 ├── static/
 │   ├── styles.css                  # Hand-written enterprise theme (light/dark)
-│   └── syntax.css                  # Pygments CSS, regenerated at app import
+│   ├── syntax.css                  # Pygments CSS, regenerated at app import
+│   └── tooltips.js                 # Vanilla-JS tooltip popovers for Lean keywords
 ├── pyproject.toml                  # uv-managed metadata + deps
 ├── uv.lock                         # cross-platform lockfile
 └── LICENSE                         # Apache 2.0
@@ -142,7 +143,8 @@ class Scenario:
     guideline_a: Guideline
     guideline_b: Guideline
     lean_filename: str         # filename inside lean/ (e.g. "ScenarioA.lean")
-    audit_summary: str         # plain-English explanation of the proof
+    audit_summary: str         # short technical caption under the code frame
+    plain_english: str         # narrative shown in the verification result alert
 
 SCENARIOS: dict[str, Scenario] = {...}   # what the app iterates over
 ```

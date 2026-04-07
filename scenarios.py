@@ -37,6 +37,7 @@ class Scenario:
     guideline_b: Guideline
     lean_filename: str
     audit_summary: str
+    plain_english: str
 
     @property
     def lean_path(self) -> Path:
@@ -114,6 +115,16 @@ SCENARIO_A = Scenario(
         "list is the precise set of guidelines and chart findings "
         "participating in the contradiction."
     ),
+    plain_english=(
+        "The system has mathematically proven that, for this 72-year-old "
+        "patient, it is impossible to simultaneously follow Guideline 1 "
+        "(the AHA/ACC recommendation to start a thiazide diuretic for "
+        "essential hypertension) and Guideline 2 (the KDIGO safety "
+        "statement that forbids any diuretic in severe dehydration) "
+        "without violating the fundamental rule that a single drug "
+        "cannot be both <em>indicated</em> and <em>contraindicated</em> "
+        "for the same patient at the same time."
+    ),
 )
 
 
@@ -181,6 +192,17 @@ SCENARIO_B = Scenario(
         "ADA insulin axiom drops the K\u207a \u2265 3.3 mEq/L precondition, "
         "which is exactly the encoder bug the audit is designed to expose."
     ),
+    plain_english=(
+        "The system has mathematically proven that, for this 34-year-old "
+        "patient in diabetic ketoacidosis with a serum potassium of "
+        "2.9 mEq/L, it is impossible to simultaneously follow Guideline 1 "
+        "(the ADA Standards of Care directive to start IV regular insulin "
+        "in DKA) and Guideline 2 (the AACE/ACE critical safety "
+        "recommendation that forbids insulin while serum potassium is "
+        "below 3.3 mEq/L) without violating the fundamental rule that a "
+        "single drug cannot be both <em>indicated</em> and "
+        "<em>contraindicated</em> for the same patient at the same time."
+    ),
 )
 
 
@@ -246,6 +268,18 @@ SCENARIO_C = Scenario(
         "<code>incompatible_modalities</code>. The audit surfaces the "
         "literal collision the APA recommendation produces in untreated "
         "severe OSA."
+    ),
+    plain_english=(
+        "The system has mathematically proven that, for this 58-year-old "
+        "patient with polysomnography-confirmed severe obstructive sleep "
+        "apnea who is not yet on PAP therapy, it is impossible to "
+        "simultaneously follow Guideline 1 (the APA panic-disorder "
+        "recommendation to administer a short-acting benzodiazepine for "
+        "an acute episode) and Guideline 2 (the AASM safety statement "
+        "forbidding benzodiazepines in untreated severe OSA) without "
+        "violating the fundamental rule that a single drug cannot be "
+        "both <em>indicated</em> and <em>contraindicated</em> for the "
+        "same patient at the same time."
     ),
 )
 
