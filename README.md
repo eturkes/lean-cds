@@ -114,7 +114,7 @@ class Scenario:
     guideline_a: Guideline
     guideline_b: Guideline
     lean_code: str             # full audit.lean source
-    collision_summary: str     # plain-English collision explanation
+    verdict_summary: str       # plain-English verdict explanation
 
 SCENARIOS: dict[str, Scenario] = {...}   # what the app iterates over
 ```

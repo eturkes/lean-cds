@@ -647,7 +647,7 @@ other template that references the old `contradiction_proven` field.
 
 ## Section 8 — `scenarios.py`: rename the collision framing
 
-- [ ] **Status**
+- [x] **Status** — Renamed `Scenario.collision_summary` → `Scenario.verdict_summary` in the dataclass and updated all three scenario constants with the suggested prose templates verbatim (using Unicode escapes for the curly quotes and `≥`/`—`); `_scenario_panel.html` does not reference the field so was left untouched (Section 7 status note already records this); per the explicit grep acceptance criterion I also renamed the single occurrence in `README.md`'s data model snippet (line 117, field name + comment only — broader README rewrite is Section 9), so README.md was edited despite not being in this section's "Files affected" list; verified all three panels and the index render HTTP 200 via `uv run uvicorn app:app` on port 8765; only remaining `collision_summary` references project-wide are in `PLAN.md` itself, which describes the rename work.
 
 **Goal.** The `Scenario` dataclass currently has a `collision_summary` field
 that no longer matches the new system. Rename it to `verdict_summary` and

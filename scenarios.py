@@ -26,7 +26,7 @@ class Scenario:
     guideline_a: Guideline
     guideline_b: Guideline
     lean_code: str
-    collision_summary: str
+    verdict_summary: str
 
 
 CORE_LEAN_SOURCE: str = r"""-- Epistemological Audit: Core DSL types
@@ -189,11 +189,12 @@ SCENARIO_A = Scenario(
             "Level of Evidence B)."
         ),
     ),
-    collision_summary=(
-        "The AHA/ACC hypertension guideline mandates thiazide therapy for "
-        "this patient, while KDIGO absolutely contraindicates the same agent "
-        "in the presence of severe dehydration. The two recommendations "
-        "are mutually exclusive."
+    verdict_summary=(
+        "The KDIGO acute-volume rule has higher priority than the AHA/ACC "
+        "chronic-management rule in this hemodynamic context, so the "
+        "verifier recommends holding the thiazide and rehydrating. The "
+        "earlier \u201ccollision\u201d was an artifact of the previous "
+        "encoding, which omitted hemodynamic context."
     ),
     lean_code=r"""-- Epistemological Audit: Scenario A
 -- Hypertension (AHA/ACC) vs. Severe Dehydration (KDIGO)
@@ -299,11 +300,14 @@ SCENARIO_B = Scenario(
             "recommendation \u2014 Harm, Level of Evidence A)."
         ),
     ),
-    collision_summary=(
-        "The ADA standard mandates immediate IV insulin for confirmed DKA, "
-        "while the AACE/ACE safety recommendation prohibits insulin until "
-        "potassium is corrected. Both clinical contexts are simultaneously "
-        "true for this patient."
+    verdict_summary=(
+        "The ADA insulin recommendation is conditioned on serum potassium "
+        "\u2265 3.3 mEq/L \u2014 a precondition that exists in the published "
+        "ADA guideline itself. With measured K of 2.9 mEq/L the ADA rule "
+        "does not fire, the AACE/ACE rule does, and the verifier recommends "
+        "potassium repletion before insulin. There is no real conflict in "
+        "the literature; the previous encoding manufactured one by dropping "
+        "the ADA precondition."
     ),
     lean_code=r"""-- Epistemological Audit: Scenario B
 -- Diabetic Ketoacidosis (ADA) vs. Severe Hypokalemia (AACE/ACE)
@@ -408,11 +412,13 @@ SCENARIO_C = Scenario(
             "Evidence B)."
         ),
     ),
-    collision_summary=(
-        "The APA guideline indicates a benzodiazepine for this acute panic "
-        "presentation, while the AASM safety statement strictly "
-        "contraindicates the same drug class for untreated severe OSA. The "
-        "two guidelines collide on the only intervention available."
+    verdict_summary=(
+        "The AASM contraindication on benzodiazepines in untreated severe "
+        "OSA defeats the APA\u2019s benzodiazepine option (priority 2 > 1). "
+        "A non-benzo anxiolytic remains a valid first-line APA option, so "
+        "the verifier recommends that alternative. The earlier "
+        "\u201ccollision\u201d assumed benzos were the only acceptable APA "
+        "recommendation, which the actual APA guideline does not assert."
     ),
     lean_code=r"""-- Epistemological Audit: Scenario C
 -- Acute Panic Disorder (APA) vs. Severe Obstructive Sleep Apnea (AASM)
