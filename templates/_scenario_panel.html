@@ -12,6 +12,32 @@
     <p>{{ scenario.patient_summary | safe }}</p>
   </section>
 
+  <section class="cds-legend" aria-label="Natural-language to Lean mapping legend">
+    <h3 class="card-label">Lean Mapping</h3>
+    <div class="cds-legend-items">
+      <span class="cds-legend-item">
+        <strong class="cds-cond">condition</strong>
+        <code>has<em>Cond</em> : Patient → Prop</code>
+      </span>
+      <span class="cds-legend-item">
+        <strong class="cds-find">finding</strong>
+        <code>obs_<em>Cond</em></code>
+      </span>
+      <span class="cds-legend-item">
+        <strong class="cds-int">intervention</strong>
+        <code>administer<em>Drug</em> : Patient → Prop</code>
+      </span>
+      <span class="cds-legend-item">
+        <strong class="cds-ind">indicated</strong>
+        <code>→ administer<em>Drug</em></code>
+      </span>
+      <span class="cds-legend-item">
+        <strong class="cds-con">contraindicated</strong>
+        <code>→ ¬ administer<em>Drug</em></code>
+      </span>
+    </div>
+  </section>
+
   <div class="two-column">
     <section class="column" aria-labelledby="guidelines-heading">
       <h3 id="guidelines-heading" class="column-title">Clinical Guidelines</h3>

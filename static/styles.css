@@ -41,6 +41,18 @@
   --info-soft:      #e7f0fa;
   --info-border:    #b6cfe9;
 
+  /* Semantic palette for natural-language → Lean mapping. */
+  --cds-cond:       #0b4a8a;  /* condition  → has… : Patient → Prop  */
+  --cds-find:       #8a5a00;  /* finding    → obs_…                   */
+  --cds-int:        #6a2da3;  /* intervention → administer…           */
+  --cds-ind:        #126b3f;  /* indicated  → → administer …          */
+  --cds-con:        #a31e16;  /* contraindicated → → ¬ administer …   */
+  --cds-cond-bg:    #e6efff;
+  --cds-find-bg:    #fdf2e3;
+  --cds-int-bg:     #f1e8fb;
+  --cds-ind-bg:     #e3f5ec;
+  --cds-con-bg:     #fdecea;
+
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 1px rgba(15, 23, 42, 0.04);
   --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.06);
 
@@ -89,6 +101,17 @@
     --info:           #7eb6ee;
     --info-soft:      #122439;
     --info-border:    #2a4566;
+
+    --cds-cond:       #79b8ff;
+    --cds-find:       #ffce6f;
+    --cds-int:        #c4a4f7;
+    --cds-ind:        #7ee2a8;
+    --cds-con:        #ff8e85;
+    --cds-cond-bg:    #11243d;
+    --cds-find-bg:    #36240a;
+    --cds-int-bg:     #271640;
+    --cds-ind-bg:     #0e2a1c;
+    --cds-con-bg:     #3a1413;
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
@@ -454,10 +477,60 @@ code {
   line-height: 1.6;
 }
 
-.patient-card p strong,
-.guideline-body strong {
-  color: var(--accent-strong);
+/* ---------- Semantic highlighting (Lean mapping) ---------- */
+
+.cds-cond,
+.cds-find,
+.cds-int,
+.cds-ind,
+.cds-con {
   font-weight: 700;
+  padding: 0 3px;
+  border-radius: 3px;
+}
+
+.cds-cond { color: var(--cds-cond); background: var(--cds-cond-bg); }
+.cds-find { color: var(--cds-find); background: var(--cds-find-bg); }
+.cds-int  { color: var(--cds-int);  background: var(--cds-int-bg); }
+.cds-ind  { color: var(--cds-ind);  background: var(--cds-ind-bg); }
+.cds-con  { color: var(--cds-con);  background: var(--cds-con-bg); }
+
+.cds-legend {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.cds-legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  font-size: 12px;
+  color: var(--fg-secondary);
+}
+
+.cds-legend-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.cds-legend-item code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-muted);
+  background: var(--bg-code);
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid var(--border-soft);
+}
+
+.cds-legend-item code em {
+  font-style: italic;
+  color: var(--accent);
 }
 
 /* ---------- Code Frame ---------- */
