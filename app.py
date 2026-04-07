@@ -1,18 +1,25 @@
 """Verifiable Clinical Decision Support — Litestar application.
 
-Serves the Guideline Collision Gallery UI and exposes a verification endpoint
-that writes the selected scenario's Lean 4 source to a temporary file, invokes
-the ``lean`` compiler, and returns the captured output as an HTML fragment for
-HTMX-driven swap into the page.
+Serves the Guideline Collision Gallery UI and exposes a verification
+endpoint that invokes the Lean 4 compiler against a *static*, pre-written
+``ScenarioX.lean`` file. No user input is ever interpolated into Lean
+source: each scenario id is mapped through an in-process whitelist
+(``scenarios.SCENARIOS``) to a fixed filename in the ``lean/`` directory.
+
+At import time the shared knowledge base (``lean/MedicalKnowledge.lean``)
+is compiled once to ``lean/MedicalKnowledge.olean`` so that subsequent
+scenario verifications can `import` it as a precompiled module — this
+keeps each verification a single, fast ``lean`` invocation rather than a
+cold compile of the whole DSL on every request.
 """
 
 from __future__ import annotations
 
 import enum
+import os
 import re
 import shutil
 import subprocess
-import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -26,7 +33,13 @@ from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import Lean4Lexer
 
-from scenarios import CORE_LEAN_SOURCE, SCENARIOS, Scenario
+from scenarios import (
+    KNOWLEDGE_BASE_FILE,
+    KNOWLEDGE_BASE_MODULE,
+    LEAN_DIR,
+    SCENARIOS,
+    Scenario,
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
@@ -64,14 +77,65 @@ def _write_syntax_css() -> None:
 _write_syntax_css()
 
 
+def _ensure_knowledge_base_compiled() -> str | None:
+    """Compile ``MedicalKnowledge.lean`` to ``.olean`` if it is stale.
+
+    Returns ``None`` on success or a human-readable error string on failure.
+    The compiled artefact is what every scenario file imports, so the
+    application refuses to start serving verifications until it exists.
+    """
+    olean_path = LEAN_DIR / f"{KNOWLEDGE_BASE_MODULE}.olean"
+    ilean_path = LEAN_DIR / f"{KNOWLEDGE_BASE_MODULE}.ilean"
+    src_mtime = KNOWLEDGE_BASE_FILE.stat().st_mtime
+    if (
+        olean_path.exists()
+        and olean_path.stat().st_mtime >= src_mtime
+        and ilean_path.exists()
+        and ilean_path.stat().st_mtime >= src_mtime
+    ):
+        return None
+    try:
+        completed = subprocess.run(
+            [
+                LEAN_BINARY,
+                "-o",
+                olean_path.name,
+                "-i",
+                ilean_path.name,
+                KNOWLEDGE_BASE_FILE.name,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=LEAN_TIMEOUT_SECONDS,
+            cwd=LEAN_DIR,
+        )
+    except FileNotFoundError:
+        return (
+            "The Lean 4 compiler executable was not found on this system. "
+            "Install Lean via elan and ensure it is on PATH."
+        )
+    except subprocess.TimeoutExpired:
+        return (
+            f"Compiling MedicalKnowledge.lean exceeded the "
+            f"{LEAN_TIMEOUT_SECONDS}s time limit."
+        )
+    if completed.returncode != 0:
+        return (
+            "Lean failed to compile MedicalKnowledge.lean:\n"
+            f"{completed.stdout}\n{completed.stderr}".strip()
+        )
+    return None
+
+
+_KNOWLEDGE_BASE_ERROR: str | None = _ensure_knowledge_base_compiled()
+
+
 class Verdict(enum.Enum):
-    Recommended = "Recommended"
-    Underdetermined = "Underdetermined"
-    InsufficientData = "InsufficientData"
-    GenuineConflict = "GenuineConflict"
+    """Outcomes the host parser can derive from a Lean verification run."""
 
-
-_VERDICT_LINE_RE = re.compile(r"^VERDICT: (\w+)(?:\s+(.*))?$")
+    CollisionVerified = "CollisionVerified"
+    ProofUnsound = "ProofUnsound"
+    CompilerError = "CompilerError"
 
 
 @dataclass(frozen=True)
@@ -80,75 +144,105 @@ class VerificationResult:
     stdout: str
     stderr: str
     verdict: Verdict | None
-    verdict_detail: str
+    trusted_axioms: tuple[str, ...]
     error_message: str | None
 
 
-def _parse_verdict(stdout: str) -> tuple[Verdict | None, str]:
-    """Scan Lean stdout for the last ``VERDICT:`` marker and decode it.
+_AXIOMS_RE = re.compile(
+    r"depends on axioms:\s*\[([^\]]*)\]",
+    re.DOTALL,
+)
 
-    The core source emits a smoke ``VERDICT:`` line before the scenario
-    fragment runs, so the scenario's own verdict is always the final match.
+
+def _parse_trusted_axioms(stdout: str) -> tuple[str, ...]:
+    """Extract the axiom dependency list emitted by ``#print axioms``.
+
+    Lean's pretty printer wraps the bracketed list across multiple lines
+    and indents continuation lines, so the regex spans newlines and we
+    normalise whitespace before splitting on commas.
     """
-    last: tuple[Verdict | None, str] | None = None
-    for line in stdout.splitlines():
-        match = _VERDICT_LINE_RE.match(line)
-        if match is None:
-            continue
-        tag, detail = match.group(1), match.group(2) or ""
-        try:
-            last = (Verdict[tag], detail)
-        except KeyError:
-            last = (None, "")
-    return last if last is not None else (None, "")
+    match = _AXIOMS_RE.search(stdout)
+    if match is None:
+        return ()
+    raw = match.group(1)
+    parts = [chunk.strip() for chunk in raw.split(",")]
+    return tuple(p for p in parts if p)
+
+
+def _classify(
+    exit_code: int, stdout: str, stderr: str, axioms: tuple[str, ...]
+) -> Verdict:
+    """Map the Lean compiler outcome onto a `Verdict`."""
+    if exit_code != 0:
+        return Verdict.CompilerError
+    if not axioms:
+        return Verdict.CompilerError
+    if "sorryAx" in axioms:
+        return Verdict.ProofUnsound
+    lowered = (stdout + "\n" + stderr).lower()
+    if "error:" in lowered:
+        return Verdict.CompilerError
+    return Verdict.CollisionVerified
 
 
 def _run_lean(scenario: Scenario) -> VerificationResult:
-    """Write the scenario's Lean source to a temp file and run the compiler."""
-    source = CORE_LEAN_SOURCE + "\n\n" + scenario.lean_code
-    with tempfile.TemporaryDirectory(prefix="lean-cds-") as tmpdir:
-        audit_path = Path(tmpdir) / "audit.lean"
-        audit_path.write_text(source, encoding="utf-8")
-        try:
-            completed = subprocess.run(
-                [LEAN_BINARY, str(audit_path)],
-                capture_output=True,
-                text=True,
-                timeout=LEAN_TIMEOUT_SECONDS,
-                cwd=tmpdir,
-            )
-        except FileNotFoundError:
-            return VerificationResult(
-                exit_code=-1,
-                stdout="",
-                stderr="",
-                verdict=None,
-                verdict_detail="",
-                error_message=(
-                    "The Lean 4 compiler executable was not found on this "
-                    "system. Install Lean via elan and ensure it is on PATH."
-                ),
-            )
-        except subprocess.TimeoutExpired:
-            return VerificationResult(
-                exit_code=-1,
-                stdout="",
-                stderr="",
-                verdict=None,
-                verdict_detail="",
-                error_message=(
-                    f"Lean verification exceeded the {LEAN_TIMEOUT_SECONDS}s "
-                    "time limit."
-                ),
-            )
+    """Invoke ``lean`` against the scenario's static ``.lean`` file."""
+    if _KNOWLEDGE_BASE_ERROR is not None:
+        return VerificationResult(
+            exit_code=-1,
+            stdout="",
+            stderr="",
+            verdict=None,
+            trusted_axioms=(),
+            error_message=_KNOWLEDGE_BASE_ERROR,
+        )
+    env = os.environ.copy()
+    existing = env.get("LEAN_PATH")
+    env["LEAN_PATH"] = (
+        f"{LEAN_DIR}{os.pathsep}{existing}" if existing else str(LEAN_DIR)
+    )
+    try:
+        completed = subprocess.run(
+            [LEAN_BINARY, scenario.lean_filename],
+            capture_output=True,
+            text=True,
+            timeout=LEAN_TIMEOUT_SECONDS,
+            cwd=LEAN_DIR,
+            env=env,
+        )
+    except FileNotFoundError:
+        return VerificationResult(
+            exit_code=-1,
+            stdout="",
+            stderr="",
+            verdict=None,
+            trusted_axioms=(),
+            error_message=(
+                "The Lean 4 compiler executable was not found on this "
+                "system. Install Lean via elan and ensure it is on PATH."
+            ),
+        )
+    except subprocess.TimeoutExpired:
+        return VerificationResult(
+            exit_code=-1,
+            stdout="",
+            stderr="",
+            verdict=None,
+            trusted_axioms=(),
+            error_message=(
+                f"Lean verification exceeded the {LEAN_TIMEOUT_SECONDS}s "
+                "time limit."
+            ),
+        )
 
-    verdict, verdict_detail = _parse_verdict(completed.stdout)
+    axioms = _parse_trusted_axioms(completed.stdout)
+    verdict = _classify(completed.returncode, completed.stdout, completed.stderr, axioms)
     return VerificationResult(
         exit_code=completed.returncode,
         stdout=completed.stdout,
         stderr=completed.stderr,
         verdict=verdict,
-        verdict_detail=verdict_detail,
+        trusted_axioms=axioms,
         error_message=None,
     )
 
@@ -161,9 +255,11 @@ def _get_scenario(scenario_id: str) -> Scenario:
 
 
 def _scenario_context(scenario: Scenario) -> dict[str, object]:
+    lean_source = scenario.read_lean_source()
     return {
         "scenario": scenario,
-        "highlighted_lean": _highlight_lean(scenario.lean_code),
+        "lean_source": lean_source,
+        "highlighted_lean": _highlight_lean(lean_source),
     }
 
 

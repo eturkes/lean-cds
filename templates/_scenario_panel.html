@@ -17,23 +17,23 @@
     <div class="cds-legend-items">
       <span class="cds-legend-item">
         <strong class="cds-cond">condition</strong>
-        <code>has<em>Cond</em> : Patient → Prop</code>
+        <code>Has<em>Cond</em> : Patient → Prop</code>
       </span>
       <span class="cds-legend-item">
         <strong class="cds-find">finding</strong>
-        <code>obs_<em>Cond</em></code>
+        <code>axiom obs_<em>cond</em></code>
       </span>
       <span class="cds-legend-item">
         <strong class="cds-int">intervention</strong>
-        <code>administer<em>Drug</em> : Patient → Prop</code>
+        <code>Treatment.<em>drug</em></code>
       </span>
       <span class="cds-legend-item">
         <strong class="cds-ind">indicated</strong>
-        <code>→ administer<em>Drug</em></code>
+        <code>Indicated p t : Prop</code>
       </span>
       <span class="cds-legend-item">
         <strong class="cds-con">contraindicated</strong>
-        <code>→ ¬ administer<em>Drug</em></code>
+        <code>Contraindicated p t : Prop</code>
       </span>
     </div>
   </section>
@@ -63,12 +63,13 @@
       <h3 id="lean-heading" class="column-title">Lean 4 Formalization</h3>
       <div class="code-frame">
         <div class="code-frame-header">
-          <span class="code-frame-title">audit.lean</span>
+          <span class="code-frame-title">{{ scenario.lean_filename }}</span>
         </div>
         <div class="code-frame-body">
           {{ highlighted_lean | safe }}
         </div>
       </div>
+      <p class="audit-summary">{{ scenario.audit_summary | safe }}</p>
     </section>
   </div>
 

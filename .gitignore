@@ -17,14 +17,13 @@ venv/
 .lake/
 lake-packages/
 *.olean
-
-# Runtime artifacts (audit.lean is written to a tempdir, but be defensive)
-/audit.lean
+*.ilean
 
 # Override a common global-gitignore rule ([Ss]cripts) so the project's
 # scripts/ directory is tracked.
 !scripts/
 !scripts/**
+scripts/__pycache__/
 
 # Editor / IDE
 .vscode/

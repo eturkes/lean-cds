@@ -10,52 +10,7 @@
     <p class="alert-message">{{ result.error_message }}</p>
   </div>
 </div>
-{% elif result.verdict and result.verdict.name == 'Recommended' %}
-<div class="alert alert-success" role="alert">
-  <div class="alert-icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" width="28" height="28">
-      <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2Zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9Z"/>
-    </svg>
-  </div>
-  <div class="alert-body">
-    <h3 class="alert-title">Recommended Action</h3>
-    <p class="alert-message">
-      Verifier returned a single recommended action:
-      <code>{{ result.verdict_detail }}</code>.
-    </p>
-  </div>
-</div>
-{% elif result.verdict and result.verdict.name == 'Underdetermined' %}
-<div class="alert alert-info" role="alert">
-  <div class="alert-icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" width="28" height="28">
-      <path fill="currentColor" d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2Zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8Z"/>
-    </svg>
-  </div>
-  <div class="alert-body">
-    <h3 class="alert-title">Multiple Acceptable Actions</h3>
-    <p class="alert-message">
-      Verifier returned multiple acceptable actions:
-      <code>{{ result.verdict_detail }}</code>.
-    </p>
-  </div>
-</div>
-{% elif result.verdict and result.verdict.name == 'InsufficientData' %}
-<div class="alert alert-warning" role="alert">
-  <div class="alert-icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" width="28" height="28">
-      <path fill="currentColor" d="M12 2 1 21h22L12 2Zm0 6 8.5 14.5h-17L12 8Zm-1 4v4h2v-4h-2Zm0 6v2h2v-2h-2Z"/>
-    </svg>
-  </div>
-  <div class="alert-body">
-    <h3 class="alert-title">Insufficient Chart Data</h3>
-    <p class="alert-message">
-      Chart lacks observations needed to decide. Missing:
-      <code>{{ result.verdict_detail }}</code>.
-    </p>
-  </div>
-</div>
-{% elif result.verdict and result.verdict.name == 'GenuineConflict' %}
+{% elif result.verdict and result.verdict.name == 'CollisionVerified' %}
 <div class="alert alert-danger" role="alert">
   <div class="alert-icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" width="28" height="28">
@@ -63,10 +18,50 @@
     </svg>
   </div>
   <div class="alert-body">
-    <h3 class="alert-title">Genuine Guideline Conflict</h3>
+    <h3 class="alert-title">Guideline Collision Formally Verified</h3>
     <p class="alert-message">
-      Guidelines genuinely conflict on this patient. Conflicting rules:
-      <code>{{ result.verdict_detail }}</code>.
+      The Lean 4 kernel typechecked
+      <code>theorem absurd : False</code> for this scenario. The encoded
+      clinical guidelines, applied to the patient's chart, prove a deontic
+      contradiction. Trusted axioms participating in the proof:
+    </p>
+    <ul class="axiom-list">
+      {% for ax in result.trusted_axioms %}
+      <li><code>{{ ax }}</code></li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% elif result.verdict and result.verdict.name == 'ProofUnsound' %}
+<div class="alert alert-warning" role="alert">
+  <div class="alert-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="28" height="28">
+      <path fill="currentColor" d="M12 2 1 21h22L12 2Zm0 6 8.5 14.5h-17L12 8Zm-1 4v4h2v-4h-2Zm0 6v2h2v-2h-2Z"/>
+    </svg>
+  </div>
+  <div class="alert-body">
+    <h3 class="alert-title">Proof Unsound</h3>
+    <p class="alert-message">
+      Lean accepted the file but the proof depends on
+      <code>sorryAx</code> — a stub that means the contradiction was not
+      actually established by the kernel. Audit the
+      <code>{{ scenario.lean_filename }}</code> source.
+    </p>
+  </div>
+</div>
+{% elif result.verdict and result.verdict.name == 'CompilerError' %}
+<div class="alert alert-warning" role="alert">
+  <div class="alert-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="28" height="28">
+      <path fill="currentColor" d="M12 2 1 21h22L12 2Zm0 6 8.5 14.5h-17L12 8Zm-1 4v4h2v-4h-2Zm0 6v2h2v-2h-2Z"/>
+    </svg>
+  </div>
+  <div class="alert-body">
+    <h3 class="alert-title">Lean Rejected the Proof</h3>
+    <p class="alert-message">
+      The Lean 4 compiler reported errors typechecking
+      <code>{{ scenario.lean_filename }}</code>. The encoded axioms do
+      not yield the expected contradiction — see the compiler output below.
     </p>
   </div>
 </div>
@@ -81,7 +76,8 @@
     <h3 class="alert-title">No Verdict Produced</h3>
     <p class="alert-message">
       The Lean compiler ran but did not emit a parseable
-      <code>VERDICT:</code> line. Review the compiler output below.
+      <code>#print axioms</code> dependency line. Review the compiler
+      output below.
     </p>
   </div>
 </div>
@@ -89,7 +85,7 @@
 
 <section class="terminal" aria-label="Lean compiler output">
   <header class="terminal-header">
-    <span class="terminal-title">$ lean audit.lean</span>
+    <span class="terminal-title">$ lean {{ scenario.lean_filename }}</span>
   </header>
   <pre class="terminal-body"><code>{%- if result.stdout -%}{{ result.stdout }}{%- endif -%}{%- if result.stderr %}
 {{ result.stderr }}{%- endif -%}{%- if not result.stdout and not result.stderr -%}(no output captured){%- endif -%}</code></pre>

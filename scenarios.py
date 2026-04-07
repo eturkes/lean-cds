@@ -1,14 +1,24 @@
-"""Clinical scenarios with authentic guideline excerpts and Lean 4 formalizations.
+"""Clinical scenarios with authentic guideline excerpts and Lean 4 metadata.
 
-Each scenario encodes two real-world clinical guidelines that appear individually
-correct but, when combined for a single patient who satisfies both clinical
-contexts, yield a logical contradiction. The Lean 4 code is a self-contained
-proof that the two axioms together entail ``False``.
+Each scenario describes a single patient context in which two real-world
+clinical guidelines collide. The actual formal verification lives in static
+``.lean`` files under the ``lean/`` directory; this module merely declares
+the ID-to-filename mapping plus the natural-language metadata that the UI
+needs to render the scenario panel.
+
+The host process never injects user-controlled strings into the Lean source.
+Each scenario references a pre-written file by name, and the verifier
+invokes ``lean`` against that file directly.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
+
+LEAN_DIR: Path = Path(__file__).resolve().parent / "lean"
+KNOWLEDGE_BASE_FILE: Path = LEAN_DIR / "MedicalKnowledge.lean"
+KNOWLEDGE_BASE_MODULE: str = "MedicalKnowledge"
 
 
 @dataclass(frozen=True)
@@ -25,115 +35,21 @@ class Scenario:
     patient_summary: str
     guideline_a: Guideline
     guideline_b: Guideline
-    lean_code: str
-    verdict_summary: str
+    lean_filename: str
+    audit_summary: str
 
+    @property
+    def lean_path(self) -> Path:
+        return LEAN_DIR / self.lean_filename
 
-CORE_LEAN_SOURCE: str = r"""-- Epistemological Audit: Core DSL types
--- Defines the deeply-embedded data model used by every scenario.
-
-namespace ClinicalAudit.Core
-
-inductive ThreeValued where
-  | tTrue
-  | tFalse
-  | tUnknown
-  deriving Repr, DecidableEq
-
-abbrev Observation := String
-abbrev Action := String
-
-inductive DeonticModality where
-  | indicated
-  | obligated
-  | contraindicated
-  deriving Repr, DecidableEq
-
-structure Chart where
-  lookup : Observation → ThreeValued
-
-structure Rule where
-  id : String
-  source : String
-  appliesWhen : Chart → ThreeValued
-  conclusion : DeonticModality × Action
-  priority : Nat
-
-inductive Verdict where
-  | recommended (action : Action)
-  | underdetermined (actions : List Action)
-  | insufficientData (missing : List Observation)
-  | genuineConflict (rules : List String)
-
-instance : ToString Verdict where
-  toString := fun
-    | .recommended action => "Recommended " ++ action
-    | .underdetermined actions => "Underdetermined " ++ String.intercalate "," actions
-    | .insufficientData missing => "InsufficientData " ++ String.intercalate "," missing
-    | .genuineConflict rules => "GenuineConflict " ++ String.intercalate "," rules
-
-def isPositiveModality : DeonticModality → Bool
-  | .indicated => true
-  | .obligated => true
-  | .contraindicated => false
-
-def isNegativeModality : DeonticModality → Bool
-  | .contraindicated => true
-  | _ => false
-
-def maxPriority (rs : List Rule) : Nat :=
-  rs.foldr (fun r acc => Nat.max r.priority acc) 0
-
-def dedupActions (xs : List Action) : List Action :=
-  xs.foldr (fun x acc => if acc.contains x then acc else x :: acc) []
-
-def evaluate (rules : List Rule) (chart : Chart) : Verdict :=
-  let fired := rules.filter (fun r =>
-    match r.appliesWhen chart with
-    | .tTrue => true
-    | _ => false)
-  let allActions := dedupActions (fired.map (fun r => r.conclusion.snd))
-  let analyze : Action → (List Action × List String) → (List Action × List String) :=
-    fun a acc =>
-      let pos := fired.filter (fun r =>
-        isPositiveModality r.conclusion.fst && r.conclusion.snd == a)
-      let neg := fired.filter (fun r =>
-        isNegativeModality r.conclusion.fst && r.conclusion.snd == a)
-      match pos, neg with
-      | [], _ => acc
-      | _ :: _, [] => (a :: acc.fst, acc.snd)
-      | _ :: _, _ :: _ =>
-        let mp := maxPriority pos
-        let mn := maxPriority neg
-        if mp > mn then (a :: acc.fst, acc.snd)
-        else if mn > mp then acc
-        else
-          let posIds := (pos.filter (fun r => r.priority == mp)).map Rule.id
-          let negIds := (neg.filter (fun r => r.priority == mn)).map Rule.id
-          (acc.fst, posIds ++ negIds ++ acc.snd)
-  let result : List Action × List String := allActions.foldr analyze ([], [])
-  let recommendedActions := result.fst
-  let conflictIds := result.snd
-  match conflictIds with
-  | _ :: _ => Verdict.genuineConflict conflictIds
-  | [] =>
-    match recommendedActions with
-    | [] => Verdict.insufficientData []
-    | [a] => Verdict.recommended a
-    | _ => Verdict.underdetermined recommendedActions
-
-def smokeUnknownChart : Chart := { lookup := fun _ => ThreeValued.tUnknown }
-
-#eval IO.println s!"VERDICT: {evaluate [] smokeUnknownChart}"
-
-end ClinicalAudit.Core
-"""
+    def read_lean_source(self) -> str:
+        return self.lean_path.read_text(encoding="utf-8")
 
 
 SCENARIO_A = Scenario(
     id="scenario-a",
     title="Hypertension vs. Severe Dehydration",
-    subtitle="Thiazide diuretic — recommended and contraindicated",
+    subtitle="Thiazide diuretic — indicated and contraindicated",
     patient_summary=(
         "72-year-old patient with a 15-year history of "
         "<strong class=\"cds-cond\">essential hypertension</strong> "
@@ -189,66 +105,22 @@ SCENARIO_A = Scenario(
             "Level of Evidence B)."
         ),
     ),
-    verdict_summary=(
-        "The KDIGO acute-volume rule has higher priority than the AHA/ACC "
-        "chronic-management rule in this hemodynamic context, so the "
-        "verifier recommends holding the thiazide and rehydrating. The "
-        "earlier \u201ccollision\u201d was an artifact of the previous "
-        "encoding, which omitted hemodynamic context."
+    lean_filename="ScenarioA.lean",
+    audit_summary=(
+        "Lean proves <code>Indicated JohnDoe ThiazideDiuretic \u2227 "
+        "Contraindicated JohnDoe ThiazideDiuretic</code> from the AHA/ACC "
+        "and KDIGO axioms, then derives <code>False</code> via "
+        "<code>incompatible_modalities</code>. The kernel-trusted axiom "
+        "list is the precise set of guidelines and chart findings "
+        "participating in the contradiction."
     ),
-    lean_code=r"""-- Epistemological Audit: Scenario A
--- Hypertension (AHA/ACC) vs. Severe Dehydration (KDIGO)
-
-namespace ClinicalAudit.ScenarioA
-
-open ClinicalAudit.Core
-
-def rules : List Rule := [
-  { id := "AHA-ACC-HTN-8.1.5",
-    source := "AHA/ACC HTN §8.1.5",
-    appliesWhen := fun chart =>
-      match chart.lookup "EssentialHypertension", chart.lookup "HemodynamicallyStable" with
-      | .tTrue, .tTrue => .tTrue
-      | _, _ => .tFalse,
-    conclusion := (.indicated, "ThiazideDiuretic"),
-    priority := 1 },
-  { id := "KDIGO-AKI-3.1.2-neg",
-    source := "KDIGO AKI §3.1.2",
-    appliesWhen := fun chart =>
-      match chart.lookup "SevereDehydration" with
-      | .tTrue => .tTrue
-      | _ => .tFalse,
-    conclusion := (.contraindicated, "ThiazideDiuretic"),
-    priority := 2 },
-  { id := "KDIGO-AKI-3.1.2-pos",
-    source := "KDIGO AKI §3.1.2",
-    appliesWhen := fun chart =>
-      match chart.lookup "SevereDehydration" with
-      | .tTrue => .tTrue
-      | _ => .tFalse,
-    conclusion := (.indicated, "HoldThiazideAndRehydrate"),
-    priority := 2 }
-]
-
-def chart : Chart :=
-  { lookup := fun obs =>
-      match obs with
-      | "EssentialHypertension" => .tTrue
-      | "HemodynamicallyStable" => .tFalse
-      | "SevereDehydration" => .tTrue
-      | _ => .tUnknown }
-
-#eval IO.println s!"VERDICT: {evaluate rules chart}"
-
-end ClinicalAudit.ScenarioA
-""",
 )
 
 
 SCENARIO_B = Scenario(
     id="scenario-b",
     title="Diabetic Ketoacidosis vs. Severe Hypokalemia",
-    subtitle="Intravenous insulin — recommended and contraindicated",
+    subtitle="Intravenous insulin — indicated and contraindicated",
     patient_summary=(
         "34-year-old patient with type 1 diabetes mellitus presenting with "
         "polyuria, Kussmaul respirations, "
@@ -300,68 +172,22 @@ SCENARIO_B = Scenario(
             "recommendation \u2014 Harm, Level of Evidence A)."
         ),
     ),
-    verdict_summary=(
-        "The ADA insulin recommendation is conditioned on serum potassium "
-        "\u2265 3.3 mEq/L \u2014 a precondition that exists in the published "
-        "ADA guideline itself. With measured K of 2.9 mEq/L the ADA rule "
-        "does not fire, the AACE/ACE rule does, and the verifier recommends "
-        "potassium repletion before insulin. There is no real conflict in "
-        "the literature; the previous encoding manufactured one by dropping "
-        "the ADA precondition."
+    lean_filename="ScenarioB.lean",
+    audit_summary=(
+        "Lean proves <code>Indicated JaneRoe IVRegularInsulin \u2227 "
+        "Contraindicated JaneRoe IVRegularInsulin</code> from the ADA and "
+        "AACE/ACE axioms, then derives <code>False</code> via "
+        "<code>incompatible_modalities</code>. The literal reading of the "
+        "ADA insulin axiom drops the K\u207a \u2265 3.3 mEq/L precondition, "
+        "which is exactly the encoder bug the audit is designed to expose."
     ),
-    lean_code=r"""-- Epistemological Audit: Scenario B
--- Diabetic Ketoacidosis (ADA) vs. Severe Hypokalemia (AACE/ACE)
-
-namespace ClinicalAudit.ScenarioB
-
-open ClinicalAudit.Core
-
-def rules : List Rule := [
-  { id := "ADA-DKA-Sec16",
-    source := "ADA Standards §16",
-    appliesWhen := fun chart =>
-      match chart.lookup "DiabeticKetoacidosis", chart.lookup "SerumKAtLeast33" with
-      | .tTrue, .tTrue => .tTrue
-      | _, _ => .tFalse,
-    conclusion := (.obligated, "IVRegularInsulin"),
-    priority := 1 },
-  { id := "AACE-ACE-Hypo-neg",
-    source := "AACE/ACE CSR-4",
-    appliesWhen := fun chart =>
-      match chart.lookup "SevereHypokalemia" with
-      | .tTrue => .tTrue
-      | _ => .tFalse,
-    conclusion := (.contraindicated, "IVRegularInsulin"),
-    priority := 2 },
-  { id := "AACE-ACE-Hypo-pos",
-    source := "AACE/ACE CSR-4",
-    appliesWhen := fun chart =>
-      match chart.lookup "SevereHypokalemia" with
-      | .tTrue => .tTrue
-      | _ => .tFalse,
-    conclusion := (.indicated, "RepleteKThenStartInsulin"),
-    priority := 2 }
-]
-
-def chart : Chart :=
-  { lookup := fun obs =>
-      match obs with
-      | "DiabeticKetoacidosis" => .tTrue
-      | "SerumKAtLeast33" => .tFalse
-      | "SevereHypokalemia" => .tTrue
-      | _ => .tUnknown }
-
-#eval IO.println s!"VERDICT: {evaluate rules chart}"
-
-end ClinicalAudit.ScenarioB
-""",
 )
 
 
 SCENARIO_C = Scenario(
     id="scenario-c",
     title="Acute Panic Disorder vs. Severe Obstructive Sleep Apnea",
-    subtitle="Benzodiazepine — recommended and contraindicated",
+    subtitle="Benzodiazepine — indicated and contraindicated",
     patient_summary=(
         "58-year-old patient with a recent polysomnography-confirmed "
         "diagnosis of "
@@ -412,59 +238,15 @@ SCENARIO_C = Scenario(
             "Evidence B)."
         ),
     ),
-    verdict_summary=(
-        "The AASM contraindication on benzodiazepines in untreated severe "
-        "OSA defeats the APA\u2019s benzodiazepine option (priority 2 > 1). "
-        "A non-benzo anxiolytic remains a valid first-line APA option, so "
-        "the verifier recommends that alternative. The earlier "
-        "\u201ccollision\u201d assumed benzos were the only acceptable APA "
-        "recommendation, which the actual APA guideline does not assert."
+    lean_filename="ScenarioC.lean",
+    audit_summary=(
+        "Lean proves <code>Indicated RichardRoe Benzodiazepine \u2227 "
+        "Contraindicated RichardRoe Benzodiazepine</code> from the APA and "
+        "AASM axioms, then derives <code>False</code> via "
+        "<code>incompatible_modalities</code>. The audit surfaces the "
+        "literal collision the APA recommendation produces in untreated "
+        "severe OSA."
     ),
-    lean_code=r"""-- Epistemological Audit: Scenario C
--- Acute Panic Disorder (APA) vs. Severe Obstructive Sleep Apnea (AASM)
-
-namespace ClinicalAudit.ScenarioC
-
-open ClinicalAudit.Core
-
-def rules : List Rule := [
-  { id := "APA-Panic-Benzo",
-    source := "APA Panic Disorder",
-    appliesWhen := fun chart =>
-      match chart.lookup "AcutePanicEpisode" with
-      | .tTrue => .tTrue
-      | _ => .tFalse,
-    conclusion := (.indicated, "Benzodiazepine"),
-    priority := 1 },
-  { id := "APA-Panic-NonBenzo",
-    source := "APA Panic Disorder",
-    appliesWhen := fun chart =>
-      match chart.lookup "AcutePanicEpisode" with
-      | .tTrue => .tTrue
-      | _ => .tFalse,
-    conclusion := (.indicated, "NonBenzoAnxiolytic"),
-    priority := 1 },
-  { id := "AASM-OSA-Benzo-neg",
-    source := "AASM OSA Pharm Safety",
-    appliesWhen := fun chart =>
-      match chart.lookup "UntreatedSevereOSA" with
-      | .tTrue => .tTrue
-      | _ => .tFalse,
-    conclusion := (.contraindicated, "Benzodiazepine"),
-    priority := 2 }
-]
-
-def chart : Chart :=
-  { lookup := fun obs =>
-      match obs with
-      | "AcutePanicEpisode" => .tTrue
-      | "UntreatedSevereOSA" => .tTrue
-      | _ => .tUnknown }
-
-#eval IO.println s!"VERDICT: {evaluate rules chart}"
-
-end ClinicalAudit.ScenarioC
-""",
 )
 
 
