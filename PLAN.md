@@ -778,7 +778,7 @@ the formalism delivers.
 
 ## Section 10 — Lean regression harness
 
-- [ ] **Status**
+- [x] **Status** — Created `scripts/check_scenarios.py` with `EXPECTED` dict mapping the three scenario ids to `(Verdict.Recommended, "<action>")` tuples and a `main()` that runs `_run_lean` per scenario, prints `PASS <id>` / `FAIL <id>: got=... expected=...`, and exits 0/1; verified PASS path (`uv run python scripts/check_scenarios.py` → three PASS lines, exit 0) and FAIL path (mutated `scenario-a` detail to `"WrongAction"` → one FAIL line and exit 1, then reverted); added the invocation as a one-liner under the README's `Common dev tasks` section.
 
 **Goal.** A small Python harness that runs all scenarios through `_run_lean`
 and asserts each produces its expected verdict. Replaces the implicit

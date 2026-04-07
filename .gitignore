@@ -21,6 +21,11 @@ lake-packages/
 # Runtime artifacts (audit.lean is written to a tempdir, but be defensive)
 /audit.lean
 
+# Override a common global-gitignore rule ([Ss]cripts) so the project's
+# scripts/ directory is tracked.
+!scripts/
+!scripts/**
+
 # Editor / IDE
 .vscode/
 .idea/

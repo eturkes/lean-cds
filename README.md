@@ -196,6 +196,9 @@ for sid, sc in SCENARIOS.items():
     r = _run_lean(sc)
     print(sid, r.verdict, repr(r.verdict_detail), r.exit_code)
 "
+
+# Run the regression harness
+uv run python scripts/check_scenarios.py
 ```
 
 `static/syntax.css` is overwritten on every app import — don't hand-edit it;
