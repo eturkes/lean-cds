@@ -34,43 +34,49 @@ SCENARIO_A = Scenario(
     title="Hypertension vs. Severe Dehydration",
     subtitle="Thiazide diuretic — recommended and contraindicated",
     patient_summary=(
-        "72-year-old patient with a 15-year history of essential hypertension "
-        "presenting to the emergency department with acute gastroenteritis, "
-        "hypotension (BP 84/52), tachycardia, oliguria, BUN/Cr ratio 28:1, and "
-        "clinical signs of severe dehydration."
+        "72-year-old patient with a 15-year history of "
+        "<strong>essential hypertension</strong> presenting to the emergency "
+        "department with acute gastroenteritis, <strong>hypotension</strong> "
+        "(BP 84/52), <strong>tachycardia</strong>, <strong>oliguria</strong>, "
+        "<strong>BUN/Cr ratio 28:1</strong>, and clinical signs of "
+        "<strong>severe dehydration</strong>."
     ),
     guideline_a=Guideline(
         source="AHA/ACC/AHA Guideline for the Prevention, Detection, "
                "Evaluation, and Management of High Blood Pressure in Adults — "
                "Section 8.1.5",
         body=(
-            "In adults with confirmed essential hypertension and an estimated "
-            "10-year atherosclerotic cardiovascular disease risk of \u226510%, "
-            "initiation of pharmacologic therapy with a thiazide-type diuretic "
-            "(chlorthalidone 12.5\u201325 mg orally once daily preferred) is "
-            "indicated as first-line agent for long-term blood pressure "
-            "control (Class I recommendation, Level of Evidence A). Thiazide "
-            "diuretics have demonstrated consistent mortality and major "
-            "adverse cardiovascular event reduction across diverse adult "
-            "populations and remain a cornerstone of guideline-directed "
-            "antihypertensive therapy."
+            "In adults with confirmed <strong>essential hypertension</strong> "
+            "and an estimated 10-year atherosclerotic cardiovascular disease "
+            "risk of \u226510%, initiation of pharmacologic therapy with a "
+            "<strong>thiazide-type diuretic</strong> (chlorthalidone "
+            "12.5\u201325 mg orally once daily preferred) is "
+            "<strong>indicated</strong> as first-line agent for long-term "
+            "blood pressure control (Class I recommendation, Level of "
+            "Evidence A). <strong>Thiazide diuretics</strong> have "
+            "demonstrated consistent mortality and major adverse "
+            "cardiovascular event reduction across diverse adult populations "
+            "and remain a cornerstone of guideline-directed antihypertensive "
+            "therapy."
         ),
     ),
     guideline_b=Guideline(
         source="KDIGO Clinical Practice Guideline for Acute Kidney Injury — "
                "Recommendation 3.1.2 (Volume Status Management)",
         body=(
-            "In any patient exhibiting clinical evidence of severe "
-            "dehydration \u2014 including frank "
-            "hypotension, sinus tachycardia, oliguria (<0.5 mL/kg/h), an "
-            "elevated BUN-to-creatinine ratio (>20:1), and laboratory or "
-            "physical findings of end-organ hypoperfusion \u2014 the "
-            "initiation or continuation of any diuretic therapy is "
-            "absolutely contraindicated. Administration of diuretics in this "
-            "hemodynamic context carries an unacceptable risk of "
-            "precipitating circulatory collapse, ischemic acute kidney "
-            "injury, and accelerated multi-organ dysfunction (Class III "
-            "recommendation \u2014 Harm, Level of Evidence B)."
+            "In any patient exhibiting clinical evidence of "
+            "<strong>severe dehydration</strong> \u2014 including frank "
+            "<strong>hypotension</strong>, <strong>sinus tachycardia</strong>, "
+            "<strong>oliguria</strong> (&lt;0.5 mL/kg/h), an elevated "
+            "<strong>BUN-to-creatinine ratio</strong> (&gt;20:1), and "
+            "laboratory or physical findings of end-organ hypoperfusion "
+            "\u2014 the initiation or continuation of any "
+            "<strong>diuretic therapy</strong> is "
+            "<strong>absolutely contraindicated</strong>. Administration of "
+            "diuretics in this hemodynamic context carries an unacceptable "
+            "risk of precipitating circulatory collapse, ischemic acute "
+            "kidney injury, and accelerated multi-organ dysfunction (Class "
+            "III recommendation \u2014 Harm, Level of Evidence B)."
         ),
     ),
     collision_summary=(
@@ -128,39 +134,49 @@ SCENARIO_B = Scenario(
     title="Diabetic Ketoacidosis vs. Severe Hypokalemia",
     subtitle="Intravenous insulin — recommended and contraindicated",
     patient_summary=(
-        "34-year-old patient with type 1 diabetes mellitus presenting with "
-        "polyuria, Kussmaul respirations, plasma glucose 612 mg/dL, "
-        "arterial pH 7.18, serum bicarbonate 9 mEq/L, anion gap 28, "
-        "moderate ketonuria, and a measured serum potassium of 2.9 mEq/L."
+        "34-year-old patient with <strong>type 1 diabetes mellitus</strong> "
+        "presenting with polyuria, Kussmaul respirations, "
+        "<strong>plasma glucose 612 mg/dL</strong>, "
+        "<strong>arterial pH 7.18</strong>, "
+        "<strong>serum bicarbonate 9 mEq/L</strong>, anion gap 28, "
+        "<strong>moderate ketonuria</strong>, and a measured "
+        "<strong>serum potassium of 2.9 mEq/L</strong>."
     ),
     guideline_a=Guideline(
         source="ADA Standards of Care in Diabetes — Section 16: "
                "Hyperglycemic Crises in Adults",
         body=(
-            "For adult patients meeting diagnostic criteria for diabetic "
-            "ketoacidosis (plasma glucose >250 mg/dL, arterial pH <7.30, "
-            "serum bicarbonate <18 mEq/L, and the presence of ketonemia or "
-            "moderate ketonuria), prompt initiation of continuous "
-            "intravenous regular insulin infusion at 0.1 units/kg/hour is "
-            "indicated to correct insulinopenia, suppress hepatic "
-            "ketogenesis, and resolve the underlying metabolic acidosis "
-            "(Class I recommendation, Level of Evidence A). Insulin therapy "
-            "should not be delayed once DKA criteria are confirmed."
+            "For adult patients meeting diagnostic criteria for "
+            "<strong>diabetic ketoacidosis</strong> "
+            "(<strong>plasma glucose &gt;250 mg/dL</strong>, "
+            "<strong>arterial pH &lt;7.30</strong>, "
+            "<strong>serum bicarbonate &lt;18 mEq/L</strong>, and the "
+            "presence of ketonemia or <strong>moderate ketonuria</strong>), "
+            "prompt initiation of continuous "
+            "<strong>intravenous regular insulin</strong> infusion at "
+            "0.1 units/kg/hour is <strong>indicated</strong> to correct "
+            "insulinopenia, suppress hepatic ketogenesis, and resolve the "
+            "underlying metabolic acidosis (Class I recommendation, Level "
+            "of Evidence A). Insulin therapy should not be delayed once "
+            "<strong>DKA</strong> criteria are confirmed."
         ),
     ),
     guideline_b=Guideline(
         source="AACE/ACE Consensus Statement on the Management of Inpatient "
                "Hyperglycemia and DKA — Critical Safety Recommendation 4",
         body=(
-            "In any patient presenting with DKA who has a measured serum "
-            "potassium concentration below 3.3 mEq/L, the administration of "
-            "insulin is strictly contraindicated until aggressive "
+            "In any patient presenting with <strong>DKA</strong> who has a "
+            "measured <strong>serum potassium concentration below "
+            "3.3 mEq/L</strong>, the administration of "
+            "<strong>insulin</strong> is "
+            "<strong>strictly contraindicated</strong> until aggressive "
             "intravenous potassium replacement has restored serum potassium "
             "to \u22653.3 mEq/L. Insulin-induced transcellular potassium "
-            "shift in the setting of preexisting hypokalemia carries an "
-            "imminent risk of life-threatening ventricular arrhythmias, "
-            "respiratory muscle paralysis, and cardiac arrest (Class III "
-            "recommendation \u2014 Harm, Level of Evidence A)."
+            "shift in the setting of preexisting "
+            "<strong>hypokalemia</strong> carries an imminent risk of "
+            "life-threatening ventricular arrhythmias, respiratory muscle "
+            "paralysis, and cardiac arrest (Class III recommendation "
+            "\u2014 Harm, Level of Evidence A)."
         ),
     ),
     collision_summary=(
@@ -212,41 +228,48 @@ SCENARIO_C = Scenario(
     title="Acute Panic Disorder vs. Severe Obstructive Sleep Apnea",
     subtitle="Benzodiazepine — recommended and contraindicated",
     patient_summary=(
-        "58-year-old patient with a recent polysomnography-confirmed diagnosis "
-        "of severe obstructive sleep apnea (AHI 42 events/hour, nadir SpO\u2082 "
-        "78%) not yet established on PAP therapy, presenting to the emergency "
-        "department with an acute, debilitating panic episode unresponsive to "
-        "verbal de-escalation."
+        "58-year-old patient with a recent polysomnography-confirmed "
+        "diagnosis of <strong>severe obstructive sleep apnea</strong> "
+        "(<strong>AHI 42 events/hour</strong>, nadir SpO\u2082 78%) "
+        "<strong>not yet established on PAP therapy</strong>, presenting "
+        "to the emergency department with an "
+        "<strong>acute, debilitating panic episode</strong> unresponsive "
+        "to verbal de-escalation."
     ),
     guideline_a=Guideline(
         source="APA Practice Guideline for the Treatment of Patients With "
                "Panic Disorder — Acute Episode Management",
         body=(
-            "For adults experiencing an acute, severe panic episode "
-            "characterized by debilitating autonomic hyperarousal, "
-            "depersonalization, and an impending sense of doom unresponsive "
-            "to non-pharmacologic measures, short-acting benzodiazepines "
+            "For adults experiencing an "
+            "<strong>acute, severe panic episode</strong> characterized by "
+            "debilitating autonomic hyperarousal, depersonalization, and "
+            "an impending sense of doom unresponsive to non-pharmacologic "
+            "measures, <strong>short-acting benzodiazepines</strong> "
             "(e.g., lorazepam 0.5\u20132 mg orally or intravenously) are "
-            "indicated as first-line pharmacotherapy for rapid symptomatic "
-            "relief and prevention of progression to a sustained anxiety "
-            "crisis (Class I recommendation, Level of Evidence B)."
+            "<strong>indicated</strong> as first-line pharmacotherapy for "
+            "rapid symptomatic relief and prevention of progression to a "
+            "sustained anxiety crisis (Class I recommendation, Level of "
+            "Evidence B)."
         ),
     ),
     guideline_b=Guideline(
         source="AASM Clinical Practice Guideline for the Treatment of Adult "
                "Obstructive Sleep Apnea — Pharmacologic Safety Statement",
         body=(
-            "In adults with a confirmed diagnosis of moderate-to-severe "
-            "obstructive sleep apnea (apnea\u2013hypopnea index "
-            "\u226515 events/hour) who are not yet established on effective "
-            "positive airway pressure therapy, the use of benzodiazepines "
-            "and other central nervous system depressants is strictly "
-            "contraindicated. These agents reduce upper airway dilator "
-            "tone, blunt arousal responses to hypoxemia and hypercapnia, and "
-            "are associated with prolonged apneic events, profound oxygen "
-            "desaturations, and a markedly elevated risk of fatal nocturnal "
-            "respiratory failure (Class III recommendation \u2014 Harm, "
-            "Level of Evidence B)."
+            "In adults with a confirmed diagnosis of "
+            "<strong>moderate-to-severe obstructive sleep apnea</strong> "
+            "(<strong>apnea\u2013hypopnea index "
+            "\u226515 events/hour</strong>) who are <strong>not yet "
+            "established on effective positive airway pressure "
+            "therapy</strong>, the use of "
+            "<strong>benzodiazepines</strong> and other central nervous "
+            "system depressants is "
+            "<strong>strictly contraindicated</strong>. These agents reduce "
+            "upper airway dilator tone, blunt arousal responses to hypoxemia "
+            "and hypercapnia, and are associated with prolonged apneic "
+            "events, profound oxygen desaturations, and a markedly elevated "
+            "risk of fatal nocturnal respiratory failure (Class III "
+            "recommendation \u2014 Harm, Level of Evidence B)."
         ),
     ),
     collision_summary=(

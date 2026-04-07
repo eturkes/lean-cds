@@ -454,6 +454,12 @@ code {
   line-height: 1.6;
 }
 
+.patient-card p strong,
+.guideline-body strong {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
 /* ---------- Code Frame ---------- */
 
 .column-code {

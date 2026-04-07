@@ -9,7 +9,7 @@
 
   <section class="patient-card" aria-label="Patient context">
     <h3 class="card-label">Patient Context</h3>
-    <p>{{ scenario.patient_summary }}</p>
+    <p>{{ scenario.patient_summary | safe }}</p>
   </section>
 
   <div class="two-column">
@@ -21,7 +21,7 @@
           <span class="guideline-tag">Guideline 1</span>
           <p class="guideline-source">{{ scenario.guideline_a.source }}</p>
         </header>
-        <p class="guideline-body">{{ scenario.guideline_a.body }}</p>
+        <p class="guideline-body">{{ scenario.guideline_a.body | safe }}</p>
       </article>
 
       <article class="guideline">
@@ -29,7 +29,7 @@
           <span class="guideline-tag">Guideline 2</span>
           <p class="guideline-source">{{ scenario.guideline_b.source }}</p>
         </header>
-        <p class="guideline-body">{{ scenario.guideline_b.body }}</p>
+        <p class="guideline-body">{{ scenario.guideline_b.body | safe }}</p>
       </article>
     </section>
 
