@@ -1,15 +1,18 @@
 # lean-cds
 
-A local proof-of-concept web application that demonstrates a **Verifiable
-Clinical Decision Support (CDS)** system. Each scenario translates two
-real-world clinical guideline excerpts into Lean 4 axioms and asks the Lean
-compiler to prove that the encoded guidelines are mutually inconsistent on a
-single patient context (`theorem polypharmacy_collision : False`).
+A local proof-of-concept that translates clinical guidelines into a
+deeply-embedded Lean 4 DSL with deontic modality, contextual preconditions,
+and priority-based defeasible reasoning, then asks the Lean kernel to
+typecheck and reduce a `Verdict` computation for each patient scenario. The
+verifier returns one of four states — `Recommended`, `Underdetermined`,
+`InsufficientData`, or `GenuineConflict` — surfacing whether the encoded
+rules unambiguously recommend an action, leave room for clinician choice,
+lack the chart data needed to decide, or genuinely disagree.
 
-The UI is a "Guideline Collision Gallery" with a sidebar of scenarios, a
-two-column main panel (natural-language guidelines on the left, generated
-Lean 4 source on the right), and a verification button that streams the live
-`lean` compiler output back to the browser via HTMX.
+The UI is an HTMX gallery with a sidebar of scenarios, a two-column main
+panel (natural-language guidelines on the left, generated Lean 4 source on
+the right), and a verification button that streams the live `lean` compiler
+output back to the browser.
 
 ## Stack
 
@@ -73,18 +76,27 @@ Verification**.
 | POST   | `/scenarios/{scenario_id}/verify` | `_verification_result.html` HTMX fragment  |
 | GET    | `/static/*`                       | `static/` files                            |
 
-### Verification pipeline (`app.py:74` `_run_lean`)
+### Verification pipeline (`app.py:106` `_run_lean`)
 
 1. Look up the `Scenario` by id (`scenarios.SCENARIOS`).
-2. Write its `lean_code` field to `audit.lean` inside a fresh
-   `tempfile.TemporaryDirectory(prefix="lean-cds-")`.
+2. Concatenate `CORE_LEAN_SOURCE + "\n\n" + scenario.lean_code` and write
+   the result to `audit.lean` inside a fresh
+   `tempfile.TemporaryDirectory(prefix="lean-cds-")`. The shared core
+   defines the `Rule` / `Chart` / `Verdict` types and the `evaluate`
+   function once; each scenario fragment supplies only its own `rules`,
+   `chart`, and final `#eval` line.
 3. `subprocess.run([LEAN_BINARY, "audit.lean"], ..., timeout=60)`.
-4. Set `contradiction_proven = (returncode == 0 and
-   "polypharmacy_collision : False" in stdout)`.
-5. Return a `VerificationResult` (exit code, stdout, stderr, flag,
-   error_message). The Jinja template chooses one of three banners:
-   `alert-danger` (contradiction proven), `alert-info` (no contradiction),
-   `alert-warning` (compiler missing or timed out).
+4. Scan stdout for the last line matching
+   `^VERDICT: (\w+)(?:\s+(.*))?$` and decode the tag into a four-state
+   `Verdict` enum (`Recommended | Underdetermined | InsufficientData |
+   GenuineConflict`); the second capture group becomes `verdict_detail`.
+5. Return a `VerificationResult` (exit code, stdout, stderr, `verdict`,
+   `verdict_detail`, `error_message`). The Jinja template picks one of
+   five banners: `alert-success` for `Recommended`, `alert-info` for
+   `Underdetermined`, `alert-warning` for `InsufficientData`,
+   `alert-danger` for `GenuineConflict`, and a fallback `alert-warning`
+   when the compiler is missing, timed out, or did not emit a parseable
+   `VERDICT:` marker.
 
 `LEAN_BINARY` is resolved once at import time via `shutil.which("lean")`.
 Override by exporting a different `lean` on PATH or editing the constant.
@@ -119,33 +131,47 @@ class Scenario:
 SCENARIOS: dict[str, Scenario] = {...}   # what the app iterates over
 ```
 
-Each `lean_code` defines an abstract `Patient` type, predicates for the two
-clinical conditions, an `intervention` predicate, observation axioms for the
-specific patient, and two guideline axioms — one mandating the intervention,
-one negating it. The theorem then derives `False` by `exact h_neg h_pos`.
+Each `lean_code` opens its own namespace, opens `ClinicalAudit.Core` (the
+shared core defined in `CORE_LEAN_SOURCE`), defines `rules : List Rule` and
+`chart : Chart` for the patient context, and ends with
+`#eval IO.println s!"VERDICT: {evaluate rules chart}"` so the Lean kernel
+prints the four-state verdict to stdout. Each `Rule` carries an id, a source
+citation, an `appliesWhen : Chart → ThreeValued` precondition, a
+`(DeonticModality × Action)` conclusion, and a `Nat` priority used by
+`evaluate` to resolve disagreements between rules concluding opposite
+modalities on the same action.
 
 ### Adding a new scenario
 
 1. Append a new `Scenario` constant to `scenarios.py` with realistic
-   guideline text and a Lean source string that defines a
-   `theorem polypharmacy_collision : False` inside its own
-   `namespace ClinicalAudit_<id>`.
-2. Add the constant to the `SCENARIOS` dict at the bottom of the module.
-3. Sanity-check the Lean compiles to `False`:
+   guideline text and a `lean_code` string that:
+   - opens a fresh namespace (e.g. `namespace ClinicalAudit.ScenarioD`),
+   - opens the shared core with `open ClinicalAudit.Core`,
+   - defines `def rules : List Rule := [ ... ]` listing the encoded
+     guideline rules with their preconditions, deontic conclusions, and
+     priorities,
+   - defines `def chart : Chart := { lookup := fun obs => match obs with ... }`
+     mapping each observation key the rules reference to a `ThreeValued`
+     value, with `_ => .tUnknown` as the catch-all,
+   - ends with `#eval IO.println s!"VERDICT: {evaluate rules chart}"`,
+   - closes the namespace with `end ClinicalAudit.ScenarioD`.
+2. Add the constant to the `SCENARIOS` dict at the bottom of the module
+   and write a 1–2 sentence `verdict_summary` describing the verdict the
+   verifier should produce.
+3. Sanity-check from the CLI:
    ```bash
    uv run python -c "
    from app import _run_lean
    from scenarios import SCENARIOS
    r = _run_lean(SCENARIOS['<your-id>'])
-   assert r.contradiction_proven, (r.exit_code, r.stdout, r.stderr)
+   print(r.verdict, repr(r.verdict_detail), r.exit_code)
    "
    ```
-4. The sidebar, fragment endpoint, and verify endpoint all pick it up
-   automatically — no template edits required.
-
-The `contradiction_proven` flag depends on the literal substring
-`polypharmacy_collision : False` appearing in the compiler stdout. Keep the
-theorem name stable, or update the check in `app.py:110`.
+4. Optionally add an entry to `scripts/check_scenarios.py` so the
+   regression harness asserts the expected `(verdict, verdict_detail)`
+   pair on every run.
+5. The sidebar, fragment endpoint, and verify endpoint all pick the new
+   scenario up automatically — no template edits required.
 
 ## Common dev tasks
 
@@ -168,12 +194,31 @@ from app import _run_lean
 from scenarios import SCENARIOS
 for sid, sc in SCENARIOS.items():
     r = _run_lean(sc)
-    print(sid, r.contradiction_proven, r.exit_code)
+    print(sid, r.verdict, repr(r.verdict_detail), r.exit_code)
 "
 ```
 
 `static/syntax.css` is overwritten on every app import — don't hand-edit it;
 edit the Pygments style names in `_write_syntax_css()` instead.
+
+## Limitations
+
+- The DSL is hand-curated. There is no automatic translation from
+  natural-language guidelines to `Rule` definitions; encoder discipline is
+  the dominant correctness constraint, and a misencoded precondition or
+  modality will silently produce a wrong verdict.
+- Defeasibility is implemented as naive numeric priority on individual
+  rules, not a real argumentation framework (ASPIC+, defeasible logic
+  programming, Carneades, etc.). The mechanism is adequate for the
+  scenarios in this repository and not much beyond them.
+- There is no separate soundness theorem for `evaluate`. The verification
+  claim is "the Lean kernel typechecks the function definition and reduces
+  it to a concrete `Verdict` for each scenario" — not "the verdict is a
+  sound consequence of the encoded rules under any particular non-monotonic
+  semantics."
+- A two-tier architecture — an external solver (e.g. an ASP engine)
+  emitting a Lean-checkable certificate — is deferred until after the demo
+  stage. Today the entire reasoning step lives inside Lean's reduction.
 
 ## License
 

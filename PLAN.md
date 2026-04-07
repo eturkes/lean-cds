@@ -712,7 +712,7 @@ rather than the no-longer-existent collision.
 
 ## Section 9 — README rewrite
 
-- [ ] **Status**
+- [x] **Status** — Rewrote opening paragraph (verdict-engine framing), `Verification pipeline` subsection (CORE_LEAN_SOURCE concat → audit.lean → parse VERDICT marker → five-banner template choice), data-model prose (rules/chart/`#eval` shape), and `Adding a new scenario` subsection (new lean_code recipe + optional `scripts/check_scenarios.py` entry); updated the `Common dev tasks` CLI loop to print `r.verdict`/`r.verdict_detail`/`r.exit_code`; added a new `## Limitations` section between `Common dev tasks` and `License` covering hand-curation, naive-priority defeasibility, no separate soundness theorem, and the deferred two-tier solver architecture; left the stale `app.py:45` line reference in the unrelated `Syntax highlighting` subsection alone (out of scope per "update only the parts that referenced the old contradiction-based pipeline").
 
 **Goal.** The README markets the system as proving guideline collisions.
 Reframe it to describe the new verdict engine without overclaiming what
