@@ -41,6 +41,10 @@
   --info-soft:      #e7f0fa;
   --info-border:    #b6cfe9;
 
+  --success:        #1e7b40;
+  --success-soft:   #e3f5ec;
+  --success-border: #b6e6c8;
+
   /* Semantic palette for natural-language → Lean mapping. */
   --cds-cond:       #0b4a8a;  /* condition  → has… : Patient → Prop  */
   --cds-find:       #8a5a00;  /* finding    → obs_…                   */
@@ -101,6 +105,10 @@
     --info:           #7eb6ee;
     --info-soft:      #122439;
     --info-border:    #2a4566;
+
+    --success:        #7ee2a8;
+    --success-soft:   #0e2a1c;
+    --success-border: #1f5a3a;
 
     --cds-cond:       #79b8ff;
     --cds-find:       #ffce6f;
@@ -744,6 +752,12 @@ code {
   background: var(--info-soft);
   border-color: var(--info-border);
   color: var(--info);
+}
+
+.alert-success {
+  background: var(--success-soft);
+  border-color: var(--success-border);
+  color: var(--success);
 }
 
 @media (prefers-color-scheme: dark) {

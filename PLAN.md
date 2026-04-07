@@ -582,7 +582,7 @@ on `VerificationResult` with a `verdict` field.
 
 ## Section 7 — Templates: render the four verdict states
 
-- [ ] **Status**
+- [x] **Status** — Replaced `contradiction_proven` block in `_verification_result.html` with five-branch `result.verdict.name`-switched block (`Recommended` → new `alert-success`/check-circle, `Underdetermined` → existing `alert-info`, `InsufficientData` → `alert-warning`, `GenuineConflict` → `alert-danger`, `None` fallback → `alert-warning` "No Verdict Produced"); detail strings rendered inline as `<code>`; terminal stdout/stderr block preserved verbatim; added `--success`/`--success-soft`/`--success-border` CSS variables (light and dark) plus an `.alert-success` rule in `static/styles.css`; `_scenario_panel.html` had no `contradiction_proven`/`collision_summary` references so was left untouched (static prose deferred to Sections 8/9); verified all three scenarios via running `uv run uvicorn app:app` and posting to `/scenarios/{a,b,c}/verify` — each returns the green Recommended banner with the correct action and the live `lean` terminal output.
 
 **Goal.** Update the HTMX result fragment so it renders all four verdict
 states with appropriate visual styling, replacing the old three-banner
