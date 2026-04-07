@@ -29,6 +29,56 @@ class Scenario:
     collision_summary: str
 
 
+CORE_LEAN_SOURCE: str = r"""-- Epistemological Audit: Core DSL types
+-- Defines the deeply-embedded data model used by every scenario.
+
+namespace ClinicalAudit.Core
+
+inductive ThreeValued where
+  | tTrue
+  | tFalse
+  | tUnknown
+  deriving Repr, DecidableEq
+
+abbrev Observation := String
+abbrev Action := String
+
+inductive DeonticModality where
+  | indicated
+  | obligated
+  | contraindicated
+  deriving Repr, DecidableEq
+
+structure Chart where
+  lookup : Observation → ThreeValued
+
+structure Rule where
+  id : String
+  source : String
+  appliesWhen : Chart → ThreeValued
+  conclusion : DeonticModality × Action
+  priority : Nat
+
+inductive Verdict where
+  | recommended (action : Action)
+  | underdetermined (actions : List Action)
+  | insufficientData (missing : List Observation)
+  | genuineConflict (rules : List String)
+
+instance : ToString Verdict where
+  toString := fun
+    | .recommended action => "Recommended " ++ action
+    | .underdetermined actions => "Underdetermined " ++ String.intercalate "," actions
+    | .insufficientData missing => "InsufficientData " ++ String.intercalate "," missing
+    | .genuineConflict rules => "GenuineConflict " ++ String.intercalate "," rules
+
+def evaluate (_rules : List Rule) (_chart : Chart) : Verdict :=
+  Verdict.insufficientData []
+
+end ClinicalAudit.Core
+"""
+
+
 SCENARIO_A = Scenario(
     id="scenario-a",
     title="Hypertension vs. Severe Dehydration",

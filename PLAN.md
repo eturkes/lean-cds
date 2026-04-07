@@ -113,7 +113,7 @@ stdout for the `VERDICT:` line.
 
 ## Section 1 — Lean core: types and DSL skeleton
 
-- [ ] **Status**
+- [x] **Status** — Added `CORE_LEAN_SOURCE` with stub `evaluate`; `ToString Verdict` format is `<Name> <comma-joined-detail>` (e.g. `Recommended HoldThiazideAndRehydrate`, `InsufficientData ` for empty list).
 
 **Goal.** Add the foundational types of the deep-embedded DSL to a new
 module-level constant `CORE_LEAN_SOURCE` in `scenarios.py`. No evaluation
