@@ -519,7 +519,7 @@ so it remains recommended. Exactly one action survives → `Recommended`.
 
 ## Section 6 — Python wrapper: parse the new verdict output
 
-- [ ] **Status**
+- [x] **Status** — Added `Verdict` enum (`enum.Enum` with string values) and `_VERDICT_LINE_RE` regex; replaced `contradiction_proven` with `verdict`/`verdict_detail` fields on `VerificationResult` (early-return error paths now set `verdict=None, verdict_detail=""`); `_run_lean` now concatenates `CORE_LEAN_SOURCE + "\n\n" + scenario.lean_code`; `_parse_verdict` returns the **last** matching `VERDICT:` line (the core's smoke `#eval` always emits one before the scenario fragment runs, so the scenario verdict is always the final match).
 
 **Goal.** Update `app.py` to (a) concatenate `CORE_LEAN_SOURCE` with the
 scenario fragment before invoking Lean, (b) parse the four-state `VERDICT:`

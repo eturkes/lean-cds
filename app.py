@@ -8,6 +8,8 @@ HTMX-driven swap into the page.
 
 from __future__ import annotations
 
+import enum
+import re
 import shutil
 import subprocess
 import tempfile
@@ -24,7 +26,7 @@ from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import Lean4Lexer
 
-from scenarios import SCENARIOS, Scenario
+from scenarios import CORE_LEAN_SOURCE, SCENARIOS, Scenario
 
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
@@ -62,20 +64,51 @@ def _write_syntax_css() -> None:
 _write_syntax_css()
 
 
+class Verdict(enum.Enum):
+    Recommended = "Recommended"
+    Underdetermined = "Underdetermined"
+    InsufficientData = "InsufficientData"
+    GenuineConflict = "GenuineConflict"
+
+
+_VERDICT_LINE_RE = re.compile(r"^VERDICT: (\w+)(?:\s+(.*))?$")
+
+
 @dataclass(frozen=True)
 class VerificationResult:
     exit_code: int
     stdout: str
     stderr: str
-    contradiction_proven: bool
+    verdict: Verdict | None
+    verdict_detail: str
     error_message: str | None
+
+
+def _parse_verdict(stdout: str) -> tuple[Verdict | None, str]:
+    """Scan Lean stdout for the last ``VERDICT:`` marker and decode it.
+
+    The core source emits a smoke ``VERDICT:`` line before the scenario
+    fragment runs, so the scenario's own verdict is always the final match.
+    """
+    last: tuple[Verdict | None, str] | None = None
+    for line in stdout.splitlines():
+        match = _VERDICT_LINE_RE.match(line)
+        if match is None:
+            continue
+        tag, detail = match.group(1), match.group(2) or ""
+        try:
+            last = (Verdict[tag], detail)
+        except KeyError:
+            last = (None, "")
+    return last if last is not None else (None, "")
 
 
 def _run_lean(scenario: Scenario) -> VerificationResult:
     """Write the scenario's Lean source to a temp file and run the compiler."""
+    source = CORE_LEAN_SOURCE + "\n\n" + scenario.lean_code
     with tempfile.TemporaryDirectory(prefix="lean-cds-") as tmpdir:
         audit_path = Path(tmpdir) / "audit.lean"
-        audit_path.write_text(scenario.lean_code, encoding="utf-8")
+        audit_path.write_text(source, encoding="utf-8")
         try:
             completed = subprocess.run(
                 [LEAN_BINARY, str(audit_path)],
@@ -89,7 +122,8 @@ def _run_lean(scenario: Scenario) -> VerificationResult:
                 exit_code=-1,
                 stdout="",
                 stderr="",
-                contradiction_proven=False,
+                verdict=None,
+                verdict_detail="",
                 error_message=(
                     "The Lean 4 compiler executable was not found on this "
                     "system. Install Lean via elan and ensure it is on PATH."
@@ -100,22 +134,21 @@ def _run_lean(scenario: Scenario) -> VerificationResult:
                 exit_code=-1,
                 stdout="",
                 stderr="",
-                contradiction_proven=False,
+                verdict=None,
+                verdict_detail="",
                 error_message=(
                     f"Lean verification exceeded the {LEAN_TIMEOUT_SECONDS}s "
                     "time limit."
                 ),
             )
 
-    contradiction_proven = (
-        completed.returncode == 0
-        and "polypharmacy_collision : False" in completed.stdout
-    )
+    verdict, verdict_detail = _parse_verdict(completed.stdout)
     return VerificationResult(
         exit_code=completed.returncode,
         stdout=completed.stdout,
         stderr=completed.stderr,
-        contradiction_proven=contradiction_proven,
+        verdict=verdict,
+        verdict_detail=verdict_detail,
         error_message=None,
     )
 
