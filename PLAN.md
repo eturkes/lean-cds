@@ -277,7 +277,7 @@ and a smoke `#eval` returns a sensible verdict on a tiny synthetic input.
 
 ## Section 3 — Encode Scenario A in the new framework
 
-- [ ] **Status**
+- [x] **Status** — Rewrote `SCENARIO_A.lean_code` with three rules (AHA-ACC priority 1, two KDIGO rules priority 2) under `namespace ClinicalAudit.ScenarioA`; chart sets `HemodynamicallyStable := tFalse` so the AHA rule is inert and the verdict resolves to `Recommended HoldThiazideAndRehydrate`.
 
 **Goal.** Rewrite `SCENARIO_A.lean_code` so it (a) consumes the
 `CORE_LEAN_SOURCE` types and `evaluate`, (b) faithfully encodes the AHA/ACC

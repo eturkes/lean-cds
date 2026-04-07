@@ -198,43 +198,48 @@ SCENARIO_A = Scenario(
     lean_code=r"""-- Epistemological Audit: Scenario A
 -- Hypertension (AHA/ACC) vs. Severe Dehydration (KDIGO)
 
-namespace ClinicalAudit_ScenarioA
+namespace ClinicalAudit.ScenarioA
 
--- Universe of patients and the specific patient under review.
-axiom Patient : Type
-axiom thePatient : Patient
+open ClinicalAudit.Core
 
--- Clinical predicates extracted from the patient's chart.
-axiom hasEssentialHypertension     : Patient → Prop
-axiom hasSevereDehydration         : Patient → Prop
-axiom administerThiazideDiuretic   : Patient → Prop
+def rules : List Rule := [
+  { id := "AHA-ACC-HTN-8.1.5",
+    source := "AHA/ACC HTN §8.1.5",
+    appliesWhen := fun chart =>
+      match chart.lookup "EssentialHypertension", chart.lookup "HemodynamicallyStable" with
+      | .tTrue, .tTrue => .tTrue
+      | _, _ => .tFalse,
+    conclusion := (.indicated, "ThiazideDiuretic"),
+    priority := 1 },
+  { id := "KDIGO-AKI-3.1.2-neg",
+    source := "KDIGO AKI §3.1.2",
+    appliesWhen := fun chart =>
+      match chart.lookup "SevereDehydration" with
+      | .tTrue => .tTrue
+      | _ => .tFalse,
+    conclusion := (.contraindicated, "ThiazideDiuretic"),
+    priority := 2 },
+  { id := "KDIGO-AKI-3.1.2-pos",
+    source := "KDIGO AKI §3.1.2",
+    appliesWhen := fun chart =>
+      match chart.lookup "SevereDehydration" with
+      | .tTrue => .tTrue
+      | _ => .tFalse,
+    conclusion := (.indicated, "HoldThiazideAndRehydrate"),
+    priority := 2 }
+]
 
--- Observed clinical findings for thePatient.
-axiom obs_EssentialHypertension : hasEssentialHypertension thePatient
-axiom obs_SevereDehydration : hasSevereDehydration thePatient
+def chart : Chart :=
+  { lookup := fun obs =>
+      match obs with
+      | "EssentialHypertension" => .tTrue
+      | "HemodynamicallyStable" => .tFalse
+      | "SevereDehydration" => .tTrue
+      | _ => .tUnknown }
 
--- Guideline 1: AHA/ACC Hypertension Section 8.1.5
--- "Thiazide diuretic indicated for essential hypertension."
-axiom guideline_AHA_ACC_HTN :
-  ∀ (p : Patient), hasEssentialHypertension p → administerThiazideDiuretic p
+#eval IO.println s!"VERDICT: {evaluate rules chart}"
 
--- Guideline 2: KDIGO AKI Recommendation 3.1.2
--- "Diuretics absolutely contraindicated in severe dehydration."
-axiom guideline_KDIGO_Dehydration :
-  ∀ (p : Patient), hasSevereDehydration p → ¬ administerThiazideDiuretic p
-
--- Theorem: the two guidelines are jointly inconsistent on thePatient.
-theorem polypharmacy_collision : False := by
-  have h_recommend : administerThiazideDiuretic thePatient :=
-    guideline_AHA_ACC_HTN thePatient obs_EssentialHypertension
-  have h_contraindicate : ¬ administerThiazideDiuretic thePatient :=
-    guideline_KDIGO_Dehydration thePatient obs_SevereDehydration
-  exact h_contraindicate h_recommend
-
-#check @polypharmacy_collision
-#print axioms polypharmacy_collision
-
-end ClinicalAudit_ScenarioA
+end ClinicalAudit.ScenarioA
 """,
 )
 
