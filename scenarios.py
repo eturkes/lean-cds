@@ -308,37 +308,48 @@ SCENARIO_B = Scenario(
     lean_code=r"""-- Epistemological Audit: Scenario B
 -- Diabetic Ketoacidosis (ADA) vs. Severe Hypokalemia (AACE/ACE)
 
-namespace ClinicalAudit_ScenarioB
+namespace ClinicalAudit.ScenarioB
 
-axiom Patient : Type
-axiom thePatient : Patient
+open ClinicalAudit.Core
 
-axiom hasDiabeticKetoacidosis    : Patient → Prop
-axiom hasSevereHypokalemia       : Patient → Prop
-axiom administerIVRegularInsulin : Patient → Prop
+def rules : List Rule := [
+  { id := "ADA-DKA-Sec16",
+    source := "ADA Standards §16",
+    appliesWhen := fun chart =>
+      match chart.lookup "DiabeticKetoacidosis", chart.lookup "SerumKAtLeast33" with
+      | .tTrue, .tTrue => .tTrue
+      | _, _ => .tFalse,
+    conclusion := (.obligated, "IVRegularInsulin"),
+    priority := 1 },
+  { id := "AACE-ACE-Hypo-neg",
+    source := "AACE/ACE CSR-4",
+    appliesWhen := fun chart =>
+      match chart.lookup "SevereHypokalemia" with
+      | .tTrue => .tTrue
+      | _ => .tFalse,
+    conclusion := (.contraindicated, "IVRegularInsulin"),
+    priority := 2 },
+  { id := "AACE-ACE-Hypo-pos",
+    source := "AACE/ACE CSR-4",
+    appliesWhen := fun chart =>
+      match chart.lookup "SevereHypokalemia" with
+      | .tTrue => .tTrue
+      | _ => .tFalse,
+    conclusion := (.indicated, "RepleteKThenStartInsulin"),
+    priority := 2 }
+]
 
-axiom obs_DiabeticKetoacidosis : hasDiabeticKetoacidosis thePatient
-axiom obs_SevereHypokalemia    : hasSevereHypokalemia thePatient
+def chart : Chart :=
+  { lookup := fun obs =>
+      match obs with
+      | "DiabeticKetoacidosis" => .tTrue
+      | "SerumKAtLeast33" => .tFalse
+      | "SevereHypokalemia" => .tTrue
+      | _ => .tUnknown }
 
--- Guideline 1: ADA Standards of Care, Section 16
-axiom guideline_ADA_DKA :
-  ∀ (p : Patient), hasDiabeticKetoacidosis p → administerIVRegularInsulin p
+#eval IO.println s!"VERDICT: {evaluate rules chart}"
 
--- Guideline 2: AACE/ACE Critical Safety Recommendation 4
-axiom guideline_AACE_Hypokalemia :
-  ∀ (p : Patient), hasSevereHypokalemia p → ¬ administerIVRegularInsulin p
-
-theorem polypharmacy_collision : False := by
-  have h_recommend : administerIVRegularInsulin thePatient :=
-    guideline_ADA_DKA thePatient obs_DiabeticKetoacidosis
-  have h_contraindicate : ¬ administerIVRegularInsulin thePatient :=
-    guideline_AACE_Hypokalemia thePatient obs_SevereHypokalemia
-  exact h_contraindicate h_recommend
-
-#check @polypharmacy_collision
-#print axioms polypharmacy_collision
-
-end ClinicalAudit_ScenarioB
+end ClinicalAudit.ScenarioB
 """,
 )
 

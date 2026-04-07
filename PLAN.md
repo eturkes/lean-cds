@@ -366,7 +366,7 @@ yet committed to a format, document it in this section's status line.)
 
 ## Section 4 — Encode Scenario B in the new framework
 
-- [ ] **Status**
+- [x] **Status** — Rewrote `SCENARIO_B.lean_code` with three rules under `namespace ClinicalAudit.ScenarioB`; ADA precondition restored (`appliesWhen` references both `DiabeticKetoacidosis` and `SerumKAtLeast33`); chart sets `SerumKAtLeast33 := tFalse` so the ADA rule is inert and the verdict resolves to `Recommended RepleteKThenStartInsulin`.
 
 **Goal.** Rewrite `SCENARIO_B.lean_code` to faithfully encode the ADA and
 AACE/ACE guidelines, **including the in-document `serumK ≥ 3.3`
