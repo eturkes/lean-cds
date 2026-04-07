@@ -31,13 +31,13 @@ class Scenario:
 
 SCENARIO_A = Scenario(
     id="scenario-a",
-    title="Hypertension vs. Severe Volume Depletion",
+    title="Hypertension vs. Severe Dehydration",
     subtitle="Thiazide diuretic — recommended and contraindicated",
     patient_summary=(
         "72-year-old patient with a 15-year history of essential hypertension "
         "presenting to the emergency department with acute gastroenteritis, "
         "hypotension (BP 84/52), tachycardia, oliguria, BUN/Cr ratio 28:1, and "
-        "clinical signs of severe intravascular volume depletion."
+        "clinical signs of severe dehydration."
     ),
     guideline_a=Guideline(
         source="AHA/ACC/AHA Guideline for the Prevention, Detection, "
@@ -61,7 +61,7 @@ SCENARIO_A = Scenario(
                "Recommendation 3.1.2 (Volume Status Management)",
         body=(
             "In any patient exhibiting clinical evidence of severe "
-            "intravascular volume depletion \u2014 including frank "
+            "dehydration \u2014 including frank "
             "hypotension, sinus tachycardia, oliguria (<0.5 mL/kg/h), an "
             "elevated BUN-to-creatinine ratio (>20:1), and laboratory or "
             "physical findings of end-organ hypoperfusion \u2014 the "
@@ -76,11 +76,11 @@ SCENARIO_A = Scenario(
     collision_summary=(
         "The AHA/ACC hypertension guideline mandates thiazide therapy for "
         "this patient, while KDIGO absolutely contraindicates the same agent "
-        "in the presence of severe volume depletion. The two recommendations "
+        "in the presence of severe dehydration. The two recommendations "
         "are mutually exclusive."
     ),
     lean_code=r"""-- Epistemological Audit: Scenario A
--- Hypertension (AHA/ACC) vs. Severe Volume Depletion (KDIGO)
+-- Hypertension (AHA/ACC) vs. Severe Dehydration (KDIGO)
 
 namespace ClinicalAudit_ScenarioA
 
@@ -90,12 +90,12 @@ axiom thePatient : Patient
 
 -- Clinical predicates extracted from the patient's chart.
 axiom hasEssentialHypertension     : Patient → Prop
-axiom hasSevereVolumeDepletion     : Patient → Prop
+axiom hasSevereDehydration         : Patient → Prop
 axiom administerThiazideDiuretic   : Patient → Prop
 
 -- Observed clinical findings for thePatient.
 axiom obs_EssentialHypertension : hasEssentialHypertension thePatient
-axiom obs_SevereVolumeDepletion : hasSevereVolumeDepletion thePatient
+axiom obs_SevereDehydration : hasSevereDehydration thePatient
 
 -- Guideline 1: AHA/ACC Hypertension Section 8.1.5
 -- "Thiazide diuretic indicated for essential hypertension."
@@ -103,16 +103,16 @@ axiom guideline_AHA_ACC_HTN :
   ∀ (p : Patient), hasEssentialHypertension p → administerThiazideDiuretic p
 
 -- Guideline 2: KDIGO AKI Recommendation 3.1.2
--- "Diuretics absolutely contraindicated in severe volume depletion."
-axiom guideline_KDIGO_VolumeDepletion :
-  ∀ (p : Patient), hasSevereVolumeDepletion p → ¬ administerThiazideDiuretic p
+-- "Diuretics absolutely contraindicated in severe dehydration."
+axiom guideline_KDIGO_Dehydration :
+  ∀ (p : Patient), hasSevereDehydration p → ¬ administerThiazideDiuretic p
 
 -- Theorem: the two guidelines are jointly inconsistent on thePatient.
 theorem polypharmacy_collision : False := by
   have h_recommend : administerThiazideDiuretic thePatient :=
     guideline_AHA_ACC_HTN thePatient obs_EssentialHypertension
   have h_contraindicate : ¬ administerThiazideDiuretic thePatient :=
-    guideline_KDIGO_VolumeDepletion thePatient obs_SevereVolumeDepletion
+    guideline_KDIGO_Dehydration thePatient obs_SevereDehydration
   exact h_contraindicate h_recommend
 
 #check @polypharmacy_collision
