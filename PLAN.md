@@ -182,7 +182,7 @@ returns `Verdict.insufficientData []`. Section 2 will replace the stub.
 
 ## Section 2 — Lean core: evaluation engine
 
-- [ ] **Status**
+- [x] **Status** — Implemented `evaluate` with `isPositiveModality`/`isNegativeModality`/`maxPriority`/`dedupActions` helpers; per step 4 simplification, `InsufficientData` always returns an empty `missing` list (no observation-key extraction from opaque `appliesWhen`); smoke `#eval` uses a `smokeUnknownChart` helper to avoid nested-brace ambiguity inside `s!`.
 
 **Goal.** Replace the Section 1 stub `evaluate` with a real implementation
 that produces each of the four `Verdict` cases according to the semantics

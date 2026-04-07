@@ -72,8 +72,59 @@ instance : ToString Verdict where
     | .insufficientData missing => "InsufficientData " ++ String.intercalate "," missing
     | .genuineConflict rules => "GenuineConflict " ++ String.intercalate "," rules
 
-def evaluate (_rules : List Rule) (_chart : Chart) : Verdict :=
-  Verdict.insufficientData []
+def isPositiveModality : DeonticModality → Bool
+  | .indicated => true
+  | .obligated => true
+  | .contraindicated => false
+
+def isNegativeModality : DeonticModality → Bool
+  | .contraindicated => true
+  | _ => false
+
+def maxPriority (rs : List Rule) : Nat :=
+  rs.foldr (fun r acc => Nat.max r.priority acc) 0
+
+def dedupActions (xs : List Action) : List Action :=
+  xs.foldr (fun x acc => if acc.contains x then acc else x :: acc) []
+
+def evaluate (rules : List Rule) (chart : Chart) : Verdict :=
+  let fired := rules.filter (fun r =>
+    match r.appliesWhen chart with
+    | .tTrue => true
+    | _ => false)
+  let allActions := dedupActions (fired.map (fun r => r.conclusion.snd))
+  let analyze : Action → (List Action × List String) → (List Action × List String) :=
+    fun a acc =>
+      let pos := fired.filter (fun r =>
+        isPositiveModality r.conclusion.fst && r.conclusion.snd == a)
+      let neg := fired.filter (fun r =>
+        isNegativeModality r.conclusion.fst && r.conclusion.snd == a)
+      match pos, neg with
+      | [], _ => acc
+      | _ :: _, [] => (a :: acc.fst, acc.snd)
+      | _ :: _, _ :: _ =>
+        let mp := maxPriority pos
+        let mn := maxPriority neg
+        if mp > mn then (a :: acc.fst, acc.snd)
+        else if mn > mp then acc
+        else
+          let posIds := (pos.filter (fun r => r.priority == mp)).map Rule.id
+          let negIds := (neg.filter (fun r => r.priority == mn)).map Rule.id
+          (acc.fst, posIds ++ negIds ++ acc.snd)
+  let result : List Action × List String := allActions.foldr analyze ([], [])
+  let recommendedActions := result.fst
+  let conflictIds := result.snd
+  match conflictIds with
+  | _ :: _ => Verdict.genuineConflict conflictIds
+  | [] =>
+    match recommendedActions with
+    | [] => Verdict.insufficientData []
+    | [a] => Verdict.recommended a
+    | _ => Verdict.underdetermined recommendedActions
+
+def smokeUnknownChart : Chart := { lookup := fun _ => ThreeValued.tUnknown }
+
+#eval IO.println s!"VERDICT: {evaluate [] smokeUnknownChart}"
 
 end ClinicalAudit.Core
 """
