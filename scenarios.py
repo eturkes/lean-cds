@@ -417,37 +417,47 @@ SCENARIO_C = Scenario(
     lean_code=r"""-- Epistemological Audit: Scenario C
 -- Acute Panic Disorder (APA) vs. Severe Obstructive Sleep Apnea (AASM)
 
-namespace ClinicalAudit_ScenarioC
+namespace ClinicalAudit.ScenarioC
 
-axiom Patient : Type
-axiom thePatient : Patient
+open ClinicalAudit.Core
 
-axiom hasAcutePanicEpisode     : Patient → Prop
-axiom hasUntreatedSevereOSA    : Patient → Prop
-axiom administerBenzodiazepine : Patient → Prop
+def rules : List Rule := [
+  { id := "APA-Panic-Benzo",
+    source := "APA Panic Disorder",
+    appliesWhen := fun chart =>
+      match chart.lookup "AcutePanicEpisode" with
+      | .tTrue => .tTrue
+      | _ => .tFalse,
+    conclusion := (.indicated, "Benzodiazepine"),
+    priority := 1 },
+  { id := "APA-Panic-NonBenzo",
+    source := "APA Panic Disorder",
+    appliesWhen := fun chart =>
+      match chart.lookup "AcutePanicEpisode" with
+      | .tTrue => .tTrue
+      | _ => .tFalse,
+    conclusion := (.indicated, "NonBenzoAnxiolytic"),
+    priority := 1 },
+  { id := "AASM-OSA-Benzo-neg",
+    source := "AASM OSA Pharm Safety",
+    appliesWhen := fun chart =>
+      match chart.lookup "UntreatedSevereOSA" with
+      | .tTrue => .tTrue
+      | _ => .tFalse,
+    conclusion := (.contraindicated, "Benzodiazepine"),
+    priority := 2 }
+]
 
-axiom obs_AcutePanicEpisode  : hasAcutePanicEpisode thePatient
-axiom obs_UntreatedSevereOSA : hasUntreatedSevereOSA thePatient
+def chart : Chart :=
+  { lookup := fun obs =>
+      match obs with
+      | "AcutePanicEpisode" => .tTrue
+      | "UntreatedSevereOSA" => .tTrue
+      | _ => .tUnknown }
 
--- Guideline 1: APA Practice Guideline, Acute Episode Management
-axiom guideline_APA_PanicDisorder :
-  ∀ (p : Patient), hasAcutePanicEpisode p → administerBenzodiazepine p
+#eval IO.println s!"VERDICT: {evaluate rules chart}"
 
--- Guideline 2: AASM OSA Pharmacologic Safety Statement
-axiom guideline_AASM_OSA :
-  ∀ (p : Patient), hasUntreatedSevereOSA p → ¬ administerBenzodiazepine p
-
-theorem polypharmacy_collision : False := by
-  have h_recommend : administerBenzodiazepine thePatient :=
-    guideline_APA_PanicDisorder thePatient obs_AcutePanicEpisode
-  have h_contraindicate : ¬ administerBenzodiazepine thePatient :=
-    guideline_AASM_OSA thePatient obs_UntreatedSevereOSA
-  exact h_contraindicate h_recommend
-
-#check @polypharmacy_collision
-#print axioms polypharmacy_collision
-
-end ClinicalAudit_ScenarioC
+end ClinicalAudit.ScenarioC
 """,
 )
 

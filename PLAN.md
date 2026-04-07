@@ -448,7 +448,7 @@ VERDICT: Recommended RepleteKThenStartInsulin
 
 ## Section 5 — Encode Scenario C in the new framework
 
-- [ ] **Status**
+- [x] **Status** — Rewrote `SCENARIO_C.lean_code` with three rules under `namespace ClinicalAudit.ScenarioC` (two APA rules priority 1: `indicated Benzodiazepine` and `indicated NonBenzoAnxiolytic`; one AASM rule priority 2: `contraindicated Benzodiazepine`); chart sets both `AcutePanicEpisode` and `UntreatedSevereOSA` to `tTrue` so all three rules fire and priority 2 > 1 forbids `Benzodiazepine`, leaving the verdict `Recommended NonBenzoAnxiolytic`.
 
 **Goal.** Rewrite `SCENARIO_C.lean_code` so the APA recommendation for
 benzodiazepines is encoded as `indicated` (a first-line option), an
