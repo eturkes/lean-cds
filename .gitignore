@@ -1,0 +1,35 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Lean / Lake build artifacts
+.lake/
+lake-packages/
+*.olean
+
+# Runtime artifacts (audit.lean is written to a tempdir, but be defensive)
+/audit.lean
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.*
+!.env.example

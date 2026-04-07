@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Verifiable Clinical Decision Support · Epistemological Audit</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/syntax.css" />
+  <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22">
+          <path fill="currentColor" d="M12 2 4 6v6c0 5 3.4 9.5 8 10 4.6-.5 8-5 8-10V6l-8-4Zm-1 14-4-4 1.4-1.4L11 13.2l5.6-5.6L18 9l-7 7Z"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Verifiable Clinical Decision Support</h1>
+        <p class="tagline">Epistemological Audit · Formal Polypharmacy Collision Detection</p>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span class="meta-pill">Guideline Collision Gallery</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar" aria-label="Clinical scenarios">
+      <h2 class="sidebar-title">Clinical Scenarios</h2>
+      <nav class="scenario-list">
+        {% for s in scenarios %}
+        <button type="button"
+                class="scenario-item{% if s.id == scenario.id %} is-active{% endif %}"
+                hx-get="/scenarios/{{ s.id }}"
+                hx-target="#scenario-panel"
+                hx-swap="innerHTML"
+                hx-on::after-request="document.querySelectorAll('.scenario-item').forEach(el => el.classList.remove('is-active')); this.classList.add('is-active');">
+          <span class="scenario-letter">{{ loop.index | string }}</span>
+          <span class="scenario-text">
+            <span class="scenario-name">{{ s.title }}</span>
+            <span class="scenario-sub">{{ s.subtitle }}</span>
+          </span>
+        </button>
+        {% endfor %}
+      </nav>
+      <footer class="sidebar-footer">
+        <p class="sidebar-note">
+          Each scenario encodes two published clinical guidelines whose
+          recommendations collide on a single patient context. The
+          formal verification engine attempts to derive a logical
+          contradiction from the encoded axioms.
+        </p>
+      </footer>
+    </aside>
+
+    <section id="scenario-panel" class="scenario-panel">
+      {% include "_scenario_panel.html" %}
+    </section>
+  </main>
+</body>
+</html>
