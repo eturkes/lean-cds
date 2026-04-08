@@ -1,20 +1,3 @@
-/-
-  ScenarioB.lean — Diabetic ketoacidosis (ADA) vs. severe hypokalaemia
-  (AACE/ACE).
-
-  34-year-old patient with type 1 diabetes presents in DKA (plasma glucose
-  612 mg/dL, arterial pH 7.18, HCO₃⁻ 9 mEq/L, anion gap 28, moderate
-  ketonuria) with a measured serum potassium of 2.9 mEq/L. The ADA
-  Standards of Care indicate IV regular insulin for DKA; the AACE/ACE
-  Critical Safety Recommendation contraindicates insulin until potassium
-  has been repleted to ≥ 3.3 mEq/L. The literal reading of the ADA rule
-  fires before the precondition is satisfied, producing a deontic
-  collision on the same patient.
-
-  This file proves, by tactic, that the encoded axioms entail a deontic
-  contradiction on `JaneRoe` and therefore `False`.
--/
-
 import MedicalKnowledge
 
 namespace ClinicalAudit.ScenarioB

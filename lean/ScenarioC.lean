@@ -1,20 +1,3 @@
-/-
-  ScenarioC.lean — Acute panic disorder (APA) vs. severe untreated
-  obstructive sleep apnoea (AASM).
-
-  58-year-old patient with polysomnography-confirmed severe OSA
-  (AHI 42 events/hour, nadir SpO₂ 78%) not yet established on PAP
-  therapy presents to the ED in an acute, debilitating panic episode
-  unresponsive to verbal de-escalation. The APA panic-disorder guideline
-  indicates a short-acting benzodiazepine; the AASM OSA pharmacologic-
-  safety statement contraindicates benzodiazepines in untreated severe
-  OSA. The two recommendations apply to the same patient and produce a
-  deontic collision.
-
-  This file proves, by tactic, that the encoded axioms entail a deontic
-  contradiction on `RichardRoe` and therefore `False`.
--/
-
 import MedicalKnowledge
 
 namespace ClinicalAudit.ScenarioC
