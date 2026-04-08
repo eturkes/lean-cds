@@ -854,14 +854,6 @@ code {
   white-space: nowrap;
 }
 
-.decoder-list dt code.decoder-symbol {
-  color: var(--danger);
-  background: var(--danger-soft);
-  border-color: var(--danger-border);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
 .decoder-list dd {
   margin: 3px 0 0;
   font-size: 12.5px;
@@ -890,11 +882,6 @@ code {
   .decoder-list dt code {
     background: rgba(126, 178, 238, 0.08);
     color: var(--accent-strong);
-  }
-  .decoder-list dt code.decoder-symbol {
-    background: rgba(240, 138, 131, 0.12);
-    color: var(--danger-strong);
-    border-color: var(--danger-border);
   }
 }
 
