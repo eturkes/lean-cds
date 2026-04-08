@@ -97,6 +97,7 @@
 <section class="terminal" aria-label="Lean compiler output">
   <header class="terminal-header">
     <span class="terminal-title">$ lean {{ scenario.lean_filename }}</span>
+    <span class="terminal-hint" aria-hidden="true">live evaluation of the .lean file</span>
   </header>
   <pre class="terminal-body"><code>{%- if result.stdout -%}{{ result.stdout }}{%- endif -%}{%- if result.stderr %}
 {{ result.stderr }}{%- endif -%}{%- if not result.stdout and not result.stderr -%}(no output captured){%- endif -%}</code></pre>
