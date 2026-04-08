@@ -45,18 +45,21 @@
           <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 5h2v2h-2V7Zm0 4h2v6h-2v-6Z"/>
         </svg>
       </span>
-      <div class="syntax-decoder-title-block">
+      <div class="syntax-decoder-text">
         <h3 id="syntax-decoder-heading" class="syntax-decoder-title">Reading this Lean proof</h3>
-        <p class="syntax-decoder-sub">
-          No Lean or programming background needed. The groups below
-          are a quick overview; every underlined
-          <span class="lean-tip-demo">symbol</span>
-          <em>and</em> every underlined
-          <span class="lean-tip-demo">phrase</span>
-          in the code has a hover tooltip written specifically for its
-          line — the name being declared, the claim being proved, the
-          guideline axiom being applied to this patient.
-        </p>
+        <div class="syntax-decoder-paragraphs">
+          <p class="syntax-decoder-sub">
+            No Lean or programming background needed. The groups below
+            are a quick overview; every underlined
+            <span class="lean-tip-demo">symbol</span>
+            <em>and</em> every underlined
+            <span class="lean-tip-demo">phrase</span>
+            in the code has a hover tooltip written specifically for its
+            line — the name being declared, the claim being proved, the
+            guideline axiom being applied to this patient.
+          </p>
+          <p class="syntax-decoder-sub syntax-decoder-summary">{{ scenario.audit_summary | safe }}</p>
+        </div>
       </div>
     </header>
 
@@ -169,8 +172,6 @@
           {{ highlighted_lean | safe }}
         </div>
       </div>
-
-      <p class="audit-summary">{{ scenario.audit_summary | safe }}</p>
     </section>
   </div>
 

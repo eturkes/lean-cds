@@ -108,7 +108,8 @@ SCENARIO_A = Scenario(
     ),
     lean_filename="ScenarioA.lean",
     audit_summary=(
-        "Lean proves <code>Indicated JohnDoe ThiazideDiuretic \u2227 "
+        "The Lean 4 Formalization below proves "
+        "<code>Indicated JohnDoe ThiazideDiuretic \u2227 "
         "Contraindicated JohnDoe ThiazideDiuretic</code> from the AHA/ACC "
         "and KDIGO axioms, then derives <code>False</code> via "
         "<code>incompatible_modalities</code>. The kernel-trusted axiom "
@@ -185,7 +186,8 @@ SCENARIO_B = Scenario(
     ),
     lean_filename="ScenarioB.lean",
     audit_summary=(
-        "Lean proves <code>Indicated JaneRoe IVRegularInsulin \u2227 "
+        "The Lean 4 Formalization below proves "
+        "<code>Indicated JaneRoe IVRegularInsulin \u2227 "
         "Contraindicated JaneRoe IVRegularInsulin</code> from the ADA and "
         "AACE/ACE axioms, then derives <code>False</code> via "
         "<code>incompatible_modalities</code>. The literal reading of the "
@@ -262,7 +264,8 @@ SCENARIO_C = Scenario(
     ),
     lean_filename="ScenarioC.lean",
     audit_summary=(
-        "Lean proves <code>Indicated RichardRoe Benzodiazepine \u2227 "
+        "The Lean 4 Formalization below proves "
+        "<code>Indicated RichardRoe Benzodiazepine \u2227 "
         "Contraindicated RichardRoe Benzodiazepine</code> from the APA and "
         "AASM axioms, then derives <code>False</code> via "
         "<code>incompatible_modalities</code>. The audit surfaces the "
