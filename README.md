@@ -56,6 +56,8 @@ Verification**.
 .
 ├── app.py                          # Litestar app + Lean subprocess wrapper
 ├── scenarios.py                    # Scenario metadata and ID → .lean filename map
+├── lean_decorate.py                # Pygments → per-line tooltip HTML renderer
+├── lean_vocab.py                   # Plain-English glosses for every MedicalKnowledge symbol
 ├── lean/
 │   ├── MedicalKnowledge.lean       # Shared knowledge base: types, predicates, axioms
 │   ├── ScenarioA.lean              # Hypertension vs. severe dehydration proof
