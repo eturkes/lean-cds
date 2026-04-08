@@ -110,15 +110,15 @@
 
           <dt><code>·</code></dt>
           <dd>Bullet that starts the next sub-goal left open by an earlier tactic.</dd>
-
-          <dt><code>And.intro</code></dt>
-          <dd>To prove “P and Q”, supply a proof of P and a proof of Q.</dd>
         </dl>
       </article>
 
       <article class="decoder-group">
-        <h4 class="decoder-group-title">Audit target</h4>
+        <h4 class="decoder-group-title">Contradiction</h4>
         <dl class="decoder-list">
+          <dt><code>And.intro</code></dt>
+          <dd>Constructor for “P and Q” — supply a proof of P and a proof of Q. Used here to assemble the <code>Indicated ∧ Contraindicated</code> collision.</dd>
+
           <dt><code>False</code></dt>
           <dd>The proposition that is never true. Proving it means the axioms contradict each other.</dd>
 
