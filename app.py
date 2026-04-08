@@ -56,7 +56,32 @@ _FORMATTER = HtmlFormatter(nowrap=False, cssclass="lean-code", noclasses=False)
 # match against the output of `pygments.highlight`, so we never accidentally
 # annotate other identifiers (e.g. `absurd_helper`) — Pygments emits each
 # identifier as its own `<span class="n">…</span>` block.
+#
+# The goal of this map is that a reader with *no* Lean / functional
+# programming / formal verification background can hover every piece of
+# syntax that is not self-explanatory and get a plain-English reading.
+# The companion "Reading this Lean proof" decoder panel in
+# `_scenario_panel.html` gives an always-visible summary of the same
+# keys for readers who would rather scan than hover.
 _LEAN_TOOLTIP_DECORATIONS: tuple[tuple[str, str], ...] = (
+    # ---- File structure ----------------------------------------------------
+    (
+        '<span class="kn">import</span>',
+        '<span class="kn lean-tip" data-lean-tip="import" tabindex="0">import</span>',
+    ),
+    (
+        '<span class="kn">namespace</span>',
+        '<span class="kn lean-tip" data-lean-tip="namespace" tabindex="0">namespace</span>',
+    ),
+    (
+        '<span class="kn">open</span>',
+        '<span class="kn lean-tip" data-lean-tip="open" tabindex="0">open</span>',
+    ),
+    (
+        '<span class="kn">end</span>',
+        '<span class="kn lean-tip" data-lean-tip="end" tabindex="0">end</span>',
+    ),
+    # ---- Declarations ------------------------------------------------------
     (
         '<span class="kn">axiom</span>',
         '<span class="kn lean-tip" data-lean-tip="axiom" tabindex="0">axiom</span>',
@@ -65,23 +90,59 @@ _LEAN_TOOLTIP_DECORATIONS: tuple[tuple[str, str], ...] = (
         '<span class="kn">theorem</span>',
         '<span class="kn lean-tip" data-lean-tip="theorem" tabindex="0">theorem</span>',
     ),
+    # `:=` must be rewritten *before* `:` so the longer operator is not
+    # accidentally chewed up by the shorter one. Python's str.replace is
+    # a literal substring search, and `<span class="o">:</span>` is not
+    # a substring of `<span class="o">:=</span>` — but ordering the long
+    # form first keeps the intent obvious if someone tweaks the markers.
     (
-        '<span class="n">absurd</span>',
-        '<span class="n lean-tip" data-lean-tip="absurd" tabindex="0">absurd</span>',
+        '<span class="o">:=</span>',
+        '<span class="o lean-tip" data-lean-tip="coloneq" tabindex="0">:=</span>',
     ),
     (
-        '<span class="n">exact</span>',
-        '<span class="n lean-tip" data-lean-tip="exact" tabindex="0">exact</span>',
+        '<span class="o">:</span>',
+        '<span class="o lean-tip" data-lean-tip="colon" tabindex="0">:</span>',
+    ),
+    # ---- Proof tactics -----------------------------------------------------
+    (
+        '<span class="k">by</span>',
+        '<span class="k lean-tip" data-lean-tip="by" tabindex="0">by</span>',
+    ),
+    (
+        '<span class="n">unfold</span>',
+        '<span class="n lean-tip" data-lean-tip="unfold" tabindex="0">unfold</span>',
     ),
     (
         '<span class="n">apply</span>',
         '<span class="n lean-tip" data-lean-tip="apply" tabindex="0">apply</span>',
     ),
     (
+        '<span class="n">exact</span>',
+        '<span class="n lean-tip" data-lean-tip="exact" tabindex="0">exact</span>',
+    ),
+    (
+        '<span class="bp">·</span>',
+        '<span class="bp lean-tip" data-lean-tip="bullet" tabindex="0">·</span>',
+    ),
+    (
         '<span class="n">And</span><span class="bp">.</span><span class="n">intro</span>',
         '<span class="lean-tip lean-tip-compound" data-lean-tip="and-intro" '
         'tabindex="0"><span class="n">And</span><span class="bp">.</span>'
         '<span class="n">intro</span></span>',
+    ),
+    # ---- Audit target & meta ----------------------------------------------
+    (
+        '<span class="n">False</span>',
+        '<span class="n lean-tip" data-lean-tip="false" tabindex="0">False</span>',
+    ),
+    (
+        '<span class="n">absurd</span>',
+        '<span class="n lean-tip" data-lean-tip="absurd" tabindex="0">absurd</span>',
+    ),
+    (
+        '<span class="bp">#</span><span class="n">print</span>',
+        '<span class="lean-tip lean-tip-compound" data-lean-tip="print-axioms" '
+        'tabindex="0"><span class="bp">#</span><span class="n">print</span></span>',
     ),
 )
 

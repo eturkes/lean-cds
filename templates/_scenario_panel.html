@@ -38,6 +38,97 @@
     </div>
   </section>
 
+  <section class="syntax-decoder" aria-labelledby="syntax-decoder-heading">
+    <header class="syntax-decoder-header">
+      <span class="syntax-decoder-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16">
+          <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 5h2v2h-2V7Zm0 4h2v6h-2v-6Z"/>
+        </svg>
+      </span>
+      <div class="syntax-decoder-title-block">
+        <h3 id="syntax-decoder-heading" class="syntax-decoder-title">Reading this Lean proof</h3>
+        <p class="syntax-decoder-sub">
+          No Lean or programming background needed. Scan the groups
+          below, or
+          <span class="lean-tip-demo">hover</span>
+          any underlined symbol in the code for the same explanation.
+        </p>
+      </div>
+    </header>
+
+    <div class="syntax-decoder-grid">
+
+      <article class="decoder-group">
+        <h4 class="decoder-group-title">File structure</h4>
+        <dl class="decoder-list">
+          <dt><code>import</code></dt>
+          <dd>Load another Lean file — here, the shared medical vocabulary.</dd>
+
+          <dt><code>namespace</code> … <code>end</code></dt>
+          <dd>Open a named section; every declaration inside gets that prefix.</dd>
+
+          <dt><code>open</code></dt>
+          <dd>Refer to names in a namespace without repeating the prefix.</dd>
+        </dl>
+      </article>
+
+      <article class="decoder-group">
+        <h4 class="decoder-group-title">Declarations</h4>
+        <dl class="decoder-list">
+          <dt><code>axiom</code></dt>
+          <dd>A starting fact Lean accepts without proof — a guideline or a chart finding.</dd>
+
+          <dt><code>theorem</code></dt>
+          <dd>A claim Lean accepts <em>only</em> after mechanically checking its proof.</dd>
+
+          <dt><code class="decoder-symbol">X&nbsp;:&nbsp;T</code></dt>
+          <dd>Read <code>:</code> as “is a”. <code>JohnDoe&nbsp;:&nbsp;Patient</code> = “JohnDoe is a Patient”.</dd>
+
+          <dt><code class="decoder-symbol">X&nbsp;:=&nbsp;Y</code></dt>
+          <dd>Read <code>:=</code> as “is defined as”. Names <code>X</code> after the content on the right.</dd>
+        </dl>
+      </article>
+
+      <article class="decoder-group">
+        <h4 class="decoder-group-title">Proof tactics</h4>
+        <dl class="decoder-list">
+          <dt><code>by</code></dt>
+          <dd>Switch into step-by-step tactic mode — a recipe for building the proof.</dd>
+
+          <dt><code>unfold</code></dt>
+          <dd>“Replace this name with its definition” so its structure is visible.</dd>
+
+          <dt><code>apply</code></dt>
+          <dd>“Use this lemma; I'll prove its premises next” as fresh sub-goals.</dd>
+
+          <dt><code>exact</code></dt>
+          <dd>“Here is a term that is exactly the proof required — close the step.”</dd>
+
+          <dt><code class="decoder-symbol">·</code></dt>
+          <dd>Bullet that starts the next sub-goal left open by an earlier tactic.</dd>
+
+          <dt><code>And.intro</code></dt>
+          <dd>To prove “P and Q”, supply a proof of P and a proof of Q.</dd>
+        </dl>
+      </article>
+
+      <article class="decoder-group">
+        <h4 class="decoder-group-title">Audit target</h4>
+        <dl class="decoder-list">
+          <dt><code>False</code></dt>
+          <dd>The proposition that is never true. Proving it means the axioms contradict each other.</dd>
+
+          <dt><code>absurd</code></dt>
+          <dd>The final theorem in each scenario — its claim is <code>False</code>, so its proof <em>is</em> the contradiction.</dd>
+
+          <dt><code>#print&nbsp;axioms</code></dt>
+          <dd>Meta-command: lists every axiom the proof actually relied on, so the host can rule out <code>sorry</code> placeholders.</dd>
+        </dl>
+      </article>
+
+    </div>
+  </section>
+
   <div class="two-column">
     <section class="column" aria-labelledby="guidelines-heading">
       <h3 id="guidelines-heading" class="column-title">Clinical Guidelines</h3>
@@ -57,62 +148,6 @@
         </header>
         <p class="guideline-body">{{ scenario.guideline_b.body | safe }}</p>
       </article>
-
-      <details class="proof-explainer" open>
-        <summary class="proof-explainer-summary">
-          <span class="proof-explainer-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="16" height="16">
-              <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 5h2v2h-2V7Zm0 4h2v6h-2v-6Z"/>
-            </svg>
-          </span>
-          <span class="proof-explainer-label">Anatomy of a Proof</span>
-          <span class="proof-explainer-sub">Reading guide for non-mathematicians</span>
-          <span class="proof-explainer-chevron" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="14" height="14">
-              <path fill="currentColor" d="M7 10l5 5 5-5z"/>
-            </svg>
-          </span>
-        </summary>
-        <div class="proof-explainer-body">
-          <div class="proof-explainer-row">
-            <code class="proof-explainer-term">axiom</code>
-            <p>
-              An undeniable medical fact the kernel is allowed to start
-              from. Each <code>axiom</code> in this file is either a
-              <strong>published clinical guideline</strong> (e.g.
-              <code>AHA_ACC_HTN_8_1_5</code>) or one of the
-              <strong>patient's established findings</strong> drawn from
-              the chart (e.g. <code>obs_severe_dehydration</code>).
-              Lean accepts these as ground truth and never tries to
-              prove them.
-            </p>
-          </div>
-          <div class="proof-explainer-row">
-            <code class="proof-explainer-term">theorem&nbsp;/&nbsp;absurd</code>
-            <p>
-              A claim the kernel must <strong>verify</strong> before it
-              is accepted — unlike an axiom, a theorem is only true if
-              it is mechanically proven from the surrounding axioms.
-              The audit's final theorem is named <code>absurd</code>:
-              its goal is <code>False</code>, so successfully proving
-              it means the encoded treatment plan is a
-              <strong>logical impossibility</strong> for this patient.
-              That is the contradiction the audit exists to surface.
-            </p>
-          </div>
-          <div class="proof-explainer-row">
-            <code class="proof-explainer-term">Prop</code>
-            <p>
-              Short for <em>Proposition</em>: a statement Lean can
-              evaluate as strictly true or false. When the file
-              declares <code>Indicated&nbsp;:&nbsp;Patient&nbsp;&rarr;&nbsp;Treatment&nbsp;&rarr;&nbsp;Prop</code>,
-              it is saying "whether a treatment is indicated for a
-              patient is a true-or-false claim" — exactly the kind of
-              statement the kernel knows how to reason about.
-            </p>
-          </div>
-        </div>
-      </details>
     </section>
 
     <section class="column column-code" aria-labelledby="lean-heading">
@@ -121,9 +156,9 @@
         <div class="code-frame-header">
           <span class="code-frame-title">{{ scenario.lean_filename }}</span>
           <span class="code-frame-hint" aria-hidden="true">
-            hover the
+            every
             <span class="lean-tip-demo">underlined</span>
-            terms for plain-English definitions
+            symbol has a hover explanation
           </span>
         </div>
         <div class="code-frame-body">
