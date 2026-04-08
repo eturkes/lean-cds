@@ -39,25 +39,47 @@
   </section>
 
   <div class="two-column">
-    <section class="column" aria-labelledby="guidelines-heading">
-      <h3 id="guidelines-heading" class="column-title">Clinical Guidelines</h3>
+    <div class="column-stack">
+      <section class="column" aria-labelledby="guidelines-heading">
+        <h3 id="guidelines-heading" class="column-title">Clinical Guidelines</h3>
 
-      <article class="guideline">
-        <header class="guideline-header">
-          <span class="guideline-tag">Guideline 1</span>
-          <p class="guideline-source">{{ scenario.guideline_a.source }}</p>
-        </header>
-        <p class="guideline-body">{{ scenario.guideline_a.body | safe }}</p>
-      </article>
+        <article class="guideline">
+          <header class="guideline-header">
+            <span class="guideline-tag">Guideline 1</span>
+            <p class="guideline-source">{{ scenario.guideline_a.source }}</p>
+          </header>
+          <p class="guideline-body">{{ scenario.guideline_a.body | safe }}</p>
+        </article>
 
-      <article class="guideline">
-        <header class="guideline-header">
-          <span class="guideline-tag">Guideline 2</span>
-          <p class="guideline-source">{{ scenario.guideline_b.source }}</p>
-        </header>
-        <p class="guideline-body">{{ scenario.guideline_b.body | safe }}</p>
-      </article>
-    </section>
+        <article class="guideline">
+          <header class="guideline-header">
+            <span class="guideline-tag">Guideline 2</span>
+            <p class="guideline-source">{{ scenario.guideline_b.source }}</p>
+          </header>
+          <p class="guideline-body">{{ scenario.guideline_b.body | safe }}</p>
+        </article>
+      </section>
+
+      <div class="action-bar">
+        <button type="button"
+                class="verify-button"
+                hx-post="/scenarios/{{ scenario.id }}/verify"
+                hx-target="#verification-result"
+                hx-swap="innerHTML"
+                hx-indicator="#verify-indicator">
+          <span class="verify-button-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18">
+              <path fill="currentColor" d="M12 2 4 6v6c0 5 3.4 9.5 8 10 4.6-.5 8-5 8-10V6l-8-4Zm-1 14-4-4 1.4-1.4L11 13.2l5.6-5.6L18 9l-7 7Z"/>
+            </svg>
+          </span>
+          Run Lean Formal Verification
+        </button>
+        <span id="verify-indicator" class="htmx-indicator">
+          <span class="spinner" aria-hidden="true"></span>
+          Compiling axioms…
+        </span>
+      </div>
+    </div>
 
     <section class="column column-code" aria-labelledby="lean-heading">
       <h3 id="lean-heading" class="column-title">Lean 4 Formalization</h3>
@@ -75,26 +97,6 @@
         </div>
       </div>
     </section>
-  </div>
-
-  <div class="action-bar">
-    <button type="button"
-            class="verify-button"
-            hx-post="/scenarios/{{ scenario.id }}/verify"
-            hx-target="#verification-result"
-            hx-swap="innerHTML"
-            hx-indicator="#verify-indicator">
-      <span class="verify-button-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="18" height="18">
-          <path fill="currentColor" d="M12 2 4 6v6c0 5 3.4 9.5 8 10 4.6-.5 8-5 8-10V6l-8-4Zm-1 14-4-4 1.4-1.4L11 13.2l5.6-5.6L18 9l-7 7Z"/>
-        </svg>
-      </span>
-      Run Lean Formal Verification
-    </button>
-    <span id="verify-indicator" class="htmx-indicator">
-      <span class="spinner" aria-hidden="true"></span>
-      Compiling axioms…
-    </span>
   </div>
 
   <div id="verification-result" class="verification-result-container" aria-live="polite"></div>
