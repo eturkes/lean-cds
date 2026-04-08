@@ -1,4 +1,7 @@
+{% set ns = namespace(pill_class='status-warning', pill_text='No Verdict') %}
 {% if result.error_message %}
+{% set ns.pill_class = 'status-warning' %}
+{% set ns.pill_text = 'Verification Failed' %}
 <div class="alert alert-warning" role="alert">
   <div class="alert-icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" width="28" height="28">
@@ -11,6 +14,8 @@
   </div>
 </div>
 {% elif result.verdict and result.verdict.name == 'CollisionVerified' %}
+{% set ns.pill_class = 'status-danger' %}
+{% set ns.pill_text = 'Collision Verified' %}
 <div class="alert alert-danger" role="alert">
   <div class="alert-icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" width="28" height="28">
@@ -44,6 +49,8 @@
   </div>
 </div>
 {% elif result.verdict and result.verdict.name == 'ProofUnsound' %}
+{% set ns.pill_class = 'status-warning' %}
+{% set ns.pill_text = 'Proof Unsound' %}
 <div class="alert alert-warning" role="alert">
   <div class="alert-icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" width="28" height="28">
@@ -61,6 +68,8 @@
   </div>
 </div>
 {% elif result.verdict and result.verdict.name == 'CompilerError' %}
+{% set ns.pill_class = 'status-warning' %}
+{% set ns.pill_text = 'Lean Rejected Proof' %}
 <div class="alert alert-warning" role="alert">
   <div class="alert-icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" width="28" height="28">
@@ -77,6 +86,8 @@
   </div>
 </div>
 {% else %}
+{% set ns.pill_class = 'status-warning' %}
+{% set ns.pill_text = 'No Verdict' %}
 <div class="alert alert-warning" role="alert">
   <div class="alert-icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" width="28" height="28">
@@ -93,6 +104,8 @@
   </div>
 </div>
 {% endif %}
+
+<span id="scenario-status-pill" class="status-pill {{ ns.pill_class }}" hx-swap-oob="true">{{ ns.pill_text }}</span>
 
 <section class="terminal" aria-label="Lean compiler output">
   <header class="terminal-header">

@@ -388,6 +388,18 @@ code {
   background: var(--bg-surface);
 }
 
+.status-pill.status-danger {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: var(--danger-border);
+}
+
+.status-pill.status-warning {
+  color: var(--warning);
+  background: var(--warning-soft);
+  border-color: var(--warning-border);
+}
+
 /* ---------- Patient Card ---------- */
 
 .patient-card {
