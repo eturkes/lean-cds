@@ -160,7 +160,7 @@ def _norm(s: str) -> str:
     return " ".join(s.split())
 
 
-def parse_lean_contexts(source: str) -> ParseResult:
+def parse_lean_contexts(source: str, locale: str = "en") -> ParseResult:
     """Parse a scenario file into per-line decls, groups, and file context.
 
     Walks the source top to bottom with a small line-based recogniser,
@@ -177,6 +177,12 @@ def parse_lean_contexts(source: str) -> ParseResult:
       observation axioms (and the condition predicate each observes),
       and previously-proved theorem names, so the group tooltip
       composer can refer to them by meaning rather than by label.
+
+    ``locale`` selects which medical-knowledge vocabulary table to
+    consult when classifying observation axioms — condition predicate
+    identifiers (``HasEssentialHypertension`` etc.) are shared across
+    locales but the lookup machinery is locale-aware so the parser stays
+    consistent with the rest of the decorator pipeline.
     """
     lines = source.split("\n")
     line_to_decl: dict[int, LeanDecl] = {}
@@ -222,7 +228,7 @@ def parse_lean_contexts(source: str) -> ParseResult:
         parts = type_text.split()
         if len(parts) >= 1:
             head = parts[0]
-            entry = lean_vocab.lookup(head)
+            entry = lean_vocab.lookup(head, locale)
             if entry is not None and entry.role == lean_vocab.ROLE_CONDITION_PRED:
                 file_ctx.observations[axiom_name] = head
 
@@ -523,7 +529,16 @@ def _tactic_arg(tactic: str, source_line: str) -> str:
     return m.group(1).strip() if m else ""
 
 
-def _tip_import(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_import(decl: Optional[LeanDecl], src: str, locale: str) -> str:
+    if locale == "ja":
+        name = decl.name if decl else "別のモジュール"
+        return (
+            f"import {name} ── {_code(name + '.lean')} を読み込み、"
+            f"その宣言を再記述することなく利用可能にする。本監査では "
+            f"{_code('MedicalKnowledge.lean')} が共有医療語彙を保持し、"
+            f"{_code('Patient')} の定義、利用可能な治療、ならびに各シナリオ"
+            f"が依拠する臨床ガイドライン公理をすべて含んでいる。"
+        )
     name = decl.name if decl else "another module"
     return (
         f"import {name} — loads {_code(name + '.lean')} so its "
@@ -534,7 +549,20 @@ def _tip_import(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_namespace(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_namespace(decl: Optional[LeanDecl], src: str, locale: str) -> str:
+    if locale == "ja":
+        if not decl:
+            return (
+                "namespace ── 名前付きセクションを開く。対応する `end` で"
+                "閉じる必要がある。"
+            )
+        return (
+            f"namespace {decl.name} ── 名前付きセクションを開く。本ファイル"
+            f"の各宣言は外部から {_code(decl.name + '.')} を接頭辞として"
+            f"参照され、各シナリオは衝突することなく独自の "
+            f"{_code('collision_detected')} を保持できる。ファイル末尾の "
+            f"{_code('end ' + decl.name)} で閉じる必要がある。"
+        )
     if not decl:
         return (
             "namespace — opens a named section; must be closed by a "
@@ -550,7 +578,20 @@ def _tip_namespace(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_open(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_open(decl: Optional[LeanDecl], src: str, locale: str) -> str:
+    if locale == "ja":
+        if not decl:
+            return (
+                "open ── 接頭辞を付けずに名前空間内の名前を参照できる"
+                "ようにする。"
+            )
+        return (
+            f"open {decl.name} ── このファイル内で {_code(decl.name)} 内の"
+            f"名前を接頭辞なしで参照できるようにする。"
+            f"{_code('open ' + decl.name)} が有効な間、"
+            f"{_code(decl.name + '.Patient')} の代わりに "
+            f"{_code('Patient')} と書ける。"
+        )
     if not decl:
         return (
             "open — lets you refer to names inside a namespace without "
@@ -564,7 +605,16 @@ def _tip_open(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_end(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_end(decl: Optional[LeanDecl], src: str, locale: str) -> str:
+    if locale == "ja":
+        if not decl:
+            return "end ── 直前の名前空間またはセクションを閉じる。"
+        return (
+            f"end {decl.name} ── このファイルで前に開かれた "
+            f"{_code('namespace ' + decl.name)} を閉じる。その `namespace` "
+            f"とこの `end` の間にある宣言はすべて {_code(decl.name)} に"
+            f"属する。"
+        )
     if not decl:
         return "end — closes the surrounding namespace or section."
     return (
@@ -574,7 +624,27 @@ def _tip_end(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_axiom(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_axiom(decl: Optional[LeanDecl], src: str, locale: str) -> str:
+    if locale == "ja":
+        if decl and decl.kind == "axiom":
+            if _is_simple_type(decl.type_raw):
+                return (
+                    f"axiom {decl.name} ── {_code(decl.name)} を、Lean が"
+                    f"証明なしに受け入れる前提として宣言する：本シナリオ"
+                    f"の証明が参照しうる新しい {_code(decl.type_raw)}。"
+                    f"Lean は決してこれを検証しようとしない。"
+                )
+            return (
+                f"axiom {decl.name} ── {_code(decl.name)} を、Lean が"
+                f"証明なしに受け入れる前提として宣言する：すなわち "
+                f"{_code(decl.type_raw)} の証明。本監査ではすべての "
+                f"`axiom` が公開された臨床ガイドラインまたは患者カルテの"
+                f"所見を符号化する。"
+            )
+        return (
+            "axiom ── Lean が証明なしに受け入れる前提。本監査ではすべての"
+            "公理が公開された臨床ガイドラインまたは患者カルテの所見である。"
+        )
     if decl and decl.kind == "axiom":
         if _is_simple_type(decl.type_raw):
             return (
@@ -597,7 +667,21 @@ def _tip_axiom(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_theorem(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_theorem(decl: Optional[LeanDecl], src: str, locale: str) -> str:
+    if locale == "ja":
+        if decl and decl.kind in ("theorem_term", "theorem_tactic"):
+            return (
+                f"theorem {decl.name} ── {_code(decl.name)} を、Lean が"
+                f"その証明を機械的に検査して初めて受け入れる主張として"
+                f"宣言する。主張は {_code(decl.type_raw)} であり、`:=` の"
+                f"右辺は実際にこれを証明しなければならない。`axiom` "
+                f"（無条件に信頼される）と異なり、`theorem` は公理および"
+                f"既に検査された定理から段階的に導出される。"
+            )
+        return (
+            "theorem ── Lean がその証明を機械的に検査して初めて受け入れる"
+            "主張。"
+        )
     if decl and decl.kind in ("theorem_term", "theorem_tactic"):
         return (
             f"theorem {decl.name} — declares {_code(decl.name)} as a "
@@ -613,7 +697,31 @@ def _tip_theorem(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_colon(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_colon(decl: Optional[LeanDecl], src: str, locale: str) -> str:
+    if locale == "ja":
+        if decl and decl.kind == "axiom":
+            if _is_simple_type(decl.type_raw):
+                return (
+                    f"`:` は「は〜である」と読む。本行は {_code(decl.name)} "
+                    f"が {_code(decl.type_raw)} であることを宣言する。"
+                )
+            return (
+                f"`:` は「〜の証明である」と読む。本行は {_code(decl.name)} "
+                f"がコロンの右側に書かれた主張 {_code(decl.type_raw)} の"
+                f"証明であることを宣言する。"
+            )
+        if decl and decl.kind in ("theorem_term", "theorem_tactic"):
+            return (
+                f"`:` は「〜の証明である」と読む。この定理は "
+                f"{_code(decl.name)} が {_code(decl.type_raw)} の証明で"
+                f"あると主張する。`:=` の右辺は Lean が定理を受け入れる前に"
+                f"実際にその証明を与えなければならない。"
+            )
+        return (
+            "`:` ── 「は〜である」あるいは「〜という型を持つ」と読む。"
+            "Lean では完成した証明はそれ自体が値であり、証明される主張は"
+            "その値の型である。"
+        )
     if decl and decl.kind == "axiom":
         if _is_simple_type(decl.type_raw):
             return (
@@ -638,7 +746,26 @@ def _tip_colon(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_coloneq(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_coloneq(decl: Optional[LeanDecl], src: str, locale: str) -> str:
+    if locale == "ja":
+        if decl and decl.kind == "theorem_term":
+            return (
+                f"`:=` は「と定義する」と読む。{_code(decl.name)} は証明項 "
+                f"{_preview(decl.body_raw)} と定義される。Lean はその項が"
+                f"実際に {_code(decl.type_raw)} を証明することをカーネルで"
+                f"検査する。"
+            )
+        if decl and decl.kind == "theorem_tactic":
+            return (
+                f"`:=` は「と定義する」と読む。{_code(decl.name)} は続く "
+                f"`by …` 戦術ブロックによって定義される；戦術は Lean が "
+                f"{_code(decl.type_raw)} の証明を構築するために実行する"
+                f"レシピである。"
+            )
+        return (
+            "`:=` ── 「と定義する」。左辺の名前が右辺の内容を別の表記で"
+            "表すものになる。"
+        )
     if decl and decl.kind == "theorem_term":
         return (
             f"`:=` reads as “is defined as”. {_code(decl.name)} is "
@@ -659,7 +786,21 @@ def _tip_coloneq(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_by(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_by(decl: Optional[LeanDecl], src: str, locale: str) -> str:
+    if locale == "ja":
+        if decl and decl.kind == "theorem_tactic":
+            return (
+                f"by ── {_code(decl.name)} の証明のために戦術モードへ"
+                f"切り替える。下のインデント行は Lean が "
+                f"{_code(decl.type_raw)} の証明を構築するために実行する"
+                f"段階的なレシピである。ゴールが閉じるまでブロックは"
+                f"続く。"
+            )
+        return (
+            "by ── 直接証明を書く代わりに段階的な戦術を書くモードへ"
+            "切り替える。`by` の後にインデントされたものはすべて証明を"
+            "構築するレシピである。"
+        )
     if decl and decl.kind == "theorem_tactic":
         return (
             f"by — switches into tactic mode for the proof of "
@@ -675,8 +816,20 @@ def _tip_by(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_unfold(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_unfold(decl: Optional[LeanDecl], src: str, locale: str) -> str:
     arg = _tactic_arg("unfold", src)
+    if locale == "ja":
+        if decl and arg:
+            return (
+                f"unfold {arg} ── {_code(decl.name)} の証明内で、現在の"
+                f"ゴールにある名前 {_code(arg)} をその定義で置き換える。"
+                f"これにより {_code(arg)} の内部構造が露わになり、後続の"
+                f"戦術が直接その構造に作用できる。"
+            )
+        return (
+            "unfold X ── 戦術：名前 `X` をその定義でここで置き換え、"
+            "それが指す構造をゴール中で可視化する。"
+        )
     if decl and arg:
         return (
             f"unfold {arg} — inside the proof of {_code(decl.name)}, "
@@ -690,8 +843,20 @@ def _tip_unfold(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_apply(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_apply(decl: Optional[LeanDecl], src: str, locale: str) -> str:
     arg = _tactic_arg("apply", src)
+    if locale == "ja":
+        if decl and arg:
+            return (
+                f"apply {arg} ── {_code(decl.name)} の証明内で、"
+                f"{_code(arg)} の結論が現在のゴールに一致するため、Lean は "
+                f"{_code(arg)} を使用し、その残りの前提を新しい部分目標"
+                f"として証明するよう求める。"
+            )
+        return (
+            "apply L ── 戦術：「`L` の結論は現在のゴールに一致する。"
+            "`L` を使い、その前提を次に証明する。」"
+        )
     if decl and arg:
         return (
             f"apply {arg} — inside the proof of {_code(decl.name)}, the "
@@ -705,8 +870,19 @@ def _tip_apply(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_exact(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_exact(decl: Optional[LeanDecl], src: str, locale: str) -> str:
     arg = _tactic_arg("exact", src)
+    if locale == "ja":
+        if decl and arg:
+            return (
+                f"exact {arg} ── {_code(decl.name)} の証明内で、項 "
+                f"{_code(arg)} は現在の部分目標の証明そのものである；"
+                f"Lean はこれを受け入れ、本ステップを閉じる。"
+            )
+        return (
+            "exact E ── 戦術：「項 `E` は現在のゴールの証明そのもの ── "
+            "受け入れてステップを閉じる。」"
+        )
     if decl and arg:
         return (
             f"exact {arg} — inside the proof of {_code(decl.name)}, the "
@@ -719,7 +895,19 @@ def _tip_exact(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_bullet(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_bullet(decl: Optional[LeanDecl], src: str, locale: str) -> str:
+    if locale == "ja":
+        if decl and decl.kind == "theorem_tactic":
+            return (
+                f"`·` ── {_code(decl.name)} の次の部分目標に焦点を移す。"
+                f"直前の戦術（通常 `apply And.intro`）が複数のゴールを"
+                f"残しており、各 `·` がそのうち一つのミニ証明を開始し、"
+                f"分岐を視覚的に分離する。"
+            )
+        return (
+            "`·` ── 直前の戦術が残した次の部分目標に焦点を移す；"
+            "各箇条書きが分岐の一つのミニ証明を開始する。"
+        )
     if decl and decl.kind == "theorem_tactic":
         return (
             f"`·` — focuses the next sub-goal of {_code(decl.name)}. A "
@@ -733,7 +921,21 @@ def _tip_bullet(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_and_intro(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_and_intro(decl: Optional[LeanDecl], src: str, locale: str) -> str:
+    if locale == "ja":
+        if decl and decl.kind in ("theorem_term", "theorem_tactic"):
+            return (
+                f"And.intro ── 「P ∧ Q」の形の主張（ここでは "
+                f"{_code(decl.type_raw)}）を証明するには、両半分の"
+                f"証明をそれぞれ与えなければならない。`And.intro` は "
+                f"Lean の「両半分はこれだ」という構成子であり、開いた"
+                f"まま残る二つの部分目標は下の二つの `·` 箇条書きで"
+                f"処理される。"
+            )
+        return (
+            "And.intro ── 「P ∧ Q」を証明するには、P の証明と Q の"
+            "証明をそれぞれ与える。"
+        )
     if decl and decl.kind in ("theorem_term", "theorem_tactic"):
         return (
             f"And.intro — to prove a claim of the form “P ∧ Q” (here "
@@ -748,7 +950,20 @@ def _tip_and_intro(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_false(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_false(decl: Optional[LeanDecl], src: str, locale: str) -> str:
+    if locale == "ja":
+        if decl and decl.kind in ("theorem_term", "theorem_tactic"):
+            return (
+                f"False ── 決して真にならない命題。定理 {_code(decl.name)} "
+                f"は `False` を主張するため、これが証明に成功するという"
+                f"ことは、依拠する公理が互いに不可能であることを意味する "
+                f"── 本監査が暴き出すために存在する矛盾そのものである。"
+            )
+        return (
+            "False ── 決して真にならない命題。ある公理集合からこれが"
+            "証明されるということは、それらの公理が互いに不可能で"
+            "あることを意味する。"
+        )
     if decl and decl.kind in ("theorem_term", "theorem_tactic"):
         return (
             f"False — the proposition that is never true. The theorem "
@@ -763,7 +978,29 @@ def _tip_false(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_absurd(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_absurd(decl: Optional[LeanDecl], src: str, locale: str) -> str:
+    if locale == "ja":
+        if decl and decl.kind == "print_axioms" and decl.name == "absurd":
+            return (
+                "absurd ── ここでは、`#print axioms` がこれから出力する"
+                "信頼公理リストの対象となる名前。`absurd` は本監査の最終"
+                "定理であり、その主張は `False` である。"
+            )
+        if (
+            decl
+            and decl.kind in ("theorem_term", "theorem_tactic")
+            and decl.name == "absurd"
+        ):
+            return (
+                "absurd ── 本監査の最終定理。その主張は `False` で"
+                "あるため、これが証明に成功するということは、符号化"
+                "された二つの臨床ガイドラインがこの特定の患者に対して"
+                "論理的に矛盾していることを意味する。"
+            )
+        return (
+            "absurd ── 本監査の最終定理；その主張は `False` であり、"
+            "その証明こそが本監査が暴き出すために存在する矛盾である。"
+        )
     if decl and decl.kind == "print_axioms" and decl.name == "absurd":
         return (
             "absurd — here, the name whose trusted-axiom list "
@@ -787,7 +1024,20 @@ def _tip_absurd(decl: Optional[LeanDecl], src: str) -> str:
     )
 
 
-def _tip_print_axioms(decl: Optional[LeanDecl], src: str) -> str:
+def _tip_print_axioms(decl: Optional[LeanDecl], src: str, locale: str) -> str:
+    if locale == "ja":
+        if decl and decl.kind == "print_axioms":
+            return (
+                f"#print axioms {decl.name} ── 証明の一部ではないメタ"
+                f"コマンド。{_code(decl.name)} の証明が実際に依拠した"
+                f"公理の正確なリストを Lean に出力させる。ホストプロセスは"
+                f"このリストを読み取り、（証明を密かに無効化する）`sorry` "
+                f"仮置きが紛れ込んでいないことを確認する。"
+            )
+        return (
+            "#print axioms NAME ── NAME の証明が実際に依拠したすべての"
+            "公理を列挙するメタコマンド。"
+        )
     if decl and decl.kind == "print_axioms":
         return (
             f"#print axioms {decl.name} — meta-command, not part of the "
@@ -819,26 +1069,45 @@ def _tip_print_axioms(decl: Optional[LeanDecl], src: str) -> str:
 # "the earlier theorem `thiazide_indicated` (which claims …)".
 
 
-def _gloss_treatment(symbol: str) -> str:
-    """Plain-English noun phrase for a ``Treatment.X`` constructor."""
-    entry = lean_vocab.lookup(symbol)
+def _gloss_treatment(symbol: str, locale: str) -> str:
+    """Locale-aware noun phrase for a ``Treatment.X`` constructor."""
+    entry = lean_vocab.lookup(symbol, locale)
     if entry is not None and entry.noun:
         return entry.noun
+    if locale == "ja":
+        return f"治療 `{symbol}`"
     return f"the treatment `{symbol}`"
 
 
-def _gloss_local_identifier(symbol: str, fc: FileContext) -> str:
+def _gloss_local_identifier(
+    symbol: str, fc: FileContext, locale: str
+) -> str:
     """Explain a name that is declared locally in the scenario file.
 
     Covers the scenario's patient axiom, its observation axioms, and
     any previously-proved theorem. Falls back to a code-quoted name
     when we have no idea what it refers to.
     """
+    if locale == "ja":
+        if fc.patient_name and symbol == fc.patient_name:
+            return f"本シナリオの患者 `{symbol}`"
+        if symbol in fc.observations:
+            cond_name = fc.observations[symbol]
+            cond_entry = lean_vocab.lookup(cond_name, locale)
+            reads = cond_entry.reads if cond_entry else "その病態を有する"
+            return (
+                f"`{fc.patient_name or '患者'}` が{reads}ことを"
+                f"記録した公理 `{symbol}`"
+            )
+        if symbol in fc.theorems:
+            claim = fc.theorems[symbol]
+            return f"主張が `{claim}` である既出の定理 `{symbol}`"
+        return f"`{symbol}`"
     if fc.patient_name and symbol == fc.patient_name:
         return f"`{symbol}`, this scenario's patient"
     if symbol in fc.observations:
         cond_name = fc.observations[symbol]
-        cond_entry = lean_vocab.lookup(cond_name)
+        cond_entry = lean_vocab.lookup(cond_name, locale)
         reads = cond_entry.reads if cond_entry else "has that condition"
         return (
             f"`{symbol}`, the axiom recording that "
@@ -850,8 +1119,24 @@ def _gloss_local_identifier(symbol: str, fc: FileContext) -> str:
     return f"`{symbol}`"
 
 
-def _role_frame(role: str, decl_name: str) -> str:
+def _role_frame(role: str, decl_name: str, locale: str) -> str:
     """Role-specific closing sentence for the composed group tooltip."""
+    if locale == "ja":
+        if role == GROUP_AXIOM_TYPE:
+            return (
+                f" これは `axiom {decl_name}` の型であるため、Lean は"
+                f"証明を求めることなく本主張を真理として受け入れる。"
+            )
+        if role == GROUP_THEOREM_TYPE:
+            return (
+                f" これは定理 `{decl_name}` が証明している主張であり、"
+                f"`:=` の右辺は実際にその証明を与えなければならない。"
+            )
+        if role == GROUP_THEOREM_BODY:
+            return f" これは定理 `{decl_name}` に与えられた証明項である。"
+        if role == GROUP_TACTIC_ARG:
+            return f" `{decl_name}` の証明内で戦術の引数として与えられる。"
+        return ""
     if role == GROUP_AXIOM_TYPE:
         return (
             f" Since this is the type of `axiom {decl_name}`, Lean "
@@ -882,8 +1167,17 @@ def _compose_condition_pred(
     entry: lean_vocab.VocabEntry,
     args: list[str],
     fc: FileContext,
+    locale: str,
 ) -> str:
     """``HasX p`` → "``p`` has X"."""
+    if locale == "ja":
+        if len(args) == 1:
+            patient = args[0]
+            return (
+                f"`{head} {patient}` ── `{patient}` が{entry.reads}という"
+                f"Lean 命題。`{head}` は{entry.plain}（{entry.shape}）。"
+            )
+        return f"{entry.plain}：{entry.reads}。"
     if len(args) == 1:
         patient = args[0]
         patient_phrase = (
@@ -903,11 +1197,22 @@ def _compose_deontic_pred(
     entry: lean_vocab.VocabEntry,
     args: list[str],
     fc: FileContext,
+    locale: str,
 ) -> str:
     """``Indicated p t`` → "``t`` is indicated for ``p``"."""
+    if locale == "ja":
+        if len(args) == 2:
+            patient, treatment = args
+            treatment_noun = _gloss_treatment(treatment, locale)
+            return (
+                f"`{head} {patient} {treatment}` ── {treatment_noun}が "
+                f"`{patient}`{entry.reads}という Lean 命題。`{head}` は"
+                f"{entry.plain}（{entry.shape}）。"
+            )
+        return f"{entry.plain}：`{head}` を {' と '.join(args)} に適用。"
     if len(args) == 2:
         patient, treatment = args
-        treatment_noun = _gloss_treatment(treatment)
+        treatment_noun = _gloss_treatment(treatment, locale)
         return (
             f"`{head} {patient} {treatment}` — the Lean proposition "
             f"that {treatment_noun} {entry.reads} `{patient}`. `{head}` "
@@ -921,11 +1226,25 @@ def _compose_collision_def(
     entry: lean_vocab.VocabEntry,
     args: list[str],
     fc: FileContext,
+    locale: str,
 ) -> str:
     """``Collision p t`` → unfolds to both halves of the deontic conflict."""
+    if locale == "ja":
+        if len(args) == 2:
+            patient, treatment = args
+            treatment_noun = _gloss_treatment(treatment, locale)
+            return (
+                f"`{head} {patient} {treatment}` ── "
+                f"`Indicated {patient} {treatment} ∧ "
+                f"Contraindicated {patient} {treatment}` に展開される。"
+                f"読み方：{treatment_noun}が `{patient}` に対して同時に"
+                f"適応かつ禁忌である ── 本監査が暴き出すために存在する"
+                f"義務論的衝突。"
+            )
+        return f"{entry.plain}。"
     if len(args) == 2:
         patient, treatment = args
-        treatment_noun = _gloss_treatment(treatment)
+        treatment_noun = _gloss_treatment(treatment, locale)
         return (
             f"`{head} {patient} {treatment}` — unfolds to "
             f"`Indicated {patient} {treatment} ∧ "
@@ -942,15 +1261,30 @@ def _compose_guideline_axiom(
     entry: lean_vocab.VocabEntry,
     args: list[str],
     fc: FileContext,
+    locale: str,
 ) -> str:
-    """``AHA_ACC_HTN_8_1_5 p obs`` → full in-context reading."""
+    """``JSH2019_Ch5_FirstLine p obs`` → full in-context reading."""
+    if locale == "ja":
+        base = (
+            f"`{head}` ── {entry.plain}（{entry.source}）。型は "
+            f"`{entry.shape}` であり、読み方は：{entry.reads}。"
+        )
+        if len(args) == 2:
+            patient, obs = args
+            obs_gloss = _gloss_local_identifier(obs, fc, locale)
+            return (
+                base
+                + f" ここでは `{patient}` と{obs_gloss}に適用され、"
+                f"`{patient}` に対する公理の結論の証明を生成する。"
+            )
+        return base
     base = (
         f"`{head}` — {entry.plain} ({entry.source}). Its shape is "
         f"`{entry.shape}`, which reads as: {entry.reads}."
     )
     if len(args) == 2:
         patient, obs = args
-        obs_gloss = _gloss_local_identifier(obs, fc)
+        obs_gloss = _gloss_local_identifier(obs, fc, locale)
         return (
             base
             + f" Applied here to `{patient}` and {obs_gloss}, it yields "
@@ -964,15 +1298,32 @@ def _compose_global_axiom(
     entry: lean_vocab.VocabEntry,
     args: list[str],
     fc: FileContext,
+    locale: str,
 ) -> str:
     """``incompatible_modalities p t`` → plain reading with args."""
+    if locale == "ja":
+        base = (
+            f"`{head}` ── {entry.plain}。型は `{entry.shape}` であり、"
+            f"読み方は：{entry.reads}。"
+        )
+        if len(args) == 2:
+            patient, treatment = args
+            treatment_noun = _gloss_treatment(treatment, locale)
+            return (
+                base
+                + f" ここでは `{patient}` と `{treatment}`"
+                f"（{treatment_noun}）に適用され、{treatment_noun}が "
+                f"`{patient}` に対して同時に適応かつ禁忌となることが"
+                f"あり得ないことの証明を生成する。"
+            )
+        return base
     base = (
         f"`{head}` — {entry.plain}. Its shape is `{entry.shape}`, "
         f"which reads as: {entry.reads}."
     )
     if len(args) == 2:
         patient, treatment = args
-        treatment_noun = _gloss_treatment(treatment)
+        treatment_noun = _gloss_treatment(treatment, locale)
         return (
             base
             + f" Applied here to `{patient}` and `{treatment}` "
@@ -988,9 +1339,33 @@ def _compose_head_vocab(
     entry: lean_vocab.VocabEntry,
     args: list[str],
     fc: FileContext,
+    locale: str,
 ) -> str:
     """Dispatch on an in-vocab head symbol."""
     role = entry.role
+    if locale == "ja":
+        if role == lean_vocab.ROLE_PATIENT_TYPE:
+            return (
+                f"`{head}` ── {entry.plain}。コンストラクタを持たず、"
+                f"各シナリオは `axiom` を介して新たな患者を導入する。"
+            )
+        if role == lean_vocab.ROLE_TREATMENT_CTOR:
+            return f"`{head}` ── {entry.plain}（{entry.noun}を表す）。"
+        if role == lean_vocab.ROLE_PROPOSITION:
+            return entry.plain + "。"
+        if role == lean_vocab.ROLE_CONDITION_PRED:
+            return _compose_condition_pred(head, entry, args, fc, locale)
+        if role == lean_vocab.ROLE_DEONTIC_PRED:
+            return _compose_deontic_pred(head, entry, args, fc, locale)
+        if role == lean_vocab.ROLE_COLLISION_DEF:
+            return _compose_collision_def(head, entry, args, fc, locale)
+        if role == lean_vocab.ROLE_GUIDELINE_AXIOM:
+            return _compose_guideline_axiom(head, entry, args, fc, locale)
+        if role == lean_vocab.ROLE_GLOBAL_AXIOM:
+            return _compose_global_axiom(head, entry, args, fc, locale)
+        if role == lean_vocab.ROLE_AND_INTRO:
+            return f"`{head}` ── {entry.reads}。"
+        return f"`{head}` ── {entry.plain}。"
     if role == lean_vocab.ROLE_PATIENT_TYPE:
         return (
             f"`{head}` — {entry.plain}. It has no constructors; each "
@@ -1001,15 +1376,15 @@ def _compose_head_vocab(
     if role == lean_vocab.ROLE_PROPOSITION:
         return entry.plain + "."
     if role == lean_vocab.ROLE_CONDITION_PRED:
-        return _compose_condition_pred(head, entry, args, fc)
+        return _compose_condition_pred(head, entry, args, fc, locale)
     if role == lean_vocab.ROLE_DEONTIC_PRED:
-        return _compose_deontic_pred(head, entry, args, fc)
+        return _compose_deontic_pred(head, entry, args, fc, locale)
     if role == lean_vocab.ROLE_COLLISION_DEF:
-        return _compose_collision_def(head, entry, args, fc)
+        return _compose_collision_def(head, entry, args, fc, locale)
     if role == lean_vocab.ROLE_GUIDELINE_AXIOM:
-        return _compose_guideline_axiom(head, entry, args, fc)
+        return _compose_guideline_axiom(head, entry, args, fc, locale)
     if role == lean_vocab.ROLE_GLOBAL_AXIOM:
-        return _compose_global_axiom(head, entry, args, fc)
+        return _compose_global_axiom(head, entry, args, fc, locale)
     if role == lean_vocab.ROLE_AND_INTRO:
         return f"`{head}` — {entry.reads}."
     return f"`{head}` — {entry.plain}."
@@ -1019,9 +1394,15 @@ def _compose_head_local(
     head: str,
     args: list[str],
     fc: FileContext,
+    locale: str,
 ) -> str:
     """Dispatch on a head symbol declared locally in the scenario file."""
-    gloss = _gloss_local_identifier(head, fc)
+    gloss = _gloss_local_identifier(head, fc, locale)
+    if locale == "ja":
+        if not args:
+            return f"{gloss}。"
+        arg_phrases = "、".join(f"`{a}`" for a in args)
+        return f"{gloss}。ここでは {arg_phrases} に適用される。"
     if not args:
         return f"{gloss[0].upper() + gloss[1:]}."
     arg_phrases = ", ".join(f"`{a}`" for a in args)
@@ -1034,12 +1415,15 @@ def _split_phrase(text: str) -> list[str]:
 
 
 def compose_group_tip(
-    group: LeanGroup, fc: FileContext, decl: Optional[LeanDecl]
+    group: LeanGroup,
+    fc: FileContext,
+    decl: Optional[LeanDecl],
+    locale: str,
 ) -> str:
-    """Plain-English explanation for a multi-word phrase group.
+    """Plain-language explanation for a multi-word phrase group.
 
     The phrase is split on whitespace, the head token drives
-    role-specific composition (via the vocab table when it is a
+    role-specific composition (via the locale's vocab table when it is a
     MedicalKnowledge symbol, or via the per-file context for
     locally-declared names), and the closing sentence frames the
     phrase's role in its owning declaration.
@@ -1050,21 +1434,21 @@ def compose_group_tip(
 
     head = tokens[0]
     args = tokens[1:]
-    entry = lean_vocab.lookup(head)
+    entry = lean_vocab.lookup(head, locale)
 
     if entry is not None:
-        body = _compose_head_vocab(head, entry, args, fc)
+        body = _compose_head_vocab(head, entry, args, fc, locale)
     else:
-        body = _compose_head_local(head, args, fc)
+        body = _compose_head_local(head, args, fc, locale)
 
     # For single-symbol tactic arguments we've already explained the
     # symbol; the role frame would add nothing. For multi-word phrases
     # the role frame is the tooltip's anchor to the surrounding code.
-    frame = _role_frame(group.role, group.decl_name)
+    frame = _role_frame(group.role, group.decl_name, locale)
     return (body + frame).strip()
 
 
-_TipFn = Callable[[Optional[LeanDecl], str], str]
+_TipFn = Callable[[Optional[LeanDecl], str, str], str]
 
 _TIP_DISPATCH: dict[str, _TipFn] = {
     "import": _tip_import,
@@ -1192,12 +1576,15 @@ _TARGETS: tuple[tuple[re.Pattern[str], str, str], ...] = (
 
 
 def _decorate_line(
-    html_line: str, source_line: str, decl: Optional[LeanDecl]
+    html_line: str,
+    source_line: str,
+    decl: Optional[LeanDecl],
+    locale: str,
 ) -> str:
     """Wrap every recognised token on a line with a context-specific tip."""
     for regex, kind, template in _TARGETS:
         tip_fn = _TIP_DISPATCH[kind]
-        text = tip_fn(decl, source_line)
+        text = tip_fn(decl, source_line, locale)
         escaped = _html.escape(text, quote=True)
         replacement = template.replace("{tip}", escaped)
         # Use a lambda so `re.sub` doesn't interpret backslashes in the
@@ -1292,6 +1679,7 @@ def _wrap_groups_in_line(
     groups: list[LeanGroup],
     fc: FileContext,
     decl: Optional[LeanDecl],
+    locale: str,
 ) -> str:
     """Wrap the chunks covering each group's column range in a group span.
 
@@ -1344,7 +1732,7 @@ def _wrap_groups_in_line(
                 g_idx += 1
                 continue
 
-            tip_text = compose_group_tip(g, fc, decl)
+            tip_text = compose_group_tip(g, fc, decl, locale)
             escaped = _html.escape(tip_text, quote=True)
             inner = "".join(c[2] for c in chunks[chunk_idx : end_idx + 1])
             out.append(
@@ -1371,7 +1759,10 @@ _PRE_CLOSE = "</pre></div>"
 
 
 def render_lean_with_tooltips(
-    code: str, lexer: Lexer, formatter: Formatter
+    code: str,
+    lexer: Lexer,
+    formatter: Formatter,
+    locale: str = "en",
 ) -> str:
     """Syntax-highlight ``code`` and inject per-line tooltip attributes.
 
@@ -1383,10 +1774,16 @@ def render_lean_with_tooltips(
     context-aware individual tooltip, then wrap any multi-word phrase
     groups (axiom type, theorem type, theorem body term, tactic
     argument) so hovering anywhere inside the phrase shows a unified
-    plain-English reading composed from the per-file vocab and the
+    plain-language reading composed from the per-file vocab and the
     declaration context.
+
+    ``locale`` selects which medical-knowledge vocabulary table and
+    which tooltip-prose templates to use, so the JA build of a
+    scenario file is annotated with Japanese tooltips citing JSH /
+    JDS / JRS axioms while the EN build keeps the AHA / ADA / AASM
+    English prose.
     """
-    result = parse_lean_contexts(code)
+    result = parse_lean_contexts(code, locale)
     raw = highlight(code, lexer, formatter)
 
     if not raw.startswith(_PRE_OPEN) or _PRE_CLOSE not in raw:
@@ -1406,9 +1803,11 @@ def render_lean_with_tooltips(
         line_no = idx + 1
         source_line = src_lines[idx] if idx < len(src_lines) else ""
         decl = result.line_to_decl.get(line_no)
-        step1 = _decorate_line(line_html, source_line, decl)
+        step1 = _decorate_line(line_html, source_line, decl, locale)
         groups = result.line_to_groups.get(line_no, [])
-        step2 = _wrap_groups_in_line(step1, groups, result.file_context, decl)
+        step2 = _wrap_groups_in_line(
+            step1, groups, result.file_context, decl, locale
+        )
         decorated.append(step2)
 
     return _PRE_OPEN + "\n".join(decorated) + _PRE_CLOSE

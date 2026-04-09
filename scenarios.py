@@ -1,21 +1,24 @@
 """Bilingual clinical scenarios with authentic guideline excerpts.
 
 Each scenario describes a single patient context in which two real-world
-clinical guidelines collide. The actual formal verification lives in
-language-neutral ``.lean`` files under the ``lean/`` directory; this module
-declares:
+clinical guidelines collide. The Lean 4 source files are themselves
+*localized*: ``lean/en/`` cites the American guidelines and uses
+ASCII-romanized placeholder patient names (``JohnDoe`` etc.); ``lean/ja/``
+cites the Japanese society guidelines and uses Japanese placeholder
+patient names (``TaroYamada`` etc.). Both directories carry their own
+``MedicalKnowledge.lean`` so each guideline axiom is named after the
+society that actually published it.
 
-* the ID-to-Lean-filename mapping (shared across locales),
-* per-locale natural-language metadata for the UI panel.
+This module declares:
 
-The Japanese (``ja``) locale cites Japanese medical society guidelines
-(JSH 2019, JSN AKI 2016, JDS 2024, JSAD/JSNP 2025, JRS SAS 2020) and the
-English (``en``) locale cites the original American guidelines
-(AHA/ACC 2017, KDIGO AKI, ADA Standards of Care, AACE/ACE, APA, AASM).
+* the per-locale ``Scenario`` registry with natural-language metadata
+  for the UI panel,
+* the locale-aware ``lean_subdir`` so the verifier can resolve the
+  right ``ScenarioX.lean`` file at runtime.
 
-The host process never injects user-controlled strings into the Lean source.
-Each scenario references a pre-written file by name, and the verifier
-invokes ``lean`` against that file directly.
+The host process never injects user-controlled strings into the Lean
+source. Each scenario references a pre-written file by name, and the
+verifier invokes ``lean`` against that file directly.
 """
 
 from __future__ import annotations
@@ -23,11 +26,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from i18n import DEFAULT_LOCALE, normalize_locale
+from i18n import DEFAULT_LOCALE, SUPPORTED_LOCALES, normalize_locale
 
 LEAN_DIR: Path = Path(__file__).resolve().parent / "lean"
-KNOWLEDGE_BASE_FILE: Path = LEAN_DIR / "MedicalKnowledge.lean"
 KNOWLEDGE_BASE_MODULE: str = "MedicalKnowledge"
+
+
+def knowledge_base_file(locale: str) -> Path:
+    """Return the per-locale ``MedicalKnowledge.lean`` source path."""
+    return LEAN_DIR / normalize_locale(locale) / f"{KNOWLEDGE_BASE_MODULE}.lean"
 
 
 @dataclass(frozen=True)
@@ -45,12 +52,17 @@ class Scenario:
     guideline_a: Guideline
     guideline_b: Guideline
     lean_filename: str
+    lean_subdir: str
     audit_summary: str
     plain_english: str
 
     @property
     def lean_path(self) -> Path:
-        return LEAN_DIR / self.lean_filename
+        return LEAN_DIR / self.lean_subdir / self.lean_filename
+
+    @property
+    def lean_dir(self) -> Path:
+        return LEAN_DIR / self.lean_subdir
 
     def read_lean_source(self) -> str:
         return self.lean_path.read_text(encoding="utf-8")
@@ -120,6 +132,7 @@ _EN_SCENARIO_A = Scenario(
         ),
     ),
     lean_filename="ScenarioA.lean",
+    lean_subdir="en",
     audit_summary=(
         "The Lean 4 Formalization above proves "
         "<code>Indicated JohnDoe ThiazideDiuretic \u2227 "
@@ -198,6 +211,7 @@ _EN_SCENARIO_B = Scenario(
         ),
     ),
     lean_filename="ScenarioB.lean",
+    lean_subdir="en",
     audit_summary=(
         "The Lean 4 Formalization above proves "
         "<code>Indicated JaneRoe IVRegularInsulin \u2227 "
@@ -276,6 +290,7 @@ _EN_SCENARIO_C = Scenario(
         ),
     ),
     lean_filename="ScenarioC.lean",
+    lean_subdir="en",
     audit_summary=(
         "The Lean 4 Formalization above proves "
         "<code>Indicated RichardRoe Benzodiazepine \u2227 "
@@ -359,13 +374,15 @@ _JA_SCENARIO_A = Scenario(
         ),
     ),
     lean_filename="ScenarioA.lean",
+    lean_subdir="ja",
     audit_summary=(
-        "上記の Lean 4 形式化は、JSH2019 と JSN AKI ガイドライン2016 の"
-        "公理から <code>Indicated JohnDoe ThiazideDiuretic \u2227 "
-        "Contraindicated JohnDoe ThiazideDiuretic</code> を証明し、"
-        "<code>incompatible_modalities</code> を介して <code>False</code> を"
-        "導出します。カーネルが信頼する公理リストは、矛盾に関与した"
-        "ガイドラインと患者所見の正確な集合です。"
+        "上記の Lean 4 形式化は、<code>JSH2019_Ch5_FirstLine</code> と "
+        "<code>JSN_AKI2016_Diuretics</code> の公理から "
+        "<code>Indicated TaroYamada Treatment.thiazideDiuretic \u2227 "
+        "Contraindicated TaroYamada Treatment.thiazideDiuretic</code> を"
+        "証明し、<code>incompatible_modalities</code> を介して "
+        "<code>False</code> を導出します。カーネルが信頼する公理リストは、"
+        "矛盾に関与したガイドラインと患者所見の正確な集合です。"
     ),
     plain_english=(
         "本システムは、この72歳の患者について、ガイドライン 1（本態性"
@@ -434,14 +451,17 @@ _JA_SCENARIO_B = Scenario(
         ),
     ),
     lean_filename="ScenarioB.lean",
+    lean_subdir="ja",
     audit_summary=(
         "上記の Lean 4 形式化は、日本糖尿病学会『糖尿病診療ガイドライン"
-        "2024』第20-1項の DKA 適応公理と血清カリウム管理公理から "
-        "<code>Indicated JaneRoe IVRegularInsulin \u2227 "
-        "Contraindicated JaneRoe IVRegularInsulin</code> を証明し、"
-        "<code>incompatible_modalities</code> を介して <code>False</code> を"
-        "導出します。インスリン適応公理を文字通り読むと "
-        "K\u207a \u2265 3.3 mEq/L の前提条件が抜け落ちており、"
+        "2024』第20-1項の DKA 適応公理 "
+        "<code>JDS2024_Sec20_1_DKA</code> と血清カリウム管理公理 "
+        "<code>JDS2024_Sec20_1_KMgmt</code> から "
+        "<code>Indicated HanakoSuzuki Treatment.ivRegularInsulin \u2227 "
+        "Contraindicated HanakoSuzuki Treatment.ivRegularInsulin</code> を"
+        "証明し、<code>incompatible_modalities</code> を介して "
+        "<code>False</code> を導出します。インスリン適応公理を文字通り"
+        "読むと K\u207a \u2265 3.3 mEq/L の前提条件が抜け落ちており、"
         "それこそが本監査が暴き出すよう設計された符号化バグです。"
     ),
     plain_english=(
@@ -509,15 +529,19 @@ _JA_SCENARIO_C = Scenario(
         ),
     ),
     lean_filename="ScenarioC.lean",
+    lean_subdir="ja",
     audit_summary=(
-        "上記の Lean 4 形式化は、日本不安症学会・日本神経精神薬理学会 "
-        "『パニック症の診療ガイドライン（2025年版）』と日本呼吸器学会"
-        "『睡眠時無呼吸症候群（SAS）の診療ガイドライン2020』の公理から "
-        "<code>Indicated RichardRoe Benzodiazepine \u2227 "
-        "Contraindicated RichardRoe Benzodiazepine</code> を証明し、"
-        "<code>incompatible_modalities</code> を介して <code>False</code> を"
-        "導出します。本監査は、未治療の重症 OSA において日本のパニック症"
-        "ガイドライン推奨が引き起こす文字通りの衝突を可視化します。"
+        "上記の Lean 4 形式化は、日本不安症学会・日本神経精神薬理学会"
+        "『パニック症の診療ガイドライン（2025年版）』の "
+        "<code>JSAD_JSNP_Panic2025_Acute</code> 公理と日本呼吸器学会"
+        "『睡眠時無呼吸症候群（SAS）の診療ガイドライン2020』の "
+        "<code>JRS_SAS2020_BZD</code> 公理から "
+        "<code>Indicated IchiroTanaka Treatment.benzodiazepine \u2227 "
+        "Contraindicated IchiroTanaka Treatment.benzodiazepine</code> を"
+        "証明し、<code>incompatible_modalities</code> を介して "
+        "<code>False</code> を導出します。本監査は、未治療の重症 OSA に"
+        "おいて日本のパニック症ガイドライン推奨が引き起こす文字通りの"
+        "衝突を可視化します。"
     ),
     plain_english=(
         "本システムは、終夜睡眠ポリグラフ検査で確定された重症閉塞性"

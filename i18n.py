@@ -103,7 +103,7 @@ UI_STRINGS: Final[dict[str, dict[str, str]]] = {
         "decoder_dt_axiom": "Lean が証明なしに受け入れる前提 ── ガイドラインや患者所見。",
         "decoder_dt_theorem": "機械的に証明を検査した後にのみ Lean が受け入れる主張。",
         "decoder_dt_xt_label": "X : T",
-        "decoder_dt_xt": "<code>:</code> は「は〜である」と読む。<code>JohnDoe : Patient</code> = 「JohnDoe は Patient である」。",
+        "decoder_dt_xt": "<code>:</code> は「は〜である」と読む。<code>TaroYamada : Patient</code> = 「TaroYamada は Patient である」。",
         "decoder_dt_xy_label": "X := Y",
         "decoder_dt_xy": "<code>:=</code> は「と定義する」と読む。右辺の内容に <code>X</code> という名前を与える。",
         "decoder_dt_by": "ステップごとの戦術モードに切り替える ── 証明を組み立てるレシピ。",

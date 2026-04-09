@@ -36,17 +36,18 @@ from pygments.lexers import Lean4Lexer
 
 from i18n import (
     LANGUAGE_COOKIE,
+    SUPPORTED_LOCALES,
     get_ui_strings,
     normalize_locale,
     other_locale,
 )
 from lean_decorate import render_lean_with_tooltips
 from scenarios import (
-    KNOWLEDGE_BASE_FILE,
     KNOWLEDGE_BASE_MODULE,
     LEAN_DIR,
     Scenario,
     get_scenarios,
+    knowledge_base_file,
 )
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -59,18 +60,22 @@ LEAN_TIMEOUT_SECONDS = 60
 _LEXER = Lean4Lexer()
 _FORMATTER = HtmlFormatter(nowrap=False, cssclass="lean-code", noclasses=False)
 
-def _highlight_lean(code: str) -> str:
+def _highlight_lean(code: str, locale: str) -> str:
     """Render Lean 4 source as syntax-highlighted HTML with per-line tips.
 
     The real work lives in `lean_decorate.render_lean_with_tooltips`: it
     parses the scenario file into a line → declaration map, runs Pygments
     normally, and then rewrites every recognised token span so its
-    `data-lean-tip` attribute holds a plain-English sentence composed
-    from *that specific line's* declaration (name, type, proof body, or
-    tactic argument). The browser tooltip popover in
-    `static/tooltips.js` reads the attribute value directly.
+    `data-lean-tip` attribute holds a plain-English (or plain-Japanese)
+    sentence composed from *that specific line's* declaration (name,
+    type, proof body, or tactic argument). The browser tooltip popover
+    in `static/tooltips.js` reads the attribute value directly.
+
+    ``locale`` selects which medical-knowledge vocabulary table to read
+    for guideline-axiom and patient-name glosses, so the JA build of a
+    scenario file gets Japanese tooltips referencing JSH/JDS/JRS axioms.
     """
-    return render_lean_with_tooltips(code, _LEXER, _FORMATTER)
+    return render_lean_with_tooltips(code, _LEXER, _FORMATTER, locale=locale)
 
 
 def _write_syntax_css() -> None:
@@ -93,16 +98,18 @@ def _write_syntax_css() -> None:
 _write_syntax_css()
 
 
-def _ensure_knowledge_base_compiled() -> str | None:
-    """Compile ``MedicalKnowledge.lean`` to ``.olean`` if it is stale.
+def _ensure_knowledge_base_compiled(locale: str) -> str | None:
+    """Compile a locale's ``MedicalKnowledge.lean`` to ``.olean`` if stale.
 
-    Returns ``None`` on success or a human-readable error string on failure.
-    The compiled artefact is what every scenario file imports, so the
-    application refuses to start serving verifications until it exists.
+    Returns ``None`` on success or a human-readable error string on
+    failure. The compiled artefact is what every scenario file in the
+    locale's ``lean/<locale>/`` directory imports.
     """
-    olean_path = LEAN_DIR / f"{KNOWLEDGE_BASE_MODULE}.olean"
-    ilean_path = LEAN_DIR / f"{KNOWLEDGE_BASE_MODULE}.ilean"
-    src_mtime = KNOWLEDGE_BASE_FILE.stat().st_mtime
+    src = knowledge_base_file(locale)
+    locale_dir = src.parent
+    olean_path = locale_dir / f"{KNOWLEDGE_BASE_MODULE}.olean"
+    ilean_path = locale_dir / f"{KNOWLEDGE_BASE_MODULE}.ilean"
+    src_mtime = src.stat().st_mtime
     if (
         olean_path.exists()
         and olean_path.stat().st_mtime >= src_mtime
@@ -118,12 +125,12 @@ def _ensure_knowledge_base_compiled() -> str | None:
                 olean_path.name,
                 "-i",
                 ilean_path.name,
-                KNOWLEDGE_BASE_FILE.name,
+                src.name,
             ],
             capture_output=True,
             text=True,
             timeout=LEAN_TIMEOUT_SECONDS,
-            cwd=LEAN_DIR,
+            cwd=locale_dir,
         )
     except FileNotFoundError:
         return (
@@ -132,18 +139,23 @@ def _ensure_knowledge_base_compiled() -> str | None:
         )
     except subprocess.TimeoutExpired:
         return (
-            f"Compiling MedicalKnowledge.lean exceeded the "
+            f"Compiling {locale}/MedicalKnowledge.lean exceeded the "
             f"{LEAN_TIMEOUT_SECONDS}s time limit."
         )
     if completed.returncode != 0:
         return (
-            "Lean failed to compile MedicalKnowledge.lean:\n"
+            f"Lean failed to compile {locale}/MedicalKnowledge.lean:\n"
             f"{completed.stdout}\n{completed.stderr}".strip()
         )
     return None
 
 
-_KNOWLEDGE_BASE_ERROR: str | None = _ensure_knowledge_base_compiled()
+def _precompile_all_knowledge_bases() -> dict[str, str | None]:
+    """Compile every supported locale's knowledge base; return errors keyed by locale."""
+    return {loc: _ensure_knowledge_base_compiled(loc) for loc in SUPPORTED_LOCALES}
+
+
+_KNOWLEDGE_BASE_ERRORS: dict[str, str | None] = _precompile_all_knowledge_bases()
 
 
 class Verdict(enum.Enum):
@@ -202,20 +214,28 @@ def _classify(
 
 
 def _run_lean(scenario: Scenario) -> VerificationResult:
-    """Invoke ``lean`` against the scenario's static ``.lean`` file."""
-    if _KNOWLEDGE_BASE_ERROR is not None:
+    """Invoke ``lean`` against the scenario's static ``.lean`` file.
+
+    Each scenario lives under ``lean/<locale>/`` and imports the
+    sibling ``MedicalKnowledge.olean`` from that same directory, so the
+    subprocess is run with ``cwd`` and ``LEAN_PATH`` both set to the
+    locale-specific subdirectory.
+    """
+    locale_error = _KNOWLEDGE_BASE_ERRORS.get(scenario.lean_subdir)
+    if locale_error is not None:
         return VerificationResult(
             exit_code=-1,
             stdout="",
             stderr="",
             verdict=None,
             trusted_axioms=(),
-            error_message=_KNOWLEDGE_BASE_ERROR,
+            error_message=locale_error,
         )
+    locale_dir = scenario.lean_dir
     env = os.environ.copy()
     existing = env.get("LEAN_PATH")
     env["LEAN_PATH"] = (
-        f"{LEAN_DIR}{os.pathsep}{existing}" if existing else str(LEAN_DIR)
+        f"{locale_dir}{os.pathsep}{existing}" if existing else str(locale_dir)
     )
     try:
         completed = subprocess.run(
@@ -223,7 +243,7 @@ def _run_lean(scenario: Scenario) -> VerificationResult:
             capture_output=True,
             text=True,
             timeout=LEAN_TIMEOUT_SECONDS,
-            cwd=LEAN_DIR,
+            cwd=locale_dir,
             env=env,
         )
     except FileNotFoundError:
@@ -290,7 +310,7 @@ def _scenario_context(scenario: Scenario, locale: str) -> dict[str, object]:
     return {
         "scenario": scenario,
         "lean_source": lean_source,
-        "highlighted_lean": _highlight_lean(lean_source),
+        "highlighted_lean": _highlight_lean(lean_source, locale),
         "lang": locale,
         "other_lang": other_locale(locale),
         "t": get_ui_strings(locale),

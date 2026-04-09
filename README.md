@@ -17,13 +17,20 @@ on the right), and a verification button that runs the `lean` compiler
 against the scenario's pre-written file and surfaces the trusted-axiom
 list extracted from `#print axioms absurd`.
 
-The interface is bilingual. **Japanese (日本語) is the default** and the
-header carries a JA/EN toggle. The Japanese build cites Japanese medical
-society guidelines (JSH 2019, JSN AKI 2016, JDS 2024, JSAD/JSNP 2025
-パニック症診療ガイドライン, JRS SAS 2020); the English build cites the
-original American guidelines (ACC/AHA, KDIGO, ADA, AACE/ACE, APA, AASM).
-The Lean 4 source files are language-neutral — only the natural-language
-metadata around them varies — so a single proof underwrites both locales.
+The interface is bilingual end-to-end. **Japanese (日本語) is the
+default** and the header carries a JA/EN toggle. The Japanese build
+cites Japanese medical society guidelines (JSH 2019, JSN AKI 2016,
+JDS 2024, JSAD/JSNP 2025 パニック症診療ガイドライン, JRS SAS 2020) and
+ships its own `lean/ja/` source tree with Japanese placeholder patient
+names (`TaroYamada`, `HanakoSuzuki`, `IchiroTanaka`) and Japanese
+guideline axiom identifiers (`JSH2019_Ch5_FirstLine`,
+`JSN_AKI2016_Diuretics`, `JDS2024_Sec20_1_DKA`, …). The English build
+ships `lean/en/` with the original American guidelines (ACC/AHA, KDIGO,
+ADA, AACE/ACE, APA, AASM) and `JohnDoe / JaneRoe / RichardRoe`. Hover
+tooltips on the highlighted Lean source are likewise localized: the
+JA build's `data-lean-tip` attributes hold Japanese explanations, the
+EN build's hold English. The two trees prove the same theorem
+structure with renamed identifiers.
 
 ## Stack
 
@@ -66,13 +73,19 @@ Verification**.
 ├── app.py                          # Litestar app + Lean subprocess wrapper
 ├── i18n.py                         # JA/EN UI string catalogs + locale resolver
 ├── scenarios.py                    # Per-locale scenario metadata, ID → .lean filename map
-├── lean_decorate.py                # Pygments → per-line tooltip HTML renderer
-├── lean_vocab.py                   # Plain-English glosses for every MedicalKnowledge symbol
+├── lean_decorate.py                # Pygments → per-line tooltip HTML renderer (locale-aware)
+├── lean_vocab.py                   # Per-locale glosses for every MedicalKnowledge symbol
 ├── lean/
-│   ├── MedicalKnowledge.lean       # Shared knowledge base: types, predicates, axioms
-│   ├── ScenarioA.lean              # Hypertension vs. severe dehydration proof
-│   ├── ScenarioB.lean              # DKA vs. severe hypokalaemia proof
-│   └── ScenarioC.lean              # Acute panic vs. untreated severe OSA proof
+│   ├── en/                         # American guideline axioms + romanized patient names
+│   │   ├── MedicalKnowledge.lean   #   AHA/KDIGO/ADA/AACE/APA/AASM
+│   │   ├── ScenarioA.lean          #   JohnDoe — hypertension vs. severe dehydration
+│   │   ├── ScenarioB.lean          #   JaneRoe — DKA vs. severe hypokalaemia
+│   │   └── ScenarioC.lean          #   RichardRoe — acute panic vs. untreated severe OSA
+│   └── ja/                         # Japanese guideline axioms + Japanese patient names
+│       ├── MedicalKnowledge.lean   #   JSH/JSN/JDS/JSAD-JSNP/JRS
+│       ├── ScenarioA.lean          #   TaroYamada (山田太郎)
+│       ├── ScenarioB.lean          #   HanakoSuzuki (鈴木花子)
+│       └── ScenarioC.lean          #   IchiroTanaka (田中一郎)
 ├── scripts/
 │   └── check_scenarios.py          # Regression harness asserting expected axiom sets
 ├── templates/
@@ -106,20 +119,26 @@ response sets the `cds_lang` cookie so a one-time toggle is sticky.
 
 ### Verification pipeline (`app.py` `_run_lean`)
 
-1. At import time, `_ensure_knowledge_base_compiled()` checks the mtimes
-   of `lean/MedicalKnowledge.lean` against its `.olean` / `.ilean`
-   companions and runs `lean -o MedicalKnowledge.olean -i
-   MedicalKnowledge.ilean MedicalKnowledge.lean` if either is missing or
-   stale. The compiled module is what every scenario file imports.
+1. At import time, `_precompile_all_knowledge_bases()` walks every
+   supported locale and runs `_ensure_knowledge_base_compiled(locale)`,
+   which checks the mtimes of `lean/<locale>/MedicalKnowledge.lean`
+   against its `.olean` / `.ilean` companions and runs
+   `lean -o MedicalKnowledge.olean -i MedicalKnowledge.ilean
+   MedicalKnowledge.lean` (with `cwd=lean/<locale>`) if either is missing
+   or stale. The compiled module is what each locale's scenario files
+   import.
 2. A request to `POST /scenarios/{id}/verify` looks the scenario up in
    the per-locale `scenarios.get_scenarios(locale)` whitelist. Unknown
    ids 404. **No request data is ever interpolated into Lean source** —
    the only thing the handler does is map an id to a fixed filename,
    which is identical across locales.
-3. `subprocess.run([LEAN_BINARY, scenario.lean_filename], cwd=lean/,
-   env={"LEAN_PATH": "lean/", ...}, timeout=60)`. Setting `LEAN_PATH`
-   lets the static `import MedicalKnowledge` line in each scenario
-   resolve against the precompiled `.olean`.
+3. `subprocess.run([LEAN_BINARY, scenario.lean_filename],
+   cwd=lean/<locale>/, env={"LEAN_PATH": "lean/<locale>/", ...},
+   timeout=60)`. Setting `LEAN_PATH` to the locale subdirectory lets the
+   static `import MedicalKnowledge` line in each scenario resolve against
+   the locale-specific precompiled `.olean` (so the JA build sees the
+   JSH / JDS / JRS axioms and the EN build sees the AHA / ADA / AASM
+   axioms).
 4. `_parse_trusted_axioms()` scans stdout for the
    `'…absurd' depends on axioms: [ … ]` block emitted by the
    `#print axioms absurd` line at the end of every scenario file and
@@ -160,7 +179,8 @@ class Scenario:
     patient_summary: str
     guideline_a: Guideline
     guideline_b: Guideline
-    lean_filename: str         # filename inside lean/ (e.g. "ScenarioA.lean")
+    lean_filename: str         # filename, e.g. "ScenarioA.lean"
+    lean_subdir: str           # locale dir, e.g. "ja" or "en"
     audit_summary: str         # short technical caption under the code frame
     plain_english: str         # narrative shown in the verification result alert
 
@@ -172,13 +192,21 @@ SCENARIOS_BY_LOCALE: dict[str, dict[str, Scenario]] = {
 def get_scenarios(locale: str) -> dict[str, Scenario]: ...
 ```
 
-The same `lean_filename` is shared between the JA and EN copies of each
-scenario, so a single Lean proof underwrites both. UI chrome strings
+Each `Scenario` resolves its file via `lean/<lean_subdir>/<lean_filename>`,
+so the JA and EN copies of `scenario-a` share an `id` and a `lean_filename`
+("ScenarioA.lean") but live in `lean/ja/` and `lean/en/` respectively
+with locale-appropriate identifiers (`TaroYamada` vs. `JohnDoe`,
+`JSH2019_Ch5_FirstLine` vs. `AHA_ACC_HTN_8_1_5`). UI chrome strings
 (button labels, alert titles, decoder legend, etc.) live separately in
-`i18n.UI_STRINGS` and reach templates as `t`.
+`i18n.UI_STRINGS` and reach templates as `t`. Tooltip prose lives in
+`lean_vocab.py` (per-locale `VocabEntry` tables) and `lean_decorate.py`
+(per-locale composer branches), so hovering on `JSH2019_Ch5_FirstLine`
+in the JA build shows a Japanese explanation while hovering on
+`AHA_ACC_HTN_8_1_5` in the EN build shows an English one.
 
 `scenarios.py` carries no Lean source. The actual proof for each
-scenario lives in `lean/<lean_filename>` and follows the same shape:
+scenario lives in `lean/<lean_subdir>/<lean_filename>` and follows the
+same shape:
 
 * `import MedicalKnowledge`
 * a fresh `namespace ClinicalAudit.ScenarioX`
@@ -192,23 +220,33 @@ scenario lives in `lean/<lean_filename>` and follows the same shape:
 
 ### Adding a new scenario
 
-1. Add a guideline (or two) and any new condition predicates to
-   `lean/MedicalKnowledge.lean`. Each guideline is a single
-   `axiom` of shape `∀ p, HasFooCondition p → Indicated p Treatment.bar`
-   (or `Contraindicated`). Delete the cached `MedicalKnowledge.olean`
-   so the host recompiles it on next request.
-2. Create `lean/ScenarioD.lean` following the structure above and
-   prove `theorem absurd : False` with explicit tactics. Run
-   `LEAN_PATH=lean lean lean/ScenarioD.lean` once by hand to confirm
-   the kernel accepts the proof.
+1. Add the new guideline (or two) and any new condition predicates to
+   **both** `lean/en/MedicalKnowledge.lean` and
+   `lean/ja/MedicalKnowledge.lean`. Each guideline is a single `axiom`
+   of shape `∀ p, HasFooCondition p → Indicated p Treatment.bar` (or
+   `Contraindicated`); the EN file names it after the American society
+   (e.g. `AHA_…`) and the JA file after the Japanese society (e.g.
+   `JSH…`). Delete the cached `MedicalKnowledge.olean` in each locale
+   directory so the host recompiles it on next request.
+2. Create `lean/en/ScenarioD.lean` and `lean/ja/ScenarioD.lean`
+   following the structure above and prove `theorem absurd : False`
+   with explicit tactics. Run
+   `(cd lean/en && LEAN_PATH=. lean ScenarioD.lean)` and the
+   corresponding `lean/ja/` invocation by hand to confirm the kernel
+   accepts each proof.
 3. Append a new `Scenario` constant to `scenarios.py` for **both**
-   locales (`_JA_SCENARIO_D` citing the relevant Japanese guideline and
+   locales (`_JA_SCENARIO_D` citing the Japanese guideline and
    `_EN_SCENARIO_D` citing the American one) with `lean_filename=
-   "ScenarioD.lean"`, then add each to the matching entry in
-   `SCENARIOS_BY_LOCALE` at the bottom of the module.
-4. Append the expected axiom set to `scripts/check_scenarios.py` so the
-   regression harness pins the new proof.
-5. The sidebar, fragment endpoint, and verify endpoint all pick the new
+   "ScenarioD.lean"` and `lean_subdir="ja"` / `lean_subdir="en"`. Add
+   each to the matching entry in `SCENARIOS_BY_LOCALE` at the bottom of
+   the module.
+4. Add `VocabEntry` records for any new symbols to **both**
+   `_EN_VOCAB` and `_JA_VOCAB` in `lean_vocab.py` so the tooltip
+   composer has English and Japanese glosses for them.
+5. Append the expected axiom set to **both** locale dicts in
+   `scripts/check_scenarios.py` so the regression harness pins the new
+   proof in each language.
+6. The sidebar, fragment endpoint, and verify endpoint all pick the new
    scenario up automatically — no template edits required.
 
 ## Common dev tasks
@@ -226,20 +264,22 @@ uv add --dev <package>
 # Run an arbitrary command in the project venv
 uv run <command>
 
-# Re-verify all 3 Lean scenarios from the CLI (no server)
+# Re-verify all 6 Lean scenarios (3 × 2 locales) from the CLI (no server)
 uv run python -c "
 from app import _run_lean
 from scenarios import get_scenarios
-for sid, sc in get_scenarios('ja').items():   # locale-neutral; .lean files are shared
-    r = _run_lean(sc)
-    print(sid, r.verdict, list(r.trusted_axioms), r.exit_code)
+for locale in ('ja', 'en'):
+    for sid, sc in get_scenarios(locale).items():
+        r = _run_lean(sc)
+        print(locale, sid, r.verdict, list(r.trusted_axioms), r.exit_code)
 "
 
-# Run the regression harness
+# Run the regression harness (pins both locales)
 uv run python scripts/check_scenarios.py
 
-# Compile a single scenario by hand against the knowledge base
-(cd lean && LEAN_PATH=. lean ScenarioA.lean)
+# Compile a single scenario by hand against its locale's knowledge base
+(cd lean/ja && LEAN_PATH=. lean ScenarioA.lean)
+(cd lean/en && LEAN_PATH=. lean ScenarioA.lean)
 ```
 
 `static/syntax.css` is overwritten on every app import — don't hand-edit it;
