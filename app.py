@@ -1,10 +1,11 @@
 """Verifiable Clinical Decision Support — Litestar application.
 
-Serves the Guideline Collision Gallery UI and exposes a verification
-endpoint that invokes the Lean 4 compiler against a *static*, pre-written
-``ScenarioX.lean`` file. No user input is ever interpolated into Lean
-source: each scenario id is mapped through an in-process whitelist
-(``scenarios.SCENARIOS``) to a fixed filename in the ``lean/`` directory.
+Serves the bilingual Guideline Collision Gallery UI (Japanese default,
+English toggle) and exposes a verification endpoint that invokes the
+Lean 4 compiler against a *static*, pre-written ``ScenarioX.lean`` file.
+No user input is ever interpolated into Lean source: each scenario id is
+mapped through an in-process whitelist (``scenarios.get_scenarios``) to
+a fixed filename in the ``lean/`` directory.
 
 At import time the shared knowledge base (``lean/MedicalKnowledge.lean``)
 is compiled once to ``lean/MedicalKnowledge.olean`` so that subsequent
@@ -23,8 +24,9 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from litestar import Litestar, get, post
+from litestar import Litestar, Request, get, post
 from litestar.contrib.jinja import JinjaTemplateEngine
+from litestar.datastructures import Cookie
 from litestar.exceptions import NotFoundException
 from litestar.response import Template
 from litestar.static_files import create_static_files_router
@@ -32,13 +34,19 @@ from litestar.template.config import TemplateConfig
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import Lean4Lexer
 
+from i18n import (
+    LANGUAGE_COOKIE,
+    get_ui_strings,
+    normalize_locale,
+    other_locale,
+)
 from lean_decorate import render_lean_with_tooltips
 from scenarios import (
     KNOWLEDGE_BASE_FILE,
     KNOWLEDGE_BASE_MODULE,
     LEAN_DIR,
-    SCENARIOS,
     Scenario,
+    get_scenarios,
 )
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -255,51 +263,95 @@ def _run_lean(scenario: Scenario) -> VerificationResult:
     )
 
 
-def _get_scenario(scenario_id: str) -> Scenario:
-    scenario = SCENARIOS.get(scenario_id)
+def _resolve_locale(request: Request) -> str:
+    """Pick the active locale from query string, then cookie, then default.
+
+    Query parameter ``?lang=ja|en`` always wins so a deep link or the
+    header toggle can override a previously stored cookie. Anything else
+    falls back to the JA default.
+    """
+    query_lang = request.query_params.get("lang") if request.query_params else None
+    if query_lang is not None:
+        return normalize_locale(query_lang)
+    cookie_lang = request.cookies.get(LANGUAGE_COOKIE) if request.cookies else None
+    return normalize_locale(cookie_lang)
+
+
+def _get_scenario(scenario_id: str, locale: str) -> Scenario:
+    scenarios = get_scenarios(locale)
+    scenario = scenarios.get(scenario_id)
     if scenario is None:
         raise NotFoundException(detail=f"Unknown scenario id: {scenario_id}")
     return scenario
 
 
-def _scenario_context(scenario: Scenario) -> dict[str, object]:
+def _scenario_context(scenario: Scenario, locale: str) -> dict[str, object]:
     lean_source = scenario.read_lean_source()
     return {
         "scenario": scenario,
         "lean_source": lean_source,
         "highlighted_lean": _highlight_lean(lean_source),
+        "lang": locale,
+        "other_lang": other_locale(locale),
+        "t": get_ui_strings(locale),
     }
 
 
+def _persist_locale(template: Template, locale: str) -> Template:
+    """Attach a long-lived ``cds_lang`` cookie to ``template``."""
+    template.cookies = [
+        Cookie(
+            key=LANGUAGE_COOKIE,
+            value=locale,
+            path="/",
+            max_age=60 * 60 * 24 * 365,
+            httponly=False,
+            samesite="lax",
+        )
+    ]
+    return template
+
+
 @get("/", name="index")
-async def index() -> Template:
-    scenarios = list(SCENARIOS.values())
-    return Template(
+async def index(request: Request) -> Template:
+    locale = _resolve_locale(request)
+    scenarios = list(get_scenarios(locale).values())
+    template = Template(
         template_name="index.html",
         context={
             "scenarios": scenarios,
-            **_scenario_context(scenarios[0]),
+            **_scenario_context(scenarios[0], locale),
         },
     )
+    return _persist_locale(template, locale)
 
 
 @get("/scenarios/{scenario_id:str}", name="scenario_panel")
-async def scenario_panel(scenario_id: str) -> Template:
-    scenario = _get_scenario(scenario_id)
-    return Template(
+async def scenario_panel(scenario_id: str, request: Request) -> Template:
+    locale = _resolve_locale(request)
+    scenario = _get_scenario(scenario_id, locale)
+    template = Template(
         template_name="_scenario_panel.html",
-        context=_scenario_context(scenario),
+        context=_scenario_context(scenario, locale),
     )
+    return _persist_locale(template, locale)
 
 
 @post("/scenarios/{scenario_id:str}/verify", name="verify_scenario")
-async def verify_scenario(scenario_id: str) -> Template:
-    scenario = _get_scenario(scenario_id)
+async def verify_scenario(scenario_id: str, request: Request) -> Template:
+    locale = _resolve_locale(request)
+    scenario = _get_scenario(scenario_id, locale)
     result = _run_lean(scenario)
-    return Template(
+    template = Template(
         template_name="_verification_result.html",
-        context={"scenario": scenario, "result": result},
+        context={
+            "scenario": scenario,
+            "result": result,
+            "lang": locale,
+            "t": get_ui_strings(locale),
+        },
     )
+    return _persist_locale(template, locale)
 
 
 app = Litestar(

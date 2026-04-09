@@ -1,10 +1,17 @@
-"""Clinical scenarios with authentic guideline excerpts and Lean 4 metadata.
+"""Bilingual clinical scenarios with authentic guideline excerpts.
 
 Each scenario describes a single patient context in which two real-world
-clinical guidelines collide. The actual formal verification lives in static
-``.lean`` files under the ``lean/`` directory; this module merely declares
-the ID-to-filename mapping plus the natural-language metadata that the UI
-needs to render the scenario panel.
+clinical guidelines collide. The actual formal verification lives in
+language-neutral ``.lean`` files under the ``lean/`` directory; this module
+declares:
+
+* the ID-to-Lean-filename mapping (shared across locales),
+* per-locale natural-language metadata for the UI panel.
+
+The Japanese (``ja``) locale cites Japanese medical society guidelines
+(JSH 2019, JSN AKI 2016, JDS 2024, JSAD/JSNP 2025, JRS SAS 2020) and the
+English (``en``) locale cites the original American guidelines
+(AHA/ACC 2017, KDIGO AKI, ADA Standards of Care, AACE/ACE, APA, AASM).
 
 The host process never injects user-controlled strings into the Lean source.
 Each scenario references a pre-written file by name, and the verifier
@@ -15,6 +22,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+
+from i18n import DEFAULT_LOCALE, normalize_locale
 
 LEAN_DIR: Path = Path(__file__).resolve().parent / "lean"
 KNOWLEDGE_BASE_FILE: Path = LEAN_DIR / "MedicalKnowledge.lean"
@@ -47,7 +56,11 @@ class Scenario:
         return self.lean_path.read_text(encoding="utf-8")
 
 
-SCENARIO_A = Scenario(
+# ---------------------------------------------------------------------------
+# English (American clinical guidelines).
+# ---------------------------------------------------------------------------
+
+_EN_SCENARIO_A = Scenario(
     id="scenario-a",
     title="Hypertension vs. Severe Dehydration",
     subtitle="Thiazide diuretic — indicated and contraindicated",
@@ -63,7 +76,7 @@ SCENARIO_A = Scenario(
         "<strong class=\"cds-cond\">severe dehydration</strong>."
     ),
     guideline_a=Guideline(
-        source="AHA/ACC/AHA Guideline for the Prevention, Detection, "
+        source="2017 ACC/AHA Guideline for the Prevention, Detection, "
                "Evaluation, and Management of High Blood Pressure in Adults — "
                "Section 8.1.5",
         body=(
@@ -119,7 +132,7 @@ SCENARIO_A = Scenario(
     plain_english=(
         "The system has mathematically proven that, for this 72-year-old "
         "patient, it is impossible to simultaneously follow Guideline 1 "
-        "(the AHA/ACC recommendation to start a thiazide diuretic for "
+        "(the ACC/AHA recommendation to start a thiazide diuretic for "
         "essential hypertension) and Guideline 2 (the KDIGO safety "
         "statement that forbids any diuretic in severe dehydration) "
         "without violating the fundamental rule that a single drug "
@@ -129,7 +142,7 @@ SCENARIO_A = Scenario(
 )
 
 
-SCENARIO_B = Scenario(
+_EN_SCENARIO_B = Scenario(
     id="scenario-b",
     title="Diabetic Ketoacidosis vs. Severe Hypokalemia",
     subtitle="Intravenous insulin — indicated and contraindicated",
@@ -208,7 +221,7 @@ SCENARIO_B = Scenario(
 )
 
 
-SCENARIO_C = Scenario(
+_EN_SCENARIO_C = Scenario(
     id="scenario-c",
     title="Acute Panic Disorder vs. Severe Obstructive Sleep Apnea",
     subtitle="Benzodiazepine — indicated and contraindicated",
@@ -287,8 +300,262 @@ SCENARIO_C = Scenario(
 )
 
 
-SCENARIOS: dict[str, Scenario] = {
-    SCENARIO_A.id: SCENARIO_A,
-    SCENARIO_B.id: SCENARIO_B,
-    SCENARIO_C.id: SCENARIO_C,
+# ---------------------------------------------------------------------------
+# Japanese (Japanese clinical guidelines).
+# ---------------------------------------------------------------------------
+
+_JA_SCENARIO_A = Scenario(
+    id="scenario-a",
+    title="高血圧症 対 重症脱水",
+    subtitle="サイアザイド系利尿薬 ── 適応かつ禁忌",
+    patient_summary=(
+        "15年来の<strong class=\"cds-cond\">本態性高血圧</strong>"
+        "の既往を有する72歳の患者。急性胃腸炎に伴い救急外来を受診し、"
+        "<strong class=\"cds-find\">低血圧</strong>（血圧 84/52 mmHg）、"
+        "<strong class=\"cds-find\">頻脈</strong>、"
+        "<strong class=\"cds-find\">乏尿</strong>、"
+        "<strong class=\"cds-find\">BUN/Cr 比 28:1</strong>、"
+        "ならびに<strong class=\"cds-cond\">重症脱水</strong>"
+        "の臨床所見を呈している。"
+    ),
+    guideline_a=Guideline(
+        source="日本高血圧学会『高血圧治療ガイドライン2019（JSH2019）』── "
+               "第5章「降圧薬」積極的適応のない高血圧の第一選択薬",
+        body=(
+            "確定診断された<strong class=\"cds-cond\">本態性高血圧</strong>"
+            "を有する成人で、積極的適応がない場合、"
+            "<strong class=\"cds-int\">サイアザイド系利尿薬</strong>"
+            "（少量投与を原則とする）は、Ca拮抗薬および ARB／ACE 阻害薬と"
+            "並ぶ第一選択降圧薬として"
+            "<strong class=\"cds-ind\">適応</strong>される"
+            "（推奨グレード A、エビデンスレベル I）。本ガイドラインは、"
+            "食塩摂取量の多い日本人集団および高齢者において"
+            "<strong class=\"cds-int\">サイアザイド系利尿薬</strong>"
+            "の有用性が高いことを明記しており、長期血圧管理において"
+            "ガイドラインに基づく薬物療法の中核を担う。"
+        ),
+    ),
+    guideline_b=Guideline(
+        source="日本腎臓学会ほか合同『AKI（急性腎障害）診療ガイドライン2016』── "
+               "第3章 CQ「利尿薬の AKI 予防・治療における推奨」",
+        body=(
+            "<strong class=\"cds-cond\">重症脱水</strong>"
+            "の臨床的所見 ── すなわち明らかな"
+            "<strong class=\"cds-find\">低血圧</strong>、"
+            "<strong class=\"cds-find\">洞性頻脈</strong>、"
+            "<strong class=\"cds-find\">乏尿</strong>"
+            "（&lt;0.5 mL/kg/時）、"
+            "<strong class=\"cds-find\">BUN/Cr 比の上昇</strong>"
+            "（&gt;20:1）、ならびに末梢臓器灌流低下を示す検査・身体所見 ── "
+            "を呈する患者においては、いかなる"
+            "<strong class=\"cds-int\">利尿薬療法</strong>"
+            "の開始または継続も"
+            "<strong class=\"cds-con\">絶対禁忌</strong>"
+            "である。本ガイドラインは、まず十分な輸液による容量補正を"
+            "行うことを推奨し、AKI の予防および治療目的での利尿薬投与は"
+            "推奨しない。本血行動態下での利尿薬投与は、循環虚脱、"
+            "虚血性急性腎障害、ならびに多臓器不全進行の容認できない"
+            "リスクを伴う（推奨度 1、エビデンスレベル B）。"
+        ),
+    ),
+    lean_filename="ScenarioA.lean",
+    audit_summary=(
+        "上記の Lean 4 形式化は、JSH2019 と JSN AKI ガイドライン2016 の"
+        "公理から <code>Indicated JohnDoe ThiazideDiuretic \u2227 "
+        "Contraindicated JohnDoe ThiazideDiuretic</code> を証明し、"
+        "<code>incompatible_modalities</code> を介して <code>False</code> を"
+        "導出します。カーネルが信頼する公理リストは、矛盾に関与した"
+        "ガイドラインと患者所見の正確な集合です。"
+    ),
+    plain_english=(
+        "本システムは、この72歳の患者について、ガイドライン 1（本態性"
+        "高血圧に対しサイアザイド系利尿薬を第一選択薬として推奨する"
+        "JSH2019 第5章）とガイドライン 2（重症脱水においていかなる利尿薬"
+        "投与も推奨しない JSN AKI 診療ガイドライン2016）を同時に遵守する"
+        "ことが、「同一の薬剤を同一患者に対し同時に<em>適応</em>かつ"
+        "<em>禁忌</em>とすることはできない」という基本原則に違反せずには"
+        "不可能であることを数学的に証明しました。"
+    ),
+)
+
+
+_JA_SCENARIO_B = Scenario(
+    id="scenario-b",
+    title="糖尿病性ケトアシドーシス 対 重症低カリウム血症",
+    subtitle="経静脈インスリン ── 適応かつ禁忌",
+    patient_summary=(
+        "1型糖尿病を有する34歳の患者。多尿、Kussmaul 呼吸、"
+        "<strong class=\"cds-find\">血漿グルコース 612 mg/dL</strong>、"
+        "<strong class=\"cds-find\">動脈血 pH 7.18</strong>、"
+        "<strong class=\"cds-find\">血清重炭酸 9 mEq/L</strong>、"
+        "アニオンギャップ 28、"
+        "<strong class=\"cds-find\">中等度ケトン尿</strong>、"
+        "ならびに測定値"
+        "<strong class=\"cds-find\">血清カリウム 2.9 mEq/L</strong>"
+        "を呈している。"
+    ),
+    guideline_a=Guideline(
+        source="日本糖尿病学会『糖尿病診療ガイドライン2024』── "
+               "第20-1項「糖尿病性ケトアシドーシスの診断と治療」",
+        body=(
+            "<strong class=\"cds-cond\">糖尿病性ケトアシドーシス</strong>"
+            "（<strong class=\"cds-find\">血漿グルコース &gt;250 mg/dL</strong>、"
+            "<strong class=\"cds-find\">動脈血 pH &lt;7.30</strong>、"
+            "<strong class=\"cds-find\">血清重炭酸 &lt;18 mEq/L</strong>、"
+            "ならびにケトン血症または"
+            "<strong class=\"cds-find\">中等度以上のケトン尿</strong>"
+            "の存在）の診断基準を満たす成人患者に対しては、"
+            "<strong class=\"cds-int\">速効型インスリンの持続静注</strong>"
+            "（0.1 単位/kg/時）の速やかな開始が、インスリン欠乏の補正、"
+            "肝でのケトン体産生抑制、ならびに代謝性アシドーシスの改善を"
+            "目的として"
+            "<strong class=\"cds-ind\">適応</strong>される"
+            "（推奨グレード A、エビデンスレベル 1）。"
+            "<strong class=\"cds-cond\">DKA</strong> 診断基準が確認され次第、"
+            "インスリン療法を遅延させてはならない。"
+        ),
+    ),
+    guideline_b=Guideline(
+        source="日本糖尿病学会『糖尿病診療ガイドライン2024』── "
+               "第20-1項 DKA 治療アルゴリズム「血清カリウム管理」",
+        body=(
+            "<strong class=\"cds-cond\">DKA</strong> を呈する患者で、"
+            "<strong class=\"cds-find\">血清カリウム濃度が 3.3 mEq/L 未満</strong>"
+            "と測定された症例においては、十分な経静脈カリウム補充により"
+            "血清カリウムが 3.3 mEq/L 以上に回復するまで、"
+            "<strong class=\"cds-int\">インスリン</strong>"
+            "の投与は"
+            "<strong class=\"cds-con\">厳禁</strong>"
+            "とする。先行する"
+            "<strong class=\"cds-cond\">低カリウム血症</strong>"
+            "の状態下でインスリンが惹起する細胞内カリウム移動は、"
+            "致死的な心室性不整脈、呼吸筋麻痺、ならびに心停止の差し迫った"
+            "リスクを伴う（推奨グレード A、エビデンスレベル 1 ── 害）。"
+        ),
+    ),
+    lean_filename="ScenarioB.lean",
+    audit_summary=(
+        "上記の Lean 4 形式化は、日本糖尿病学会『糖尿病診療ガイドライン"
+        "2024』第20-1項の DKA 適応公理と血清カリウム管理公理から "
+        "<code>Indicated JaneRoe IVRegularInsulin \u2227 "
+        "Contraindicated JaneRoe IVRegularInsulin</code> を証明し、"
+        "<code>incompatible_modalities</code> を介して <code>False</code> を"
+        "導出します。インスリン適応公理を文字通り読むと "
+        "K\u207a \u2265 3.3 mEq/L の前提条件が抜け落ちており、"
+        "それこそが本監査が暴き出すよう設計された符号化バグです。"
+    ),
+    plain_english=(
+        "本システムは、血清カリウム 2.9 mEq/L の糖尿病性ケトアシドーシス"
+        "を呈するこの34歳の患者について、ガイドライン 1（DKA に対し速効型"
+        "インスリン持続静注の開始を指示する『糖尿病診療ガイドライン2024』"
+        "第20-1項）とガイドライン 2（血清カリウムが 3.3 mEq/L 未満の間は"
+        "インスリン投与を厳禁とする同ガイドラインの血清カリウム管理項）を"
+        "同時に遵守することが、「同一の薬剤を同一患者に対し同時に"
+        "<em>適応</em>かつ<em>禁忌</em>とすることはできない」という基本原則"
+        "に違反せずには不可能であることを数学的に証明しました。"
+    ),
+)
+
+
+_JA_SCENARIO_C = Scenario(
+    id="scenario-c",
+    title="急性パニック症 対 重症閉塞性睡眠時無呼吸",
+    subtitle="ベンゾジアゼピン ── 適応かつ禁忌",
+    patient_summary=(
+        "終夜睡眠ポリグラフ検査で確定診断された"
+        "<strong class=\"cds-cond\">重症閉塞性睡眠時無呼吸</strong>"
+        "（<strong class=\"cds-find\">無呼吸低呼吸指数 42 回/時</strong>、"
+        "最低 SpO\u2082 78%）"
+        "を有し<strong class=\"cds-find\">未だ持続陽圧呼吸（CPAP）療法"
+        "が導入されていない</strong>58歳の患者。言語的鎮静に反応しない"
+        "<strong class=\"cds-cond\">急性かつ重度のパニック発作</strong>"
+        "を呈し救急外来を受診。"
+    ),
+    guideline_a=Guideline(
+        source="日本不安症学会・日本神経精神薬理学会 合同『パニック症の"
+               "診療ガイドライン（2025年版）』── 急性期薬物療法",
+        body=(
+            "成人における"
+            "<strong class=\"cds-cond\">急性かつ重度のパニック発作</strong>"
+            "── 自律神経過活動、離人感、ならびに切迫した破局感を特徴と"
+            "し、非薬物療法に反応しないもの ── に対しては、"
+            "<strong class=\"cds-int\">高力価ベンゾジアゼピン</strong>"
+            "（例：ロラゼパム 0.5\u20132 mg 経口または静注、"
+            "アルプラゾラム、クロナゼパム）が、迅速な症状緩和ならびに"
+            "持続的な不安発作への進展予防のための第一選択薬物療法として"
+            "<strong class=\"cds-ind\">適応</strong>される"
+            "（推奨度 1、エビデンスレベル B）。SSRI の効果発現までの"
+            "短期併用が標準的位置付けである。"
+        ),
+    ),
+    guideline_b=Guideline(
+        source="日本呼吸器学会『睡眠時無呼吸症候群（SAS）の診療"
+               "ガイドライン2020』── ベンゾジアゼピン使用に関する"
+               "薬物療法安全声明",
+        body=(
+            "<strong class=\"cds-cond\">中等症から重症の閉塞性睡眠時無呼吸</strong>"
+            "（<strong class=\"cds-find\">無呼吸低呼吸指数 \u226515 回/時</strong>）"
+            "の確定診断を有し、"
+            "<strong class=\"cds-find\">いまだ有効な持続陽圧呼吸療法が"
+            "導入されていない</strong>成人においては、"
+            "<strong class=\"cds-int\">ベンゾジアゼピン系薬剤</strong>"
+            "およびその他の中枢神経抑制薬の使用は"
+            "<strong class=\"cds-con\">原則禁忌</strong>"
+            "とする。これらの薬剤は上気道拡張筋の緊張を低下させ、"
+            "低酸素血症および高炭酸血症に対する覚醒反応を鈍化させ、"
+            "無呼吸の遷延化、著明な酸素飽和度低下、ならびに致死的な"
+            "夜間呼吸不全リスクの著しい上昇と関連する"
+            "（推奨度 2、エビデンスレベル B ── 害）。"
+        ),
+    ),
+    lean_filename="ScenarioC.lean",
+    audit_summary=(
+        "上記の Lean 4 形式化は、日本不安症学会・日本神経精神薬理学会 "
+        "『パニック症の診療ガイドライン（2025年版）』と日本呼吸器学会"
+        "『睡眠時無呼吸症候群（SAS）の診療ガイドライン2020』の公理から "
+        "<code>Indicated RichardRoe Benzodiazepine \u2227 "
+        "Contraindicated RichardRoe Benzodiazepine</code> を証明し、"
+        "<code>incompatible_modalities</code> を介して <code>False</code> を"
+        "導出します。本監査は、未治療の重症 OSA において日本のパニック症"
+        "ガイドライン推奨が引き起こす文字通りの衝突を可視化します。"
+    ),
+    plain_english=(
+        "本システムは、終夜睡眠ポリグラフ検査で確定された重症閉塞性"
+        "睡眠時無呼吸を有し、未だ CPAP 療法が導入されていないこの58歳の"
+        "患者について、ガイドライン 1（急性パニック発作に対し短時間作用型"
+        "ベンゾジアゼピンの投与を推奨する日本のパニック症診療ガイドライン）"
+        "とガイドライン 2（未治療重症 OSA におけるベンゾジアゼピンを禁忌"
+        "とする日本呼吸器学会 SAS 診療ガイドライン2020）を同時に遵守する"
+        "ことが、「同一の薬剤を同一患者に対し同時に<em>適応</em>かつ"
+        "<em>禁忌</em>とすることはできない」という基本原則に違反せずには"
+        "不可能であることを数学的に証明しました。"
+    ),
+)
+
+
+# ---------------------------------------------------------------------------
+# Public registry.
+# ---------------------------------------------------------------------------
+
+SCENARIOS_BY_LOCALE: dict[str, dict[str, Scenario]] = {
+    "ja": {
+        _JA_SCENARIO_A.id: _JA_SCENARIO_A,
+        _JA_SCENARIO_B.id: _JA_SCENARIO_B,
+        _JA_SCENARIO_C.id: _JA_SCENARIO_C,
+    },
+    "en": {
+        _EN_SCENARIO_A.id: _EN_SCENARIO_A,
+        _EN_SCENARIO_B.id: _EN_SCENARIO_B,
+        _EN_SCENARIO_C.id: _EN_SCENARIO_C,
+    },
 }
+
+
+def get_scenarios(locale: str) -> dict[str, Scenario]:
+    """Return the scenario registry for ``locale`` (defaults to JA on miss)."""
+    return SCENARIOS_BY_LOCALE[normalize_locale(locale)]
+
+
+# Backwards-compatible alias used by the precompile path: any locale's
+# registry will resolve the same Lean filenames, so we expose the default.
+SCENARIOS: dict[str, Scenario] = SCENARIOS_BY_LOCALE[DEFAULT_LOCALE]

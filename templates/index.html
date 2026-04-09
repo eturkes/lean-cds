@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ t.html_lang }}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
-  <title>Verifiable Clinical Decision Support · Epistemological Audit</title>
+  <title>{{ t.page_title }}</title>
   <link rel="stylesheet" href="/static/styles.css" />
   <link rel="stylesheet" href="/static/syntax.css" />
   <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
   <script src="/static/tooltips.js" defer></script>
 </head>
-<body>
+<body class="locale-{{ lang }}">
   <header class="app-header">
     <div class="brand">
       <div class="brand-mark" aria-hidden="true">
@@ -19,18 +19,34 @@
         </svg>
       </div>
       <div>
-        <h1>Verifiable Clinical Decision Support</h1>
-        <p class="tagline">Epistemological Audit · Formal Polypharmacy Collision Detection</p>
+        <h1>{{ t.brand_h1 }}</h1>
+        <p class="tagline">{{ t.brand_tagline }}</p>
       </div>
     </div>
     <div class="header-meta">
-      <span class="meta-pill">Guideline Collision Examples</span>
+      <div class="lang-switcher" role="group" aria-label="{{ t.lang_switcher_label }}">
+        <a class="lang-option{% if lang == 'ja' %} is-active{% endif %}"
+           href="/?lang=ja"
+           hx-boost="false"
+           lang="ja"
+           {% if lang == 'ja' %}aria-current="true"{% endif %}>
+          日本語
+        </a>
+        <a class="lang-option{% if lang == 'en' %} is-active{% endif %}"
+           href="/?lang=en"
+           hx-boost="false"
+           lang="en"
+           {% if lang == 'en' %}aria-current="true"{% endif %}>
+          English
+        </a>
+      </div>
+      <span class="meta-pill">{{ t.header_meta_pill }}</span>
     </div>
   </header>
 
   <main class="layout">
-    <aside class="sidebar" aria-label="Clinical scenarios">
-      <h2 class="sidebar-title">Clinical Scenarios</h2>
+    <aside class="sidebar" aria-label="{{ t.sidebar_title }}">
+      <h2 class="sidebar-title">{{ t.sidebar_title }}</h2>
       <nav class="scenario-list">
         {% for s in scenarios %}
         <button type="button"
@@ -49,10 +65,7 @@
       </nav>
       <footer class="sidebar-footer">
         <p class="sidebar-note">
-          Each scenario encodes two published clinical guidelines whose
-          recommendations collide on a single patient context. The
-          formal verification engine attempts to derive a logical
-          contradiction from the encoded axioms.
+          {{ t.sidebar_note }}
         </p>
       </footer>
     </aside>

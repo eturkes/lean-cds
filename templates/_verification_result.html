@@ -1,7 +1,7 @@
-{% set ns = namespace(pill_class='status-warning', pill_text='No Verdict') %}
+{% set ns = namespace(pill_class='status-warning', pill_text=t.status_no_verdict) %}
 {% if result.error_message %}
 {% set ns.pill_class = 'status-warning' %}
-{% set ns.pill_text = 'Verification Failed' %}
+{% set ns.pill_text = t.status_failed %}
 <div class="alert alert-warning" role="alert">
   <div class="alert-icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" width="28" height="28">
@@ -9,13 +9,13 @@
     </svg>
   </div>
   <div class="alert-body">
-    <h3 class="alert-title">Verification could not be completed</h3>
+    <h3 class="alert-title">{{ t.alert_error_title }}</h3>
     <p class="alert-message">{{ result.error_message }}</p>
   </div>
 </div>
 {% elif result.verdict and result.verdict.name == 'CollisionVerified' %}
 {% set ns.pill_class = 'status-danger' %}
-{% set ns.pill_text = 'Collision Verified' %}
+{% set ns.pill_text = t.status_collision %}
 <div class="alert alert-danger" role="alert">
   <div class="alert-icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" width="28" height="28">
@@ -23,26 +23,23 @@
     </svg>
   </div>
   <div class="alert-body">
-    <h3 class="alert-title">Guideline Collision Formally Verified</h3>
+    <h3 class="alert-title">{{ t.alert_collision_title }}</h3>
     <p class="alert-message">
-      The Lean 4 kernel typechecked
-      <code>theorem absurd : False</code> for this scenario. The encoded
-      clinical guidelines, applied to the patient's chart, prove a deontic
-      contradiction. Trusted axioms participating in the proof:
+      {{ t.alert_collision_message_pre }}<code>theorem absurd : False</code>{{ t.alert_collision_message_mid }}
     </p>
     <ul class="axiom-list">
       {% for ax in result.trusted_axioms %}
       <li><code>{{ ax }}</code></li>
       {% endfor %}
     </ul>
-    <aside class="translation-block" aria-label="Plain English translation">
+    <aside class="translation-block" aria-label="{{ t.translation_label }}">
       <div class="translation-label">
         <span class="translation-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="14" height="14">
             <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 5h2v2h-2V7Zm0 4h2v6h-2v-6Z"/>
           </svg>
         </span>
-        Plain English Translation
+        {{ t.translation_label }}
       </div>
       <p class="translation-body">{{ scenario.plain_english | safe }}</p>
     </aside>
@@ -50,7 +47,7 @@
 </div>
 {% elif result.verdict and result.verdict.name == 'ProofUnsound' %}
 {% set ns.pill_class = 'status-warning' %}
-{% set ns.pill_text = 'Proof Unsound' %}
+{% set ns.pill_text = t.status_unsound %}
 <div class="alert alert-warning" role="alert">
   <div class="alert-icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" width="28" height="28">
@@ -58,18 +55,15 @@
     </svg>
   </div>
   <div class="alert-body">
-    <h3 class="alert-title">Proof Unsound</h3>
+    <h3 class="alert-title">{{ t.alert_unsound_title }}</h3>
     <p class="alert-message">
-      Lean accepted the file but the proof depends on
-      <code>sorryAx</code> — a stub that means the contradiction was not
-      actually established by the kernel. Audit the
-      <code>{{ scenario.lean_filename }}</code> source.
+      {{ t.alert_unsound_message_pre }}<code>sorryAx</code>{{ t.alert_unsound_message_mid }}<code>{{ scenario.lean_filename }}</code>{{ t.alert_unsound_message_post }}
     </p>
   </div>
 </div>
 {% elif result.verdict and result.verdict.name == 'CompilerError' %}
 {% set ns.pill_class = 'status-warning' %}
-{% set ns.pill_text = 'Lean Rejected Proof' %}
+{% set ns.pill_text = t.status_rejected %}
 <div class="alert alert-warning" role="alert">
   <div class="alert-icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" width="28" height="28">
@@ -77,17 +71,15 @@
     </svg>
   </div>
   <div class="alert-body">
-    <h3 class="alert-title">Lean Rejected the Proof</h3>
+    <h3 class="alert-title">{{ t.alert_rejected_title }}</h3>
     <p class="alert-message">
-      The Lean 4 compiler reported errors typechecking
-      <code>{{ scenario.lean_filename }}</code>. The encoded axioms do
-      not yield the expected contradiction — see the compiler output below.
+      {{ t.alert_rejected_message_pre }}<code>{{ scenario.lean_filename }}</code>{{ t.alert_rejected_message_post }}
     </p>
   </div>
 </div>
 {% else %}
 {% set ns.pill_class = 'status-warning' %}
-{% set ns.pill_text = 'No Verdict' %}
+{% set ns.pill_text = t.status_no_verdict %}
 <div class="alert alert-warning" role="alert">
   <div class="alert-icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" width="28" height="28">
@@ -95,11 +87,9 @@
     </svg>
   </div>
   <div class="alert-body">
-    <h3 class="alert-title">No Verdict Produced</h3>
+    <h3 class="alert-title">{{ t.alert_no_verdict_title }}</h3>
     <p class="alert-message">
-      The Lean compiler ran but did not emit a parseable
-      <code>#print axioms</code> dependency line. Review the compiler
-      output below.
+      {{ t.alert_no_verdict_message | safe }}
     </p>
   </div>
 </div>
@@ -110,8 +100,8 @@
 <section class="terminal" aria-label="Lean compiler output">
   <header class="terminal-header">
     <span class="terminal-title">$ lean {{ scenario.lean_filename }}</span>
-    <span class="terminal-hint" aria-hidden="true">live evaluation of the .lean file</span>
+    <span class="terminal-hint" aria-hidden="true">{{ t.terminal_hint }}</span>
   </header>
   <pre class="terminal-body"><code>{%- if result.stdout -%}{{ result.stdout }}{%- endif -%}{%- if result.stderr %}
-{{ result.stderr }}{%- endif -%}{%- if not result.stdout and not result.stderr -%}(no output captured){%- endif -%}</code></pre>
+{{ result.stderr }}{%- endif -%}{%- if not result.stdout and not result.stderr -%}{{ t.terminal_no_output }}{%- endif -%}</code></pre>
 </section>

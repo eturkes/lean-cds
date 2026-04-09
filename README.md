@@ -17,6 +17,14 @@ on the right), and a verification button that runs the `lean` compiler
 against the scenario's pre-written file and surfaces the trusted-axiom
 list extracted from `#print axioms absurd`.
 
+The interface is bilingual. **Japanese (日本語) is the default** and the
+header carries a JA/EN toggle. The Japanese build cites Japanese medical
+society guidelines (JSH 2019, JSN AKI 2016, JDS 2024, JSAD/JSNP 2025
+パニック症診療ガイドライン, JRS SAS 2020); the English build cites the
+original American guidelines (ACC/AHA, KDIGO, ADA, AACE/ACE, APA, AASM).
+The Lean 4 source files are language-neutral — only the natural-language
+metadata around them varies — so a single proof underwrites both locales.
+
 ## Stack
 
 | Layer            | Tool                              |
@@ -30,6 +38,7 @@ list extracted from `#print axioms absurd`.
 | Frontend         | **HTMX 2** (CDN, no build step)   |
 | Syntax highlight | **Pygments** `Lean4Lexer` (server-side, dual light/dark) |
 | Theming          | CSS `prefers-color-scheme`        |
+| Localization     | In-process JA/EN catalogs (`i18n.py`), JA default, query+cookie toggle |
 
 ## Prerequisites
 
@@ -55,7 +64,8 @@ Verification**.
 ```
 .
 ├── app.py                          # Litestar app + Lean subprocess wrapper
-├── scenarios.py                    # Scenario metadata and ID → .lean filename map
+├── i18n.py                         # JA/EN UI string catalogs + locale resolver
+├── scenarios.py                    # Per-locale scenario metadata, ID → .lean filename map
 ├── lean_decorate.py                # Pygments → per-line tooltip HTML renderer
 ├── lean_vocab.py                   # Plain-English glosses for every MedicalKnowledge symbol
 ├── lean/
@@ -89,6 +99,11 @@ Verification**.
 | POST   | `/scenarios/{scenario_id}/verify` | `_verification_result.html` HTMX fragment  |
 | GET    | `/static/*`                       | `static/` files                            |
 
+Every route accepts an optional `?lang=ja|en` query parameter. The
+resolver in `app.py` (`_resolve_locale`) prefers the query string, then
+falls back to the `cds_lang` cookie, then to the JA default. Each
+response sets the `cds_lang` cookie so a one-time toggle is sticky.
+
 ### Verification pipeline (`app.py` `_run_lean`)
 
 1. At import time, `_ensure_knowledge_base_compiled()` checks the mtimes
@@ -97,9 +112,10 @@ Verification**.
    MedicalKnowledge.ilean MedicalKnowledge.lean` if either is missing or
    stale. The compiled module is what every scenario file imports.
 2. A request to `POST /scenarios/{id}/verify` looks the scenario up in
-   the `scenarios.SCENARIOS` whitelist. Unknown ids 404. **No request
-   data is ever interpolated into Lean source** — the only thing the
-   handler does is map an id to a fixed filename.
+   the per-locale `scenarios.get_scenarios(locale)` whitelist. Unknown
+   ids 404. **No request data is ever interpolated into Lean source** —
+   the only thing the handler does is map an id to a fixed filename,
+   which is identical across locales.
 3. `subprocess.run([LEAN_BINARY, scenario.lean_filename], cwd=lean/,
    env={"LEAN_PATH": "lean/", ...}, timeout=60)`. Setting `LEAN_PATH`
    lets the static `import MedicalKnowledge` line in each scenario
@@ -148,8 +164,18 @@ class Scenario:
     audit_summary: str         # short technical caption under the code frame
     plain_english: str         # narrative shown in the verification result alert
 
-SCENARIOS: dict[str, Scenario] = {...}   # what the app iterates over
+SCENARIOS_BY_LOCALE: dict[str, dict[str, Scenario]] = {
+    "ja": { ... },   # JSH / JSN / JDS / JSAD-JSNP / JRS citations
+    "en": { ... },   # ACC/AHA / KDIGO / ADA / AACE-ACE / APA / AASM
+}
+
+def get_scenarios(locale: str) -> dict[str, Scenario]: ...
 ```
+
+The same `lean_filename` is shared between the JA and EN copies of each
+scenario, so a single Lean proof underwrites both. UI chrome strings
+(button labels, alert titles, decoder legend, etc.) live separately in
+`i18n.UI_STRINGS` and reach templates as `t`.
 
 `scenarios.py` carries no Lean source. The actual proof for each
 scenario lives in `lean/<lean_filename>` and follows the same shape:
@@ -175,9 +201,11 @@ scenario lives in `lean/<lean_filename>` and follows the same shape:
    prove `theorem absurd : False` with explicit tactics. Run
    `LEAN_PATH=lean lean lean/ScenarioD.lean` once by hand to confirm
    the kernel accepts the proof.
-3. Append a new `Scenario` constant to `scenarios.py` with realistic
-   guideline text and `lean_filename="ScenarioD.lean"`, then add it to
-   the `SCENARIOS` dict at the bottom of the module.
+3. Append a new `Scenario` constant to `scenarios.py` for **both**
+   locales (`_JA_SCENARIO_D` citing the relevant Japanese guideline and
+   `_EN_SCENARIO_D` citing the American one) with `lean_filename=
+   "ScenarioD.lean"`, then add each to the matching entry in
+   `SCENARIOS_BY_LOCALE` at the bottom of the module.
 4. Append the expected axiom set to `scripts/check_scenarios.py` so the
    regression harness pins the new proof.
 5. The sidebar, fragment endpoint, and verify endpoint all pick the new
@@ -201,8 +229,8 @@ uv run <command>
 # Re-verify all 3 Lean scenarios from the CLI (no server)
 uv run python -c "
 from app import _run_lean
-from scenarios import SCENARIOS
-for sid, sc in SCENARIOS.items():
+from scenarios import get_scenarios
+for sid, sc in get_scenarios('ja').items():   # locale-neutral; .lean files are shared
     r = _run_lean(sc)
     print(sid, r.verdict, list(r.trusted_axioms), r.exit_code)
 "
