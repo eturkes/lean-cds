@@ -1,32 +1,32 @@
 import MedicalKnowledge
 
-namespace ClinicalAudit.ScenarioC
+namespace «臨床監査».«シナリオC»
 
-open ClinicalAudit
+open «臨床監査»
 
-axiom IchiroTanaka : Patient
-axiom obs_acute_panic_episode  : HasAcutePanicEpisode  IchiroTanaka
-axiom obs_untreated_severe_osa : HasUntreatedSevereOSA IchiroTanaka
+axiom «田中一郎» : «患者»
+axiom «所見_急性パニック発作»     : «急性パニック発作を呈する»     «田中一郎»
+axiom «所見_未治療重症OSA»         : «未治療の重症閉塞性睡眠時無呼吸を有する» «田中一郎»
 
-theorem benzo_indicated :
-    Indicated IchiroTanaka Treatment.benzodiazepine :=
-  JSAD_JSNP_Panic2025_Acute IchiroTanaka obs_acute_panic_episode
+theorem «ベンゾ適応» :
+    «適応» «田中一郎» «治療».«ベンゾジアゼピン» :=
+  «不安症神経精神薬理パニック症2025_急性期» «田中一郎» «所見_急性パニック発作»
 
-theorem benzo_contraindicated :
-    Contraindicated IchiroTanaka Treatment.benzodiazepine :=
-  JRS_SAS2020_BZD IchiroTanaka obs_untreated_severe_osa
+theorem «ベンゾ禁忌» :
+    «禁忌» «田中一郎» «治療».«ベンゾジアゼピン» :=
+  «呼吸器SAS2020_BZD» «田中一郎» «所見_未治療重症OSA»
 
-theorem collision_detected :
-    Collision IchiroTanaka Treatment.benzodiazepine := by
-  unfold Collision
+theorem «衝突検出» :
+    «衝突» «田中一郎» «治療».«ベンゾジアゼピン» := by
+  unfold «衝突»
   apply And.intro
-  · exact benzo_indicated
-  · exact benzo_contraindicated
+  · exact «ベンゾ適応»
+  · exact «ベンゾ禁忌»
 
-theorem absurd : False := by
-  apply incompatible_modalities IchiroTanaka Treatment.benzodiazepine
-  exact collision_detected
+theorem «背理» : False := by
+  apply «治療法の両立不能性» «田中一郎» «治療».«ベンゾジアゼピン»
+  exact «衝突検出»
 
-#print axioms absurd
+#print axioms «背理»
 
-end ClinicalAudit.ScenarioC
+end «臨床監査».«シナリオC»

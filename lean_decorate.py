@@ -223,6 +223,10 @@ def parse_lean_contexts(source: str, locale: str = "en") -> ParseResult:
         )
         line_to_groups.setdefault(line_no, []).append(g)
 
+    patient_type_symbols = set(
+        lean_vocab.symbols_by_role(lean_vocab.ROLE_PATIENT_TYPE, locale)
+    )
+
     def maybe_record_observation(axiom_name: str, type_text: str) -> None:
         """If the axiom's type is ``HasX p`` for a known condition, remember it."""
         parts = type_text.split()
@@ -335,8 +339,10 @@ def parse_lean_contexts(source: str, locale: str = "en") -> ParseResult:
                 name,
             )
             # File context: remember the scenario's patient axiom and
-            # any observation axiom whose type is `HasX p`.
-            if type_text == "Patient":
+            # any observation axiom whose type is `HasX p`. The patient
+            # type is locale-specific (`Patient` in en, `«患者»` in ja),
+            # so consult the vocab table rather than hard-coding it.
+            if type_text in patient_type_symbols:
                 file_ctx.patient_name = name
             else:
                 maybe_record_observation(name, type_text)
@@ -1229,14 +1235,19 @@ def _compose_collision_def(
     locale: str,
 ) -> str:
     """``Collision p t`` → unfolds to both halves of the deontic conflict."""
+    deontic = lean_vocab.symbols_by_role(
+        lean_vocab.ROLE_DEONTIC_PRED, locale
+    )
+    indicated = deontic[0] if len(deontic) > 0 else "Indicated"
+    contraindicated = deontic[1] if len(deontic) > 1 else "Contraindicated"
     if locale == "ja":
         if len(args) == 2:
             patient, treatment = args
             treatment_noun = _gloss_treatment(treatment, locale)
             return (
                 f"`{head} {patient} {treatment}` ── "
-                f"`Indicated {patient} {treatment} ∧ "
-                f"Contraindicated {patient} {treatment}` に展開される。"
+                f"`{indicated} {patient} {treatment} ∧ "
+                f"{contraindicated} {patient} {treatment}` に展開される。"
                 f"読み方：{treatment_noun}が `{patient}` に対して同時に"
                 f"適応かつ禁忌である ── 本監査が暴き出すために存在する"
                 f"義務論的衝突。"
@@ -1247,8 +1258,8 @@ def _compose_collision_def(
         treatment_noun = _gloss_treatment(treatment, locale)
         return (
             f"`{head} {patient} {treatment}` — unfolds to "
-            f"`Indicated {patient} {treatment} ∧ "
-            f"Contraindicated {patient} {treatment}`. Reads as: "
+            f"`{indicated} {patient} {treatment} ∧ "
+            f"{contraindicated} {patient} {treatment}`. Reads as: "
             f"{treatment_noun} is simultaneously indicated AND "
             f"contraindicated for `{patient}` — the deontic collision "
             f"this audit exists to surface."

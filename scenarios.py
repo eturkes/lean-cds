@@ -4,10 +4,11 @@ Each scenario describes a single patient context in which two real-world
 clinical guidelines collide. The Lean 4 source files are themselves
 *localized*: ``lean/en/`` cites the American guidelines and uses
 ASCII-romanized placeholder patient names (``JohnDoe`` etc.); ``lean/ja/``
-cites the Japanese society guidelines and uses Japanese placeholder
-patient names (``TaroYamada`` etc.). Both directories carry their own
-``MedicalKnowledge.lean`` so each guideline axiom is named after the
-society that actually published it.
+cites the Japanese society guidelines and uses fully kanji-localized
+identifiers (each French-quoted via Lean's ``«…»`` syntax — patient names
+``«山田太郎»`` etc., predicates ``«適応»``/``«禁忌»``, and so on). Both
+directories carry their own ``MedicalKnowledge.lean`` so each guideline
+axiom is named after the society that actually published it.
 
 This module declares:
 
@@ -376,11 +377,11 @@ _JA_SCENARIO_A = Scenario(
     lean_filename="ScenarioA.lean",
     lean_subdir="ja",
     audit_summary=(
-        "上記の Lean 4 形式化は、<code>JSH2019_Ch5_FirstLine</code> と "
-        "<code>JSN_AKI2016_Diuretics</code> の公理から "
-        "<code>Indicated TaroYamada Treatment.thiazideDiuretic \u2227 "
-        "Contraindicated TaroYamada Treatment.thiazideDiuretic</code> を"
-        "証明し、<code>incompatible_modalities</code> を介して "
+        "上記の Lean 4 形式化は、<code>«高血圧2019_第5章_第一選択»</code> と "
+        "<code>«腎臓AKI2016_利尿薬»</code> の公理から "
+        "<code>«適応» «山田太郎» «治療».«サイアザイド系利尿薬» \u2227 "
+        "«禁忌» «山田太郎» «治療».«サイアザイド系利尿薬»</code> を"
+        "証明し、<code>«治療法の両立不能性»</code> を介して "
         "<code>False</code> を導出します。カーネルが信頼する公理リストは、"
         "矛盾に関与したガイドラインと患者所見の正確な集合です。"
     ),
@@ -455,11 +456,11 @@ _JA_SCENARIO_B = Scenario(
     audit_summary=(
         "上記の Lean 4 形式化は、日本糖尿病学会『糖尿病診療ガイドライン"
         "2024』第20-1項の DKA 適応公理 "
-        "<code>JDS2024_Sec20_1_DKA</code> と血清カリウム管理公理 "
-        "<code>JDS2024_Sec20_1_KMgmt</code> から "
-        "<code>Indicated HanakoSuzuki Treatment.ivRegularInsulin \u2227 "
-        "Contraindicated HanakoSuzuki Treatment.ivRegularInsulin</code> を"
-        "証明し、<code>incompatible_modalities</code> を介して "
+        "<code>«糖尿病2024_第20_1項_DKA»</code> と血清カリウム管理公理 "
+        "<code>«糖尿病2024_第20_1項_K管理»</code> から "
+        "<code>«適応» «鈴木花子» «治療».«速効型インスリン静注» \u2227 "
+        "«禁忌» «鈴木花子» «治療».«速効型インスリン静注»</code> を"
+        "証明し、<code>«治療法の両立不能性»</code> を介して "
         "<code>False</code> を導出します。インスリン適応公理を文字通り"
         "読むと K\u207a \u2265 3.3 mEq/L の前提条件が抜け落ちており、"
         "それこそが本監査が暴き出すよう設計された符号化バグです。"
@@ -533,12 +534,12 @@ _JA_SCENARIO_C = Scenario(
     audit_summary=(
         "上記の Lean 4 形式化は、日本不安症学会・日本神経精神薬理学会"
         "『パニック症の診療ガイドライン（2025年版）』の "
-        "<code>JSAD_JSNP_Panic2025_Acute</code> 公理と日本呼吸器学会"
+        "<code>«不安症神経精神薬理パニック症2025_急性期»</code> 公理と日本呼吸器学会"
         "『睡眠時無呼吸症候群（SAS）の診療ガイドライン2020』の "
-        "<code>JRS_SAS2020_BZD</code> 公理から "
-        "<code>Indicated IchiroTanaka Treatment.benzodiazepine \u2227 "
-        "Contraindicated IchiroTanaka Treatment.benzodiazepine</code> を"
-        "証明し、<code>incompatible_modalities</code> を介して "
+        "<code>«呼吸器SAS2020_BZD»</code> 公理から "
+        "<code>«適応» «田中一郎» «治療».«ベンゾジアゼピン» \u2227 "
+        "«禁忌» «田中一郎» «治療».«ベンゾジアゼピン»</code> を"
+        "証明し、<code>«治療法の両立不能性»</code> を介して "
         "<code>False</code> を導出します。本監査は、未治療の重症 OSA に"
         "おいて日本のパニック症ガイドライン推奨が引き起こす文字通りの"
         "衝突を可視化します。"

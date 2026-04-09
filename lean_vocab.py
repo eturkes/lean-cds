@@ -269,97 +269,97 @@ _EN_VOCAB: dict[str, VocabEntry] = {
 
 _JA_VOCAB: dict[str, VocabEntry] = {
     # ---- Types / constants -------------------------------------------
-    "Patient": VocabEntry(
+    "«患者»": VocabEntry(
         role=ROLE_PATIENT_TYPE,
-        plain="不透明な `Patient` 型",
+        plain="不透明な `«患者»` 型",
         noun="患者",
     ),
-    "Treatment.thiazideDiuretic": VocabEntry(
+    "«治療».«サイアザイド系利尿薬»": VocabEntry(
         role=ROLE_TREATMENT_CTOR,
-        plain="`Treatment` 列挙体の `thiazideDiuretic` コンストラクタ",
+        plain="`«治療»` 列挙体の `«サイアザイド系利尿薬»` コンストラクタ",
         noun="サイアザイド系利尿薬",
     ),
-    "Treatment.ivRegularInsulin": VocabEntry(
+    "«治療».«速効型インスリン静注»": VocabEntry(
         role=ROLE_TREATMENT_CTOR,
-        plain="`Treatment` 列挙体の `ivRegularInsulin` コンストラクタ",
+        plain="`«治療»` 列挙体の `«速効型インスリン静注»` コンストラクタ",
         noun="速効型インスリン静注",
     ),
-    "Treatment.benzodiazepine": VocabEntry(
+    "«治療».«ベンゾジアゼピン»": VocabEntry(
         role=ROLE_TREATMENT_CTOR,
-        plain="`Treatment` 列挙体の `benzodiazepine` コンストラクタ",
+        plain="`«治療»` 列挙体の `«ベンゾジアゼピン»` コンストラクタ",
         noun="短時間作用型ベンゾジアゼピン",
     ),
     "False": VocabEntry(
         role=ROLE_PROPOSITION,
         plain="`False` ── 決して真にならない命題",
     ),
-    # ---- Condition predicates (Patient → Prop) -----------------------
-    "HasEssentialHypertension": VocabEntry(
+    # ---- Condition predicates («患者» → Prop) ------------------------
+    "«本態性高血圧を有する»": VocabEntry(
         role=ROLE_CONDITION_PRED,
-        plain="病態述語 `HasEssentialHypertension`",
+        plain="病態述語 `«本態性高血圧を有する»`",
         reads="本態性高血圧の確定診断を有する",
-        shape="Patient → Prop",
+        shape="«患者» → Prop",
     ),
-    "HasSevereDehydration": VocabEntry(
+    "«重症脱水を呈する»": VocabEntry(
         role=ROLE_CONDITION_PRED,
-        plain="病態述語 `HasSevereDehydration`",
+        plain="病態述語 `«重症脱水を呈する»`",
         reads="重症脱水の臨床所見を呈する",
-        shape="Patient → Prop",
+        shape="«患者» → Prop",
     ),
-    "HasDiabeticKetoacidosis": VocabEntry(
+    "«糖尿病性ケトアシドーシスを呈する»": VocabEntry(
         role=ROLE_CONDITION_PRED,
-        plain="病態述語 `HasDiabeticKetoacidosis`",
+        plain="病態述語 `«糖尿病性ケトアシドーシスを呈する»`",
         reads="DKA の診断基準を満たす",
-        shape="Patient → Prop",
+        shape="«患者» → Prop",
     ),
-    "HasSerumPotassiumGE33": VocabEntry(
+    "«血清カリウム3_3以上»": VocabEntry(
         role=ROLE_CONDITION_PRED,
-        plain="病態述語 `HasSerumPotassiumGE33`",
+        plain="病態述語 `«血清カリウム3_3以上»`",
         reads="血清 K⁺ が 3.3 mEq/L 以上である",
-        shape="Patient → Prop",
+        shape="«患者» → Prop",
     ),
-    "HasSevereHypokalemia": VocabEntry(
+    "«重症低カリウム血症を呈する»": VocabEntry(
         role=ROLE_CONDITION_PRED,
-        plain="病態述語 `HasSevereHypokalemia`",
+        plain="病態述語 `«重症低カリウム血症を呈する»`",
         reads="重症低カリウム血症（血清 K⁺ < 3.3 mEq/L）を呈する",
-        shape="Patient → Prop",
+        shape="«患者» → Prop",
     ),
-    "HasAcutePanicEpisode": VocabEntry(
+    "«急性パニック発作を呈する»": VocabEntry(
         role=ROLE_CONDITION_PRED,
-        plain="病態述語 `HasAcutePanicEpisode`",
+        plain="病態述語 `«急性パニック発作を呈する»`",
         reads="急性かつ重度のパニック発作を呈している",
-        shape="Patient → Prop",
+        shape="«患者» → Prop",
     ),
-    "HasUntreatedSevereOSA": VocabEntry(
+    "«未治療の重症閉塞性睡眠時無呼吸を有する»": VocabEntry(
         role=ROLE_CONDITION_PRED,
-        plain="病態述語 `HasUntreatedSevereOSA`",
+        plain="病態述語 `«未治療の重症閉塞性睡眠時無呼吸を有する»`",
         reads=(
             "終夜睡眠ポリグラフ検査で確定された重症閉塞性睡眠時無呼吸を"
             "有し、未だ持続陽圧呼吸（CPAP）療法が導入されていない"
         ),
-        shape="Patient → Prop",
+        shape="«患者» → Prop",
     ),
-    # ---- Deontic predicates (Patient → Treatment → Prop) -------------
-    "Indicated": VocabEntry(
+    # ---- Deontic predicates («患者» → «治療» → Prop) -----------------
+    "«適応»": VocabEntry(
         role=ROLE_DEONTIC_PRED,
-        plain="義務論的述語 `Indicated`",
+        plain="義務論的述語 `«適応»`",
         reads="に対して適応される",
-        shape="Patient → Treatment → Prop",
+        shape="«患者» → «治療» → Prop",
     ),
-    "Contraindicated": VocabEntry(
+    "«禁忌»": VocabEntry(
         role=ROLE_DEONTIC_PRED,
-        plain="義務論的述語 `Contraindicated`",
+        plain="義務論的述語 `«禁忌»`",
         reads="に対して禁忌である",
-        shape="Patient → Treatment → Prop",
+        shape="«患者» → «治療» → Prop",
     ),
-    "Collision": VocabEntry(
+    "«衝突»": VocabEntry(
         role=ROLE_COLLISION_DEF,
-        plain="`Collision` 定義",
+        plain="`«衝突»` 定義",
         reads="に対して同時に適応かつ禁忌である",
-        shape="Patient → Treatment → Prop  := Indicated p t ∧ Contraindicated p t",
+        shape="«患者» → «治療» → Prop  := «適応» p t ∧ «禁忌» p t",
     ),
     # ---- Guideline axioms (Japanese sources) -------------------------
-    "JSH2019_Ch5_FirstLine": VocabEntry(
+    "«高血圧2019_第5章_第一選択»": VocabEntry(
         role=ROLE_GUIDELINE_AXIOM,
         plain="日本高血圧学会『高血圧治療ガイドライン2019』第5章の公理",
         reads=(
@@ -367,12 +367,12 @@ _JA_VOCAB: dict[str, VocabEntry] = {
             "第一選択降圧薬として適応する"
         ),
         shape=(
-            "∀ p, HasEssentialHypertension p → "
-            "Indicated p Treatment.thiazideDiuretic"
+            "∀ p, «本態性高血圧を有する» p → "
+            "«適応» p «治療».«サイアザイド系利尿薬»"
         ),
         source="日本高血圧学会『高血圧治療ガイドライン2019』第5章",
     ),
-    "JSN_AKI2016_Diuretics": VocabEntry(
+    "«腎臓AKI2016_利尿薬»": VocabEntry(
         role=ROLE_GUIDELINE_AXIOM,
         plain="日本腎臓学会ほか『AKI 診療ガイドライン2016』の利尿薬公理",
         reads=(
@@ -380,12 +380,12 @@ _JA_VOCAB: dict[str, VocabEntry] = {
             "禁忌とする"
         ),
         shape=(
-            "∀ p, HasSevereDehydration p → "
-            "Contraindicated p Treatment.thiazideDiuretic"
+            "∀ p, «重症脱水を呈する» p → "
+            "«禁忌» p «治療».«サイアザイド系利尿薬»"
         ),
         source="日本腎臓学会『AKI 診療ガイドライン2016』",
     ),
-    "JDS2024_Sec20_1_DKA": VocabEntry(
+    "«糖尿病2024_第20_1項_DKA»": VocabEntry(
         role=ROLE_GUIDELINE_AXIOM,
         plain="日本糖尿病学会『糖尿病診療ガイドライン2024』第20-1項 DKA 公理",
         reads=(
@@ -393,12 +393,12 @@ _JA_VOCAB: dict[str, VocabEntry] = {
             "速やかに開始する"
         ),
         shape=(
-            "∀ p, HasDiabeticKetoacidosis p → "
-            "Indicated p Treatment.ivRegularInsulin"
+            "∀ p, «糖尿病性ケトアシドーシスを呈する» p → "
+            "«適応» p «治療».«速効型インスリン静注»"
         ),
         source="日本糖尿病学会『糖尿病診療ガイドライン2024』第20-1項",
     ),
-    "JDS2024_Sec20_1_KMgmt": VocabEntry(
+    "«糖尿病2024_第20_1項_K管理»": VocabEntry(
         role=ROLE_GUIDELINE_AXIOM,
         plain="同ガイドライン第20-1項の血清カリウム管理公理",
         reads=(
@@ -406,12 +406,12 @@ _JA_VOCAB: dict[str, VocabEntry] = {
             "対しては、インスリン投与を厳禁とする"
         ),
         shape=(
-            "∀ p, HasSevereHypokalemia p → "
-            "Contraindicated p Treatment.ivRegularInsulin"
+            "∀ p, «重症低カリウム血症を呈する» p → "
+            "«禁忌» p «治療».«速効型インスリン静注»"
         ),
         source="日本糖尿病学会『糖尿病診療ガイドライン2024』第20-1項",
     ),
-    "JSAD_JSNP_Panic2025_Acute": VocabEntry(
+    "«不安症神経精神薬理パニック症2025_急性期»": VocabEntry(
         role=ROLE_GUIDELINE_AXIOM,
         plain=(
             "日本不安症学会・日本神経精神薬理学会『パニック症の診療"
@@ -422,15 +422,15 @@ _JA_VOCAB: dict[str, VocabEntry] = {
             "ベンゾジアゼピンを第一選択薬物療法として適応する"
         ),
         shape=(
-            "∀ p, HasAcutePanicEpisode p → "
-            "Indicated p Treatment.benzodiazepine"
+            "∀ p, «急性パニック発作を呈する» p → "
+            "«適応» p «治療».«ベンゾジアゼピン»"
         ),
         source=(
             "日本不安症学会・日本神経精神薬理学会『パニック症の診療"
             "ガイドライン2025』"
         ),
     ),
-    "JRS_SAS2020_BZD": VocabEntry(
+    "«呼吸器SAS2020_BZD»": VocabEntry(
         role=ROLE_GUIDELINE_AXIOM,
         plain=(
             "日本呼吸器学会『睡眠時無呼吸症候群（SAS）の診療"
@@ -441,20 +441,20 @@ _JA_VOCAB: dict[str, VocabEntry] = {
             "対しては、ベンゾジアゼピン系薬剤を原則禁忌とする"
         ),
         shape=(
-            "∀ p, HasUntreatedSevereOSA p → "
-            "Contraindicated p Treatment.benzodiazepine"
+            "∀ p, «未治療の重症閉塞性睡眠時無呼吸を有する» p → "
+            "«禁忌» p «治療».«ベンゾジアゼピン»"
         ),
         source="日本呼吸器学会『SAS の診療ガイドライン2020』",
     ),
     # ---- Global axioms / constructors --------------------------------
-    "incompatible_modalities": VocabEntry(
+    "«治療法の両立不能性»": VocabEntry(
         role=ROLE_GLOBAL_AXIOM,
-        plain="`incompatible_modalities` 公理",
+        plain="`«治療法の両立不能性»` 公理",
         reads=(
             "同一の薬剤が同一患者に対して同時に適応かつ禁忌となることは"
             "あり得ない"
         ),
-        shape="∀ p t, ¬ (Indicated p t ∧ Contraindicated p t)",
+        shape="∀ p t, ¬ («適応» p t ∧ «禁忌» p t)",
     ),
     "And.intro": VocabEntry(
         role=ROLE_AND_INTRO,
@@ -488,3 +488,17 @@ def lookup(symbol: str, locale: str = "en") -> Optional[VocabEntry]:
     """
     table = _VOCAB_BY_LOCALE[normalize_locale(locale)]
     return table.get(symbol)
+
+
+def symbols_by_role(role: str, locale: str = "en") -> list[str]:
+    """Return every Lean identifier in ``locale``'s vocab with ``role``.
+
+    Used by the decorator to recover locale-specific identifiers without
+    hard-coding the English names — e.g. the Patient type symbol is
+    ``"Patient"`` in English and ``"«患者»"`` in Japanese, and the deontic
+    predicates are ``("Indicated", "Contraindicated")`` vs
+    ``("«適応»", "«禁忌»")``. Order within the role is the insertion order
+    of the locale's vocab table, which is stable Python dict iteration.
+    """
+    table = _VOCAB_BY_LOCALE[normalize_locale(locale)]
+    return [sym for sym, entry in table.items() if entry.role == role]

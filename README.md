@@ -21,16 +21,19 @@ The interface is bilingual end-to-end. **Japanese (日本語) is the
 default** and the header carries a JA/EN toggle. The Japanese build
 cites Japanese medical society guidelines (JSH 2019, JSN AKI 2016,
 JDS 2024, JSAD/JSNP 2025 パニック症診療ガイドライン, JRS SAS 2020) and
-ships its own `lean/ja/` source tree with Japanese placeholder patient
-names (`TaroYamada`, `HanakoSuzuki`, `IchiroTanaka`) and Japanese
-guideline axiom identifiers (`JSH2019_Ch5_FirstLine`,
-`JSN_AKI2016_Diuretics`, `JDS2024_Sec20_1_DKA`, …). The English build
+ships its own `lean/ja/` source tree in which **every Lean identifier
+is kanji**, French-quoted via Lean 4's `«…»` syntax — patient names
+(`«山田太郎»`, `«鈴木花子»`, `«田中一郎»`), the type and predicates
+(`«患者»`, `«治療»`, `«適応»`, `«禁忌»`, `«衝突»`), the condition
+predicates (`«本態性高血圧を有する»`, `«重症脱水を呈する»`, …), and the
+guideline axioms themselves (`«高血圧2019_第5章_第一選択»`,
+`«腎臓AKI2016_利尿薬»`, `«糖尿病2024_第20_1項_DKA»`, …). The English build
 ships `lean/en/` with the original American guidelines (ACC/AHA, KDIGO,
 ADA, AACE/ACE, APA, AASM) and `JohnDoe / JaneRoe / RichardRoe`. Hover
 tooltips on the highlighted Lean source are likewise localized: the
 JA build's `data-lean-tip` attributes hold Japanese explanations, the
 EN build's hold English. The two trees prove the same theorem
-structure with renamed identifiers.
+structure with completely separate identifier vocabularies.
 
 ## Stack
 
@@ -89,11 +92,11 @@ Verification**.
 │   │   ├── ScenarioA.lean          #   JohnDoe — hypertension vs. severe dehydration
 │   │   ├── ScenarioB.lean          #   JaneRoe — DKA vs. severe hypokalaemia
 │   │   └── ScenarioC.lean          #   RichardRoe — acute panic vs. untreated severe OSA
-│   └── ja/                         # Japanese guideline axioms + Japanese patient names
-│       ├── MedicalKnowledge.lean   #   JSH/JSN/JDS/JSAD-JSNP/JRS
-│       ├── ScenarioA.lean          #   TaroYamada (山田太郎)
-│       ├── ScenarioB.lean          #   HanakoSuzuki (鈴木花子)
-│       └── ScenarioC.lean          #   IchiroTanaka (田中一郎)
+│   └── ja/                         # Japanese guideline axioms + fully kanji identifiers
+│       ├── MedicalKnowledge.lean   #   JSH/JSN/JDS/JSAD-JSNP/JRS, all names in «…»
+│       ├── ScenarioA.lean          #   «山田太郎» — 高血圧症 vs. 重症脱水
+│       ├── ScenarioB.lean          #   «鈴木花子» — DKA vs. 重症低カリウム血症
+│       └── ScenarioC.lean          #   «田中一郎» — 急性パニック症 vs. 重症 OSA
 ├── scripts/
 │   └── check_scenarios.py          # Regression harness asserting expected axiom sets
 ├── templates/
@@ -203,22 +206,25 @@ def get_scenarios(locale: str) -> dict[str, Scenario]: ...
 Each `Scenario` resolves its file via `lean/<lean_subdir>/<lean_filename>`,
 so the JA and EN copies of `scenario-a` share an `id` and a `lean_filename`
 ("ScenarioA.lean") but live in `lean/ja/` and `lean/en/` respectively
-with locale-appropriate identifiers (`TaroYamada` vs. `JohnDoe`,
-`JSH2019_Ch5_FirstLine` vs. `AHA_ACC_HTN_8_1_5`). UI chrome strings
+with locale-appropriate identifiers (`«山田太郎»` vs. `JohnDoe`,
+`«高血圧2019_第5章_第一選択»` vs. `AHA_ACC_HTN_8_1_5`). UI chrome strings
 (button labels, alert titles, decoder legend, etc.) live separately in
 `i18n.UI_STRINGS` and reach templates as `t`. Tooltip prose lives in
 `lean_vocab.py` (per-locale `VocabEntry` tables) and `lean_decorate.py`
-(per-locale composer branches), so hovering on `JSH2019_Ch5_FirstLine`
+(per-locale composer branches), so hovering on `«高血圧2019_第5章_第一選択»`
 in the JA build shows a Japanese explanation while hovering on
 `AHA_ACC_HTN_8_1_5` in the EN build shows an English one.
 
 `scenarios.py` carries no Lean source. The actual proof for each
 scenario lives in `lean/<lean_subdir>/<lean_filename>` and follows the
-same shape:
+same shape (shown here in the EN naming convention; the JA tree uses
+the kanji equivalents `«臨床監査».«シナリオX»`, `«患者»`, `«所見_…»`,
+`«背理»`, etc.):
 
 * `import MedicalKnowledge`
 * a fresh `namespace ClinicalAudit.ScenarioX`
-* `axiom Patient` introducing the patient inhabitant
+* an `axiom` introducing the patient inhabitant of the locale's
+  `Patient` type
 * one `axiom obs_*` per chart-derived finding
 * `theorem absurd : False := by …` deriving the contradiction with
   explicit tactics (`apply And.intro`, `exact`, `unfold`, etc.) from the
@@ -232,10 +238,12 @@ same shape:
    **both** `lean/en/MedicalKnowledge.lean` and
    `lean/ja/MedicalKnowledge.lean`. Each guideline is a single `axiom`
    of shape `∀ p, HasFooCondition p → Indicated p Treatment.bar` (or
-   `Contraindicated`); the EN file names it after the American society
-   (e.g. `AHA_…`) and the JA file after the Japanese society (e.g.
-   `JSH…`). Delete the cached `MedicalKnowledge.olean` in each locale
-   directory so the host recompiles it on next request.
+   `Contraindicated`); the EN file uses ASCII identifiers and names the
+   axiom after the American society (e.g. `AHA_…`), and the JA file
+   uses kanji identifiers French-quoted with Lean's `«…»` syntax and
+   names the axiom after the Japanese society (e.g. `«高血圧2019_…»`).
+   Delete the cached `MedicalKnowledge.olean` in each locale directory
+   so the host recompiles it on next request.
 2. Create `lean/en/ScenarioD.lean` and `lean/ja/ScenarioD.lean`
    following the structure above and prove `theorem absurd : False`
    with explicit tactics. Run

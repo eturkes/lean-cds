@@ -1,54 +1,54 @@
-namespace ClinicalAudit
+namespace «臨床監査»
 
-opaque Patient : Type
+opaque «患者» : Type
 
-inductive Treatment where
-  | thiazideDiuretic
-  | ivRegularInsulin
-  | benzodiazepine
+inductive «治療» where
+  | «サイアザイド系利尿薬»
+  | «速効型インスリン静注»
+  | «ベンゾジアゼピン»
   deriving Repr, DecidableEq
 
-opaque HasEssentialHypertension : Patient → Prop
-opaque HasSevereDehydration     : Patient → Prop
+opaque «本態性高血圧を有する»     : «患者» → Prop
+opaque «重症脱水を呈する»          : «患者» → Prop
 
-opaque HasDiabeticKetoacidosis  : Patient → Prop
-opaque HasSerumPotassiumGE33    : Patient → Prop
-opaque HasSevereHypokalemia     : Patient → Prop
+opaque «糖尿病性ケトアシドーシスを呈する» : «患者» → Prop
+opaque «血清カリウム3_3以上»        : «患者» → Prop
+opaque «重症低カリウム血症を呈する»   : «患者» → Prop
 
-opaque HasAcutePanicEpisode     : Patient → Prop
-opaque HasUntreatedSevereOSA    : Patient → Prop
+opaque «急性パニック発作を呈する»     : «患者» → Prop
+opaque «未治療の重症閉塞性睡眠時無呼吸を有する» : «患者» → Prop
 
-opaque Indicated      : Patient → Treatment → Prop
-opaque Contraindicated : Patient → Treatment → Prop
+opaque «適応»  : «患者» → «治療» → Prop
+opaque «禁忌» : «患者» → «治療» → Prop
 
-def Collision (p : Patient) (t : Treatment) : Prop :=
-  Indicated p t ∧ Contraindicated p t
+def «衝突» (p : «患者») (t : «治療») : Prop :=
+  «適応» p t ∧ «禁忌» p t
 
-axiom incompatible_modalities :
-    ∀ (p : Patient) (t : Treatment), ¬ (Indicated p t ∧ Contraindicated p t)
+axiom «治療法の両立不能性» :
+    ∀ (p : «患者») (t : «治療»), ¬ («適応» p t ∧ «禁忌» p t)
 
-axiom JSH2019_Ch5_FirstLine :
-    ∀ (p : Patient),
-      HasEssentialHypertension p → Indicated p Treatment.thiazideDiuretic
+axiom «高血圧2019_第5章_第一選択» :
+    ∀ (p : «患者»),
+      «本態性高血圧を有する» p → «適応» p «治療».«サイアザイド系利尿薬»
 
-axiom JSN_AKI2016_Diuretics :
-    ∀ (p : Patient),
-      HasSevereDehydration p → Contraindicated p Treatment.thiazideDiuretic
+axiom «腎臓AKI2016_利尿薬» :
+    ∀ (p : «患者»),
+      «重症脱水を呈する» p → «禁忌» p «治療».«サイアザイド系利尿薬»
 
-axiom JDS2024_Sec20_1_DKA :
-    ∀ (p : Patient),
-      HasDiabeticKetoacidosis p → Indicated p Treatment.ivRegularInsulin
+axiom «糖尿病2024_第20_1項_DKA» :
+    ∀ (p : «患者»),
+      «糖尿病性ケトアシドーシスを呈する» p → «適応» p «治療».«速効型インスリン静注»
 
-axiom JDS2024_Sec20_1_KMgmt :
-    ∀ (p : Patient),
-      HasSevereHypokalemia p → Contraindicated p Treatment.ivRegularInsulin
+axiom «糖尿病2024_第20_1項_K管理» :
+    ∀ (p : «患者»),
+      «重症低カリウム血症を呈する» p → «禁忌» p «治療».«速効型インスリン静注»
 
-axiom JSAD_JSNP_Panic2025_Acute :
-    ∀ (p : Patient),
-      HasAcutePanicEpisode p → Indicated p Treatment.benzodiazepine
+axiom «不安症神経精神薬理パニック症2025_急性期» :
+    ∀ (p : «患者»),
+      «急性パニック発作を呈する» p → «適応» p «治療».«ベンゾジアゼピン»
 
-axiom JRS_SAS2020_BZD :
-    ∀ (p : Patient),
-      HasUntreatedSevereOSA p → Contraindicated p Treatment.benzodiazepine
+axiom «呼吸器SAS2020_BZD» :
+    ∀ (p : «患者»),
+      «未治療の重症閉塞性睡眠時無呼吸を有する» p → «禁忌» p «治療».«ベンゾジアゼピン»
 
-end ClinicalAudit
+end «臨床監査»

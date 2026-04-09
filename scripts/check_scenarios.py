@@ -12,8 +12,9 @@ that:
 
 Both locales are exercised — the EN build pins the AHA / KDIGO / ADA /
 AACE / APA / AASM axiom names against ``JohnDoe / JaneRoe / RichardRoe``,
-and the JA build pins the JSH / JSN / JDS / JSAD-JSNP / JRS axiom names
-against ``TaroYamada / HanakoSuzuki / IchiroTanaka``.
+and the JA build pins the fully kanji-localized identifiers (each
+French-quoted via Lean's ``«…»`` syntax) against ``«山田太郎» / «鈴木花子»
+/ «田中一郎»``.
 """
 
 from __future__ import annotations
@@ -53,28 +54,28 @@ EXPECTED: dict[str, dict[str, frozenset[str]]] = {
     },
     "ja": {
         "scenario-a": frozenset({
-            "JSH2019_Ch5_FirstLine",
-            "JSN_AKI2016_Diuretics",
-            "incompatible_modalities",
-            "TaroYamada",
-            "obs_essential_hypertension",
-            "obs_severe_dehydration",
+            "«高血圧2019_第5章_第一選択»",
+            "«腎臓AKI2016_利尿薬»",
+            "«治療法の両立不能性»",
+            "«山田太郎»",
+            "«所見_本態性高血圧»",
+            "«所見_重症脱水»",
         }),
         "scenario-b": frozenset({
-            "JDS2024_Sec20_1_DKA",
-            "JDS2024_Sec20_1_KMgmt",
-            "incompatible_modalities",
-            "HanakoSuzuki",
-            "obs_diabetic_ketoacidosis",
-            "obs_severe_hypokalemia",
+            "«糖尿病2024_第20_1項_DKA»",
+            "«糖尿病2024_第20_1項_K管理»",
+            "«治療法の両立不能性»",
+            "«鈴木花子»",
+            "«所見_糖尿病性ケトアシドーシス»",
+            "«所見_重症低カリウム血症»",
         }),
         "scenario-c": frozenset({
-            "JSAD_JSNP_Panic2025_Acute",
-            "JRS_SAS2020_BZD",
-            "incompatible_modalities",
-            "IchiroTanaka",
-            "obs_acute_panic_episode",
-            "obs_untreated_severe_osa",
+            "«不安症神経精神薬理パニック症2025_急性期»",
+            "«呼吸器SAS2020_BZD»",
+            "«治療法の両立不能性»",
+            "«田中一郎»",
+            "«所見_急性パニック発作»",
+            "«所見_未治療重症OSA»",
         }),
     },
 }

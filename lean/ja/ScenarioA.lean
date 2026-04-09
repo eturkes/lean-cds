@@ -1,32 +1,32 @@
 import MedicalKnowledge
 
-namespace ClinicalAudit.ScenarioA
+namespace «臨床監査».«シナリオA»
 
-open ClinicalAudit
+open «臨床監査»
 
-axiom TaroYamada : Patient
-axiom obs_essential_hypertension : HasEssentialHypertension TaroYamada
-axiom obs_severe_dehydration     : HasSevereDehydration     TaroYamada
+axiom «山田太郎» : «患者»
+axiom «所見_本態性高血圧» : «本態性高血圧を有する» «山田太郎»
+axiom «所見_重症脱水»     : «重症脱水を呈する»     «山田太郎»
 
-theorem thiazide_indicated :
-    Indicated TaroYamada Treatment.thiazideDiuretic :=
-  JSH2019_Ch5_FirstLine TaroYamada obs_essential_hypertension
+theorem «サイアザイド適応» :
+    «適応» «山田太郎» «治療».«サイアザイド系利尿薬» :=
+  «高血圧2019_第5章_第一選択» «山田太郎» «所見_本態性高血圧»
 
-theorem thiazide_contraindicated :
-    Contraindicated TaroYamada Treatment.thiazideDiuretic :=
-  JSN_AKI2016_Diuretics TaroYamada obs_severe_dehydration
+theorem «サイアザイド禁忌» :
+    «禁忌» «山田太郎» «治療».«サイアザイド系利尿薬» :=
+  «腎臓AKI2016_利尿薬» «山田太郎» «所見_重症脱水»
 
-theorem collision_detected :
-    Collision TaroYamada Treatment.thiazideDiuretic := by
-  unfold Collision
+theorem «衝突検出» :
+    «衝突» «山田太郎» «治療».«サイアザイド系利尿薬» := by
+  unfold «衝突»
   apply And.intro
-  · exact thiazide_indicated
-  · exact thiazide_contraindicated
+  · exact «サイアザイド適応»
+  · exact «サイアザイド禁忌»
 
-theorem absurd : False := by
-  apply incompatible_modalities TaroYamada Treatment.thiazideDiuretic
-  exact collision_detected
+theorem «背理» : False := by
+  apply «治療法の両立不能性» «山田太郎» «治療».«サイアザイド系利尿薬»
+  exact «衝突検出»
 
-#print axioms absurd
+#print axioms «背理»
 
-end ClinicalAudit.ScenarioA
+end «臨床監査».«シナリオA»

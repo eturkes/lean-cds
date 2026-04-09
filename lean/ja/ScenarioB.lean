@@ -1,32 +1,32 @@
 import MedicalKnowledge
 
-namespace ClinicalAudit.ScenarioB
+namespace «臨床監査».«シナリオB»
 
-open ClinicalAudit
+open «臨床監査»
 
-axiom HanakoSuzuki : Patient
-axiom obs_diabetic_ketoacidosis : HasDiabeticKetoacidosis HanakoSuzuki
-axiom obs_severe_hypokalemia    : HasSevereHypokalemia    HanakoSuzuki
+axiom «鈴木花子» : «患者»
+axiom «所見_糖尿病性ケトアシドーシス» : «糖尿病性ケトアシドーシスを呈する» «鈴木花子»
+axiom «所見_重症低カリウム血症»       : «重症低カリウム血症を呈する»       «鈴木花子»
 
-theorem insulin_indicated :
-    Indicated HanakoSuzuki Treatment.ivRegularInsulin :=
-  JDS2024_Sec20_1_DKA HanakoSuzuki obs_diabetic_ketoacidosis
+theorem «インスリン適応» :
+    «適応» «鈴木花子» «治療».«速効型インスリン静注» :=
+  «糖尿病2024_第20_1項_DKA» «鈴木花子» «所見_糖尿病性ケトアシドーシス»
 
-theorem insulin_contraindicated :
-    Contraindicated HanakoSuzuki Treatment.ivRegularInsulin :=
-  JDS2024_Sec20_1_KMgmt HanakoSuzuki obs_severe_hypokalemia
+theorem «インスリン禁忌» :
+    «禁忌» «鈴木花子» «治療».«速効型インスリン静注» :=
+  «糖尿病2024_第20_1項_K管理» «鈴木花子» «所見_重症低カリウム血症»
 
-theorem collision_detected :
-    Collision HanakoSuzuki Treatment.ivRegularInsulin := by
-  unfold Collision
+theorem «衝突検出» :
+    «衝突» «鈴木花子» «治療».«速効型インスリン静注» := by
+  unfold «衝突»
   apply And.intro
-  · exact insulin_indicated
-  · exact insulin_contraindicated
+  · exact «インスリン適応»
+  · exact «インスリン禁忌»
 
-theorem absurd : False := by
-  apply incompatible_modalities HanakoSuzuki Treatment.ivRegularInsulin
-  exact collision_detected
+theorem «背理» : False := by
+  apply «治療法の両立不能性» «鈴木花子» «治療».«速効型インスリン静注»
+  exact «衝突検出»
 
-#print axioms absurd
+#print axioms «背理»
 
-end ClinicalAudit.ScenarioB
+end «臨床監査».«シナリオB»
