@@ -54,7 +54,27 @@ BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR / "static"
 
-LEAN_BINARY = shutil.which("lean") or "lean"
+
+def _resolve_lean_binary() -> str:
+    """Resolve the ``lean`` executable, preferring a project-local elan install.
+
+    The project keeps elan isolated under ``<project>/.elan`` so the host
+    home directory is never tainted; that directory is not on ``PATH`` by
+    default, so check the shim explicitly before falling back to whatever
+    ``lean`` ``shutil.which`` finds on the inherited environment. The
+    elan shim resolves its installed toolchains relative to ``ELAN_HOME``,
+    so when we pick the project-local shim we point ``ELAN_HOME`` at the
+    same directory for every subprocess we will spawn later.
+    """
+    project_local_root = BASE_DIR / ".elan"
+    project_local = project_local_root / "bin" / "lean"
+    if project_local.is_file() and os.access(project_local, os.X_OK):
+        os.environ.setdefault("ELAN_HOME", str(project_local_root))
+        return str(project_local)
+    return shutil.which("lean") or "lean"
+
+
+LEAN_BINARY = _resolve_lean_binary()
 LEAN_TIMEOUT_SECONDS = 60
 
 _LEXER = Lean4Lexer()

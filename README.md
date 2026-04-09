@@ -50,7 +50,15 @@ structure with renamed identifiers.
 ## Prerequisites
 
 - **Lean 4** installed via [`elan`](https://github.com/leanprover/elan).
-  Verify with `lean --version`.
+  Verify with `lean --version`. If you would rather keep elan out of
+  `$HOME`, install it into the project tree instead — `app.py` checks
+  `./.elan/bin/lean` before falling back to `PATH`:
+
+  ```bash
+  ELAN_HOME="$PWD/.elan" curl -fsSL https://elan.lean-lang.org/elan-init.sh \
+      | sh -s -- -y --no-modify-path --default-toolchain stable
+  ```
+
 - **uv** ≥ 0.11. Verify with `uv --version`.
 - Python 3.13 (uv will fetch it on demand if missing).
 

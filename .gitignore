@@ -19,6 +19,9 @@ lake-packages/
 *.olean
 *.ilean
 
+# Project-local elan install (Lean 4 toolchain)
+.elan/
+
 # Override a common global-gitignore rule ([Ss]cripts) so the project's
 # scripts/ directory is tracked.
 !scripts/
