@@ -102,7 +102,7 @@ class FileContext:
 
     Populated by the parser as it walks declarations top to bottom, so
     by the time the tooltip composer runs for a phrase like
-    ``AHA_ACC_HTN_8_1_5 JohnDoe obs_essential_hypertension`` it knows
+    ``AHA_ACC_HTN_8_1_6 JohnDoe obs_essential_hypertension`` it knows
     which identifier is the scenario's patient, which is a chart
     observation (and what condition that observation is of), and which
     earlier theorem names have already been proved.

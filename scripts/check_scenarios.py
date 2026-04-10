@@ -11,7 +11,7 @@ that:
   * the compiler exit code is zero.
 
 Both locales are exercised — the EN build pins the AHA / KDIGO / ADA /
-AACE / APA / AASM axiom names against ``JohnDoe / JaneRoe / RichardRoe``,
+APA / AASM axiom names against ``JohnDoe / JaneRoe / RichardRoe``,
 and the JA build pins the fully kanji-localized identifiers (each
 French-quoted via Lean's ``«…»`` syntax) against ``«山田太郎» / «鈴木花子»
 / «田中一郎»``.
@@ -28,8 +28,8 @@ from scenarios import get_scenarios
 EXPECTED: dict[str, dict[str, frozenset[str]]] = {
     "en": {
         "scenario-a": frozenset({
-            "AHA_ACC_HTN_8_1_5",
-            "KDIGO_AKI_3_1_2",
+            "AHA_ACC_HTN_8_1_6",
+            "KDIGO_AKI_3_4",
             "incompatible_modalities",
             "JohnDoe",
             "obs_essential_hypertension",
@@ -37,7 +37,7 @@ EXPECTED: dict[str, dict[str, frozenset[str]]] = {
         }),
         "scenario-b": frozenset({
             "ADA_DKA_Sec16",
-            "AACE_ACE_CSR4",
+            "ADA_DKA_Sec16_KSafety",
             "incompatible_modalities",
             "JaneRoe",
             "obs_diabetic_ketoacidosis",

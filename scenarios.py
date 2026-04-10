@@ -91,7 +91,7 @@ _EN_SCENARIO_A = Scenario(
     guideline_a=Guideline(
         source="2017 ACC/AHA Guideline for the Prevention, Detection, "
                "Evaluation, and Management of High Blood Pressure in Adults — "
-               "Section 8.1.5",
+               "Section 8.1.6 (Choice of Initial Medication)",
         body=(
             "In adults with confirmed "
             "<strong class=\"cds-cond\">essential hypertension</strong> and "
@@ -99,9 +99,9 @@ _EN_SCENARIO_A = Scenario(
             "risk of \u226510%, initiation of pharmacologic therapy with a "
             "<strong class=\"cds-int\">thiazide-type diuretic</strong> "
             "(chlorthalidone 12.5\u201325 mg orally once daily preferred) "
-            "is <strong class=\"cds-ind\">indicated</strong> as first-line "
-            "agent for long-term blood pressure control (Class I "
-            "recommendation, Level of Evidence A). "
+            "is <strong class=\"cds-ind\">indicated</strong> as one of four "
+            "co-equal first-line agent classes for long-term blood pressure "
+            "control (Class I recommendation, Level of Evidence A). "
             "<strong class=\"cds-int\">Thiazide diuretics</strong> have "
             "demonstrated consistent mortality and major adverse "
             "cardiovascular event reduction across diverse adult populations "
@@ -111,7 +111,7 @@ _EN_SCENARIO_A = Scenario(
     ),
     guideline_b=Guideline(
         source="KDIGO Clinical Practice Guideline for Acute Kidney Injury — "
-               "Recommendation 3.1.2 (Volume Status Management)",
+               "Section 3.4 (Use of Diuretics in AKI)",
         body=(
             "In any patient exhibiting clinical evidence of "
             "<strong class=\"cds-cond\">severe dehydration</strong> \u2014 "
@@ -124,12 +124,12 @@ _EN_SCENARIO_A = Scenario(
             "(&gt;20:1), and laboratory or physical findings of end-organ "
             "hypoperfusion \u2014 the initiation or continuation of any "
             "<strong class=\"cds-int\">diuretic therapy</strong> is "
-            "<strong class=\"cds-con\">absolutely contraindicated</strong>. "
+            "<strong class=\"cds-con\">contraindicated</strong>. "
             "Administration of diuretics in this hemodynamic context "
             "carries an unacceptable risk of precipitating circulatory "
             "collapse, ischemic acute kidney injury, and accelerated "
-            "multi-organ dysfunction (Class III recommendation \u2014 Harm, "
-            "Level of Evidence B)."
+            "multi-organ dysfunction (Grade 1B \u2014 strong recommendation, "
+            "moderate-quality evidence)."
         ),
     ),
     lean_filename="ScenarioA.lean",
@@ -138,7 +138,8 @@ _EN_SCENARIO_A = Scenario(
         "The Lean 4 Formalization above proves "
         "<code>Indicated JohnDoe ThiazideDiuretic \u2227 "
         "Contraindicated JohnDoe ThiazideDiuretic</code> from the AHA/ACC "
-        "and KDIGO axioms, then derives <code>False</code> via "
+        "\u00a78.1.6 and KDIGO \u00a73.4 axioms, then derives "
+        "<code>False</code> via "
         "<code>incompatible_modalities</code>. The kernel-trusted axiom "
         "list is the precise set of guidelines and chart findings "
         "participating in the contradiction."
@@ -146,12 +147,12 @@ _EN_SCENARIO_A = Scenario(
     plain_english=(
         "The system has mathematically proven that, for this 72-year-old "
         "patient, it is impossible to simultaneously follow Guideline 1 "
-        "(the ACC/AHA recommendation to start a thiazide diuretic for "
-        "essential hypertension) and Guideline 2 (the KDIGO safety "
-        "statement that forbids any diuretic in severe dehydration) "
-        "without violating the fundamental rule that a single drug "
-        "cannot be both <em>indicated</em> and <em>contraindicated</em> "
-        "for the same patient at the same time."
+        "(the ACC/AHA \u00a78.1.6 recommendation to start a thiazide "
+        "diuretic for essential hypertension) and Guideline 2 (the KDIGO "
+        "\u00a73.4 recommendation against diuretic use in the setting of "
+        "severe dehydration) without violating the fundamental rule that "
+        "a single drug cannot be both <em>indicated</em> and "
+        "<em>contraindicated</em> for the same patient at the same time."
     ),
 )
 
@@ -173,7 +174,7 @@ _EN_SCENARIO_B = Scenario(
     ),
     guideline_a=Guideline(
         source="ADA Standards of Care in Diabetes — Section 16: "
-               "Hyperglycemic Crises in Adults",
+               "Diabetes Care in the Hospital (Hyperglycemic Crises)",
         body=(
             "For adult patients meeting diagnostic criteria for "
             "<strong class=\"cds-cond\">diabetic ketoacidosis</strong> "
@@ -187,28 +188,28 @@ _EN_SCENARIO_B = Scenario(
             "infusion at 0.1 units/kg/hour is "
             "<strong class=\"cds-ind\">indicated</strong> to correct "
             "insulinopenia, suppress hepatic ketogenesis, and resolve the "
-            "underlying metabolic acidosis (Class I recommendation, Level "
-            "of Evidence A). Insulin therapy should not be delayed once "
+            "underlying metabolic acidosis (ADA evidence level A). "
+            "Insulin therapy should not be delayed once "
             "<strong class=\"cds-cond\">DKA</strong> criteria are confirmed."
         ),
     ),
     guideline_b=Guideline(
-        source="AACE/ACE Consensus Statement on the Management of Inpatient "
-               "Hyperglycemia and DKA — Critical Safety Recommendation 4",
+        source="ADA Standards of Care in Diabetes — Section 16: "
+               "DKA Management Algorithm (Potassium Safety Gate)",
         body=(
             "In any patient presenting with "
             "<strong class=\"cds-cond\">DKA</strong> who has a measured "
             "<strong class=\"cds-find\">serum potassium concentration below "
-            "3.3 mEq/L</strong>, the administration of "
+            "3.5 mEq/L</strong>, the administration of "
             "<strong class=\"cds-int\">insulin</strong> is "
-            "<strong class=\"cds-con\">strictly contraindicated</strong> "
+            "<strong class=\"cds-con\">contraindicated</strong> "
             "until aggressive intravenous potassium replacement has restored "
-            "serum potassium to \u22653.3 mEq/L. Insulin-induced "
+            "serum potassium to \u22653.5 mEq/L. Insulin-induced "
             "transcellular potassium shift in the setting of preexisting "
             "<strong class=\"cds-cond\">hypokalemia</strong> carries an "
             "imminent risk of life-threatening ventricular arrhythmias, "
-            "respiratory muscle paralysis, and cardiac arrest (Class III "
-            "recommendation \u2014 Harm, Level of Evidence A)."
+            "respiratory muscle paralysis, and cardiac arrest (ADA evidence "
+            "level A \u2014 risk of harm)."
         ),
     ),
     lean_filename="ScenarioB.lean",
@@ -216,10 +217,11 @@ _EN_SCENARIO_B = Scenario(
     audit_summary=(
         "The Lean 4 Formalization above proves "
         "<code>Indicated JaneRoe IVRegularInsulin \u2227 "
-        "Contraindicated JaneRoe IVRegularInsulin</code> from the ADA and "
-        "AACE/ACE axioms, then derives <code>False</code> via "
+        "Contraindicated JaneRoe IVRegularInsulin</code> from the ADA "
+        "insulin-indication and ADA potassium-safety axioms, then derives "
+        "<code>False</code> via "
         "<code>incompatible_modalities</code>. The literal reading of the "
-        "ADA insulin axiom drops the K\u207a \u2265 3.3 mEq/L precondition, "
+        "ADA insulin axiom drops the K\u207a \u2265 3.5 mEq/L precondition, "
         "which is exactly the encoder bug the audit is designed to expose."
     ),
     plain_english=(
@@ -227,10 +229,10 @@ _EN_SCENARIO_B = Scenario(
         "patient in diabetic ketoacidosis with a serum potassium of "
         "2.9 mEq/L, it is impossible to simultaneously follow Guideline 1 "
         "(the ADA Standards of Care directive to start IV regular insulin "
-        "in DKA) and Guideline 2 (the AACE/ACE critical safety "
-        "recommendation that forbids insulin while serum potassium is "
-        "below 3.3 mEq/L) without violating the fundamental rule that a "
-        "single drug cannot be both <em>indicated</em> and "
+        "in DKA) and Guideline 2 (the ADA DKA management algorithm\u2019s "
+        "potassium safety gate that forbids insulin while serum potassium "
+        "is below 3.5 mEq/L) without violating the fundamental rule that "
+        "a single drug cannot be both <em>indicated</em> and "
         "<em>contraindicated</em> for the same patient at the same time."
     ),
 )
@@ -262,15 +264,15 @@ _EN_SCENARIO_C = Scenario(
             "to non-pharmacologic measures, "
             "<strong class=\"cds-int\">short-acting benzodiazepines</strong> "
             "(e.g., lorazepam 0.5\u20132 mg orally or intravenously) are "
-            "<strong class=\"cds-ind\">indicated</strong> as first-line "
+            "<strong class=\"cds-ind\">indicated</strong> as recommended "
             "pharmacotherapy for rapid symptomatic relief and prevention of "
-            "progression to a sustained anxiety crisis (Class I "
-            "recommendation, Level of Evidence B)."
+            "progression to a sustained anxiety crisis (APA recommendation "
+            "category I, evidence level B)."
         ),
     ),
     guideline_b=Guideline(
         source="AASM Clinical Practice Guideline for the Treatment of Adult "
-               "Obstructive Sleep Apnea — Pharmacologic Safety Statement",
+               "Obstructive Sleep Apnea — Sedative Avoidance Recommendation",
         body=(
             "In adults with a confirmed diagnosis of "
             "<strong class=\"cds-cond\">moderate-to-severe obstructive "
@@ -281,13 +283,13 @@ _EN_SCENARIO_C = Scenario(
             "positive airway pressure therapy</strong>, the use of "
             "<strong class=\"cds-int\">benzodiazepines</strong> and other "
             "central nervous system depressants is "
-            "<strong class=\"cds-con\">strictly contraindicated</strong>. "
+            "<strong class=\"cds-con\">contraindicated</strong>. "
             "These agents reduce upper airway dilator tone, blunt arousal "
             "responses to hypoxemia and hypercapnia, and are associated "
             "with prolonged apneic events, profound oxygen desaturations, "
             "and a markedly elevated risk of fatal nocturnal respiratory "
-            "failure (Class III recommendation \u2014 Harm, Level of "
-            "Evidence B)."
+            "failure (AASM strong recommendation, moderate-quality "
+            "evidence)."
         ),
     ),
     lean_filename="ScenarioC.lean",

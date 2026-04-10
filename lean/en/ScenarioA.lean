@@ -10,11 +10,11 @@ axiom obs_severe_dehydration     : HasSevereDehydration     JohnDoe
 
 theorem thiazide_indicated :
     Indicated JohnDoe Treatment.thiazideDiuretic :=
-  AHA_ACC_HTN_8_1_5 JohnDoe obs_essential_hypertension
+  AHA_ACC_HTN_8_1_6 JohnDoe obs_essential_hypertension
 
 theorem thiazide_contraindicated :
     Contraindicated JohnDoe Treatment.thiazideDiuretic :=
-  KDIGO_AKI_3_1_2 JohnDoe obs_severe_dehydration
+  KDIGO_AKI_3_4 JohnDoe obs_severe_dehydration
 
 theorem collision_detected :
     Collision JohnDoe Treatment.thiazideDiuretic := by

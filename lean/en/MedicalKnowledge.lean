@@ -27,11 +27,11 @@ def Collision (p : Patient) (t : Treatment) : Prop :=
 axiom incompatible_modalities :
     ∀ (p : Patient) (t : Treatment), ¬ (Indicated p t ∧ Contraindicated p t)
 
-axiom AHA_ACC_HTN_8_1_5 :
+axiom AHA_ACC_HTN_8_1_6 :
     ∀ (p : Patient),
       HasEssentialHypertension p → Indicated p Treatment.thiazideDiuretic
 
-axiom KDIGO_AKI_3_1_2 :
+axiom KDIGO_AKI_3_4 :
     ∀ (p : Patient),
       HasSevereDehydration p → Contraindicated p Treatment.thiazideDiuretic
 
@@ -39,7 +39,7 @@ axiom ADA_DKA_Sec16 :
     ∀ (p : Patient),
       HasDiabeticKetoacidosis p → Indicated p Treatment.ivRegularInsulin
 
-axiom AACE_ACE_CSR4 :
+axiom ADA_DKA_Sec16_KSafety :
     ∀ (p : Patient),
       HasSevereHypokalemia p → Contraindicated p Treatment.ivRegularInsulin
 

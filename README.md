@@ -29,7 +29,7 @@ predicates (`«本態性高血圧を有する»`, `«重症脱水を呈する»`
 guideline axioms themselves (`«高血圧2019_第5章_第一選択»`,
 `«腎臓AKI2016_利尿薬»`, `«糖尿病2024_第20_1項_DKA»`, …). The English build
 ships `lean/en/` with the original American guidelines (ACC/AHA, KDIGO,
-ADA, AACE/ACE, APA, AASM) and `JohnDoe / JaneRoe / RichardRoe`. Hover
+ADA, APA, AASM) and `JohnDoe / JaneRoe / RichardRoe`. Hover
 tooltips on the highlighted Lean source are likewise localized: the
 JA build's `data-lean-tip` attributes hold Japanese explanations, the
 EN build's hold English. The two trees prove the same theorem
@@ -88,7 +88,7 @@ Verification**.
 ├── lean_vocab.py                   # Per-locale glosses for every MedicalKnowledge symbol
 ├── lean/
 │   ├── en/                         # American guideline axioms + romanized patient names
-│   │   ├── MedicalKnowledge.lean   #   AHA/KDIGO/ADA/AACE/APA/AASM
+│   │   ├── MedicalKnowledge.lean   #   AHA/KDIGO/ADA/APA/AASM
 │   │   ├── ScenarioA.lean          #   JohnDoe — hypertension vs. severe dehydration
 │   │   ├── ScenarioB.lean          #   JaneRoe — DKA vs. severe hypokalaemia
 │   │   └── ScenarioC.lean          #   RichardRoe — acute panic vs. untreated severe OSA
@@ -197,7 +197,7 @@ class Scenario:
 
 SCENARIOS_BY_LOCALE: dict[str, dict[str, Scenario]] = {
     "ja": { ... },   # JSH / JSN / JDS / JSAD-JSNP / JRS citations
-    "en": { ... },   # ACC/AHA / KDIGO / ADA / AACE-ACE / APA / AASM
+    "en": { ... },   # ACC/AHA / KDIGO / ADA / APA / AASM
 }
 
 def get_scenarios(locale: str) -> dict[str, Scenario]: ...
@@ -207,13 +207,13 @@ Each `Scenario` resolves its file via `lean/<lean_subdir>/<lean_filename>`,
 so the JA and EN copies of `scenario-a` share an `id` and a `lean_filename`
 ("ScenarioA.lean") but live in `lean/ja/` and `lean/en/` respectively
 with locale-appropriate identifiers (`«山田太郎»` vs. `JohnDoe`,
-`«高血圧2019_第5章_第一選択»` vs. `AHA_ACC_HTN_8_1_5`). UI chrome strings
+`«高血圧2019_第5章_第一選択»` vs. `AHA_ACC_HTN_8_1_6`). UI chrome strings
 (button labels, alert titles, decoder legend, etc.) live separately in
 `i18n.UI_STRINGS` and reach templates as `t`. Tooltip prose lives in
 `lean_vocab.py` (per-locale `VocabEntry` tables) and `lean_decorate.py`
 (per-locale composer branches), so hovering on `«高血圧2019_第5章_第一選択»`
 in the JA build shows a Japanese explanation while hovering on
-`AHA_ACC_HTN_8_1_5` in the EN build shows an English one.
+`AHA_ACC_HTN_8_1_6` in the EN build shows an English one.
 
 `scenarios.py` carries no Lean source. The actual proof for each
 scenario lives in `lean/<lean_subdir>/<lean_filename>` and follows the

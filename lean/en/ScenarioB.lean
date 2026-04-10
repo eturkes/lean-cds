@@ -14,7 +14,7 @@ theorem insulin_indicated :
 
 theorem insulin_contraindicated :
     Contraindicated JaneRoe Treatment.ivRegularInsulin :=
-  AACE_ACE_CSR4 JaneRoe obs_severe_hypokalemia
+  ADA_DKA_Sec16_KSafety JaneRoe obs_severe_hypokalemia
 
 theorem collision_detected :
     Collision JaneRoe Treatment.ivRegularInsulin := by

@@ -120,13 +120,13 @@ _EN_VOCAB: dict[str, VocabEntry] = {
     "HasSerumPotassiumGE33": VocabEntry(
         role=ROLE_CONDITION_PRED,
         plain="the condition predicate `HasSerumPotassiumGE33`",
-        reads="has serum K⁺ at least 3.3 mEq/L",
+        reads="has serum K⁺ at least 3.5 mEq/L",
         shape="Patient → Prop",
     ),
     "HasSevereHypokalemia": VocabEntry(
         role=ROLE_CONDITION_PRED,
         plain="the condition predicate `HasSevereHypokalemia`",
-        reads="has severe hypokalaemia (serum K⁺ below 3.3 mEq/L)",
+        reads="has severe hypokalaemia (serum K⁺ below 3.5 mEq/L)",
         shape="Patient → Prop",
     ),
     "HasAcutePanicEpisode": VocabEntry(
@@ -164,9 +164,9 @@ _EN_VOCAB: dict[str, VocabEntry] = {
         shape="Patient → Treatment → Prop  := Indicated p t ∧ Contraindicated p t",
     ),
     # ---- Guideline axioms (American sources) -------------------------
-    "AHA_ACC_HTN_8_1_5": VocabEntry(
+    "AHA_ACC_HTN_8_1_6": VocabEntry(
         role=ROLE_GUIDELINE_AXIOM,
-        plain="the AHA/ACC hypertension guideline §8.1.5 axiom",
+        plain="the AHA/ACC hypertension guideline §8.1.6 axiom",
         reads=(
             "if a patient has essential hypertension, a thiazide diuretic "
             "is indicated for them"
@@ -175,11 +175,11 @@ _EN_VOCAB: dict[str, VocabEntry] = {
             "∀ p, HasEssentialHypertension p → "
             "Indicated p Treatment.thiazideDiuretic"
         ),
-        source="AHA/ACC Hypertension Guideline §8.1.5",
+        source="AHA/ACC Hypertension Guideline §8.1.6",
     ),
-    "KDIGO_AKI_3_1_2": VocabEntry(
+    "KDIGO_AKI_3_4": VocabEntry(
         role=ROLE_GUIDELINE_AXIOM,
-        plain="the KDIGO Acute Kidney Injury guideline §3.1.2 axiom",
+        plain="the KDIGO Acute Kidney Injury guideline §3.4 axiom",
         reads=(
             "if a patient has severe dehydration, any diuretic is "
             "contraindicated for them"
@@ -188,7 +188,7 @@ _EN_VOCAB: dict[str, VocabEntry] = {
             "∀ p, HasSevereDehydration p → "
             "Contraindicated p Treatment.thiazideDiuretic"
         ),
-        source="KDIGO AKI Guideline §3.1.2",
+        source="KDIGO AKI Guideline §3.4",
     ),
     "ADA_DKA_Sec16": VocabEntry(
         role=ROLE_GUIDELINE_AXIOM,
@@ -203,9 +203,9 @@ _EN_VOCAB: dict[str, VocabEntry] = {
         ),
         source="ADA Standards of Care §16",
     ),
-    "AACE_ACE_CSR4": VocabEntry(
+    "ADA_DKA_Sec16_KSafety": VocabEntry(
         role=ROLE_GUIDELINE_AXIOM,
-        plain="the AACE/ACE Critical Safety Recommendation 4 axiom",
+        plain="the ADA DKA potassium-safety axiom",
         reads=(
             "if a patient has severe hypokalaemia, insulin is "
             "contraindicated for them"
@@ -214,7 +214,7 @@ _EN_VOCAB: dict[str, VocabEntry] = {
             "∀ p, HasSevereHypokalemia p → "
             "Contraindicated p Treatment.ivRegularInsulin"
         ),
-        source="AACE/ACE Critical Safety Recommendation 4",
+        source="ADA Standards of Care §16, DKA Potassium Management",
     ),
     "APA_Panic_Acute": VocabEntry(
         role=ROLE_GUIDELINE_AXIOM,
