@@ -9,7 +9,7 @@
     </svg>
   </div>
   <div class="alert-body">
-    <h3 class="alert-title">{{ t.alert_error_title }}</h3>
+    <h3 class="alert-title">{{ t.alert_error_title | safe }}</h3>
     <p class="alert-message">{{ result.error_message }}</p>
   </div>
 </div>
@@ -23,23 +23,23 @@
     </svg>
   </div>
   <div class="alert-body">
-    <h3 class="alert-title">{{ t.alert_collision_title }}</h3>
+    <h3 class="alert-title">{{ t.alert_collision_title | safe }}</h3>
     <p class="alert-message">
-      {{ t.alert_collision_message_pre }}<code>theorem absurd : False</code>{{ t.alert_collision_message_mid }}
+      {{ t.alert_collision_message_pre | safe }}<code>theorem absurd : False</code>{{ t.alert_collision_message_mid | safe }}
     </p>
     <ul class="axiom-list">
       {% for ax in result.trusted_axioms %}
       <li><code>{{ ax }}</code></li>
       {% endfor %}
     </ul>
-    <aside id="tour-translation" class="translation-block" aria-label="{{ t.translation_label }}">
+    <aside id="tour-translation" class="translation-block" aria-label="{{ t.translation_label | striptags }}">
       <div class="translation-label">
         <span class="translation-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="14" height="14">
             <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 5h2v2h-2V7Zm0 4h2v6h-2v-6Z"/>
           </svg>
         </span>
-        {{ t.translation_label }}
+        {{ t.translation_label | safe }}
       </div>
       <p class="translation-body">{{ scenario.plain_english | safe }}</p>
     </aside>
@@ -55,9 +55,9 @@
     </svg>
   </div>
   <div class="alert-body">
-    <h3 class="alert-title">{{ t.alert_unsound_title }}</h3>
+    <h3 class="alert-title">{{ t.alert_unsound_title | safe }}</h3>
     <p class="alert-message">
-      {{ t.alert_unsound_message_pre }}<code>sorryAx</code>{{ t.alert_unsound_message_mid }}<code>{{ scenario.lean_filename }}</code>{{ t.alert_unsound_message_post }}
+      {{ t.alert_unsound_message_pre | safe }}<code>sorryAx</code>{{ t.alert_unsound_message_mid | safe }}<code>{{ scenario.lean_filename }}</code>{{ t.alert_unsound_message_post | safe }}
     </p>
   </div>
 </div>
@@ -71,9 +71,9 @@
     </svg>
   </div>
   <div class="alert-body">
-    <h3 class="alert-title">{{ t.alert_rejected_title }}</h3>
+    <h3 class="alert-title">{{ t.alert_rejected_title | safe }}</h3>
     <p class="alert-message">
-      {{ t.alert_rejected_message_pre }}<code>{{ scenario.lean_filename }}</code>{{ t.alert_rejected_message_post }}
+      {{ t.alert_rejected_message_pre | safe }}<code>{{ scenario.lean_filename }}</code>{{ t.alert_rejected_message_post | safe }}
     </p>
   </div>
 </div>
@@ -87,7 +87,7 @@
     </svg>
   </div>
   <div class="alert-body">
-    <h3 class="alert-title">{{ t.alert_no_verdict_title }}</h3>
+    <h3 class="alert-title">{{ t.alert_no_verdict_title | safe }}</h3>
     <p class="alert-message">
       {{ t.alert_no_verdict_message | safe }}
     </p>
@@ -95,13 +95,13 @@
 </div>
 {% endif %}
 
-<span id="scenario-status-pill" class="status-pill {{ ns.pill_class }}" hx-swap-oob="true">{{ ns.pill_text }}</span>
+<span id="scenario-status-pill" class="status-pill {{ ns.pill_class }}" hx-swap-oob="true">{{ ns.pill_text | safe }}</span>
 
 <section id="tour-terminal" class="terminal" aria-label="Lean compiler output">
   <header class="terminal-header">
     <span class="terminal-title">$ lean {{ scenario.lean_filename }}</span>
-    <span class="terminal-hint" aria-hidden="true">{{ t.terminal_hint }}</span>
+    <span class="terminal-hint" aria-hidden="true">{{ t.terminal_hint | safe }}</span>
   </header>
   <pre class="terminal-body"><code>{%- if result.stdout -%}{{ result.stdout }}{%- endif -%}{%- if result.stderr %}
-{{ result.stderr }}{%- endif -%}{%- if not result.stdout and not result.stderr -%}{{ t.terminal_no_output }}{%- endif -%}</code></pre>
+{{ result.stderr }}{%- endif -%}{%- if not result.stdout and not result.stderr -%}{{ t.terminal_no_output | safe }}{%- endif -%}</code></pre>
 </section>

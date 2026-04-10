@@ -1,38 +1,38 @@
 <article class="scenario">
   <header class="scenario-header">
     <div class="scenario-heading">
-      <h2>{{ scenario.title }}</h2>
-      <p class="scenario-sub-heading">{{ scenario.subtitle }}</p>
+      <h2>{{ scenario.title | safe }}</h2>
+      <p class="scenario-sub-heading">{{ scenario.subtitle | safe }}</p>
     </div>
-    <span id="scenario-status-pill" class="status-pill status-pending">{{ t.status_pending }}</span>
+    <span id="scenario-status-pill" class="status-pill status-pending">{{ t.status_pending | safe }}</span>
   </header>
 
-  <section id="tour-patient" class="patient-card" aria-label="{{ t.patient_context_label }}">
-    <h3 class="card-label">{{ t.patient_context_label }}</h3>
+  <section id="tour-patient" class="patient-card" aria-label="{{ t.patient_context_label | striptags }}">
+    <h3 class="card-label">{{ t.patient_context_label | safe }}</h3>
     <p>{{ scenario.patient_summary | safe }}</p>
   </section>
 
-  <section id="tour-legend" class="cds-legend" aria-label="{{ t.lean_mapping_label }}">
-    <h3 class="card-label">{{ t.lean_mapping_label }}</h3>
+  <section id="tour-legend" class="cds-legend" aria-label="{{ t.lean_mapping_label | striptags }}">
+    <h3 class="card-label">{{ t.lean_mapping_label | safe }}</h3>
     <div class="cds-legend-items">
       <span class="cds-legend-item">
-        <strong class="cds-cond">{{ t.legend_condition }}</strong>
+        <strong class="cds-cond">{{ t.legend_condition | safe }}</strong>
         <code>Has<em>Cond</em> : Patient → Prop</code>
       </span>
       <span class="cds-legend-item">
-        <strong class="cds-find">{{ t.legend_finding }}</strong>
+        <strong class="cds-find">{{ t.legend_finding | safe }}</strong>
         <code>axiom obs_<em>cond</em></code>
       </span>
       <span class="cds-legend-item">
-        <strong class="cds-int">{{ t.legend_intervention }}</strong>
+        <strong class="cds-int">{{ t.legend_intervention | safe }}</strong>
         <code>Treatment.<em>drug</em></code>
       </span>
       <span class="cds-legend-item">
-        <strong class="cds-ind">{{ t.legend_indicated }}</strong>
+        <strong class="cds-ind">{{ t.legend_indicated | safe }}</strong>
         <code>Indicated p t : Prop</code>
       </span>
       <span class="cds-legend-item">
-        <strong class="cds-con">{{ t.legend_contraindicated }}</strong>
+        <strong class="cds-con">{{ t.legend_contraindicated | safe }}</strong>
         <code>Contraindicated p t : Prop</code>
       </span>
     </div>
@@ -41,20 +41,20 @@
   <div class="two-column">
     <div class="column-stack">
       <section id="tour-guidelines" class="column" aria-labelledby="guidelines-heading">
-        <h3 id="guidelines-heading" class="column-title">{{ t.guidelines_heading }}</h3>
+        <h3 id="guidelines-heading" class="column-title">{{ t.guidelines_heading | safe }}</h3>
 
         <article id="tour-guideline-a" class="guideline">
           <header class="guideline-header">
-            <span class="guideline-tag">{{ t.guideline_tag_a }}</span>
-            <p class="guideline-source">{{ scenario.guideline_a.source }}</p>
+            <span class="guideline-tag">{{ t.guideline_tag_a | safe }}</span>
+            <p class="guideline-source">{{ scenario.guideline_a.source | safe }}</p>
           </header>
           <p class="guideline-body">{{ scenario.guideline_a.body | safe }}</p>
         </article>
 
         <article id="tour-guideline-b" class="guideline">
           <header class="guideline-header">
-            <span class="guideline-tag">{{ t.guideline_tag_b }}</span>
-            <p class="guideline-source">{{ scenario.guideline_b.source }}</p>
+            <span class="guideline-tag">{{ t.guideline_tag_b | safe }}</span>
+            <p class="guideline-source">{{ scenario.guideline_b.source | safe }}</p>
           </header>
           <p class="guideline-body">{{ scenario.guideline_b.body | safe }}</p>
         </article>
@@ -72,24 +72,24 @@
               <path fill="currentColor" d="M12 2 4 6v6c0 5 3.4 9.5 8 10 4.6-.5 8-5 8-10V6l-8-4Zm-1 14-4-4 1.4-1.4L11 13.2l5.6-5.6L18 9l-7 7Z"/>
             </svg>
           </span>
-          {{ t.verify_button }}
+          {{ t.verify_button | safe }}
         </button>
         <span id="verify-indicator" class="htmx-indicator">
           <span class="spinner" aria-hidden="true"></span>
-          {{ t.verify_indicator }}
+          {{ t.verify_indicator | safe }}
         </span>
       </div>
     </div>
 
     <section id="tour-lean-code" class="column column-code" aria-labelledby="lean-heading">
-      <h3 id="lean-heading" class="column-title">{{ t.lean_heading }}</h3>
+      <h3 id="lean-heading" class="column-title">{{ t.lean_heading | safe }}</h3>
       <div id="tour-code-frame" class="code-frame">
         <div class="code-frame-header">
           <span class="code-frame-title">{{ scenario.lean_filename }}</span>
           <span class="code-frame-hint" aria-hidden="true">
-            {{ t.code_frame_hint_pre }}
-            <span class="lean-tip-demo">{{ t.code_frame_hint_demo }}</span>
-            {{ t.code_frame_hint_post }}
+            {{ t.code_frame_hint_pre | safe }}
+            <span class="lean-tip-demo">{{ t.code_frame_hint_demo | safe }}</span>
+            {{ t.code_frame_hint_post | safe }}
           </span>
         </div>
         <div class="code-frame-body">
@@ -109,14 +109,14 @@
         </svg>
       </span>
       <div class="syntax-decoder-text">
-        <h3 id="syntax-decoder-heading" class="syntax-decoder-title">{{ t.syntax_decoder_title }}</h3>
+        <h3 id="syntax-decoder-heading" class="syntax-decoder-title">{{ t.syntax_decoder_title | safe }}</h3>
         <div class="syntax-decoder-paragraphs">
           <p class="syntax-decoder-sub">
-            {{ t.syntax_decoder_sub }}
-            <span class="lean-tip-demo">{{ t.syntax_decoder_sub_demo_a }}</span>
-            <em>{{ t.syntax_decoder_sub_and }}</em>
-            <span class="lean-tip-demo">{{ t.syntax_decoder_sub_demo_b }}</span>
-            {{ t.syntax_decoder_sub_post }}
+            {{ t.syntax_decoder_sub | safe }}
+            <span class="lean-tip-demo">{{ t.syntax_decoder_sub_demo_a | safe }}</span>
+            <em>{{ t.syntax_decoder_sub_and | safe }}</em>
+            <span class="lean-tip-demo">{{ t.syntax_decoder_sub_demo_b | safe }}</span>
+            {{ t.syntax_decoder_sub_post | safe }}
           </p>
           <p class="syntax-decoder-sub syntax-decoder-summary">{{ scenario.audit_summary | safe }}</p>
         </div>
@@ -126,24 +126,24 @@
     <div class="syntax-decoder-grid">
 
       <article class="decoder-group">
-        <h4 class="decoder-group-title">{{ t.decoder_group_structure }}</h4>
+        <h4 class="decoder-group-title">{{ t.decoder_group_structure | safe }}</h4>
         <dl class="decoder-list">
           <dt><code>import</code></dt>
-          <dd>{{ t.decoder_dt_import }}</dd>
+          <dd>{{ t.decoder_dt_import | safe }}</dd>
 
           <dt><code>namespace</code> … <code>end</code></dt>
-          <dd>{{ t.decoder_dt_namespace }}</dd>
+          <dd>{{ t.decoder_dt_namespace | safe }}</dd>
 
           <dt><code>open</code></dt>
-          <dd>{{ t.decoder_dt_open }}</dd>
+          <dd>{{ t.decoder_dt_open | safe }}</dd>
         </dl>
       </article>
 
       <article class="decoder-group">
-        <h4 class="decoder-group-title">{{ t.decoder_group_decls }}</h4>
+        <h4 class="decoder-group-title">{{ t.decoder_group_decls | safe }}</h4>
         <dl class="decoder-list">
           <dt><code>axiom</code></dt>
-          <dd>{{ t.decoder_dt_axiom }}</dd>
+          <dd>{{ t.decoder_dt_axiom | safe }}</dd>
 
           <dt><code>theorem</code></dt>
           <dd>{{ t.decoder_dt_theorem | safe }}</dd>
@@ -157,33 +157,33 @@
       </article>
 
       <article class="decoder-group">
-        <h4 class="decoder-group-title">{{ t.decoder_group_tactics }}</h4>
+        <h4 class="decoder-group-title">{{ t.decoder_group_tactics | safe }}</h4>
         <dl class="decoder-list">
           <dt><code>by</code></dt>
-          <dd>{{ t.decoder_dt_by }}</dd>
+          <dd>{{ t.decoder_dt_by | safe }}</dd>
 
           <dt><code>unfold</code></dt>
-          <dd>{{ t.decoder_dt_unfold }}</dd>
+          <dd>{{ t.decoder_dt_unfold | safe }}</dd>
 
           <dt><code>apply</code></dt>
-          <dd>{{ t.decoder_dt_apply }}</dd>
+          <dd>{{ t.decoder_dt_apply | safe }}</dd>
 
           <dt><code>exact</code></dt>
-          <dd>{{ t.decoder_dt_exact }}</dd>
+          <dd>{{ t.decoder_dt_exact | safe }}</dd>
 
           <dt><code>·</code></dt>
-          <dd>{{ t.decoder_dt_bullet }}</dd>
+          <dd>{{ t.decoder_dt_bullet | safe }}</dd>
         </dl>
       </article>
 
       <article class="decoder-group">
-        <h4 class="decoder-group-title">{{ t.decoder_group_contradiction }}</h4>
+        <h4 class="decoder-group-title">{{ t.decoder_group_contradiction | safe }}</h4>
         <dl class="decoder-list">
           <dt><code>And.intro</code></dt>
           <dd>{{ t.decoder_dt_andintro | safe }}</dd>
 
           <dt><code>False</code></dt>
-          <dd>{{ t.decoder_dt_false }}</dd>
+          <dd>{{ t.decoder_dt_false | safe }}</dd>
 
           <dt><code>absurd</code></dt>
           <dd>{{ t.decoder_dt_absurd | safe }}</dd>
