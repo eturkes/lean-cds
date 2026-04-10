@@ -86,6 +86,15 @@
   <script>
     document.getElementById('start-tour').addEventListener('click', function () {
       var lang = '{{ lang }}';
+      var driverObj;
+
+      function triggerVerify() {
+        var btn = document.querySelector('#tour-verify .verify-button');
+        if (btn) btn.click();
+        document.addEventListener('htmx:afterSettle', function () {
+          driverObj.moveNext();
+        }, { once: true });
+      }
 
       var ja = {
         noScenario: '先に左側のパネルからシナリオを選択してください。',
@@ -209,17 +218,42 @@
               '• <strong>証明戦術</strong>（by, unfold, apply, exact）<br>' +
               '• <strong>矛盾</strong>（And.intro, False, absurd）'
           }},
-          /* 13 — verify */
+          /* 13 — verify (triggers click on Next) */
           { element: '#tour-verify', popover: {
             title: '形式検証の実行',
             description:
-              'このボタンを押すと、サーバー側で Lean 4 コンパイラが起動し、' +
-              'シナリオの <code>.lean</code> ファイルを型検査します。<br><br>' +
-              '成功すると「<strong>衝突を検証済み</strong>」のアラートと' +
-              '信頼公理の一覧が表示されます。失敗すると、コンパイラ出力が' +
-              '端末形式で表示されます。'
+              '「次へ」を押すと、この検証ボタンが自動的にクリックされ、' +
+              'サーバー側で Lean 4 コンパイラが起動します。<br><br>' +
+              '型検査が完了すると、結果画面に自動的に進みます。',
+            onNextClick: triggerVerify
           }},
-          /* 14 — lang switcher */
+          /* 14 — result alert */
+          { element: '#tour-result-alert', popover: {
+            title: '検証結果：衝突の数学的証明',
+            description:
+              'Lean 4 カーネルが <code>theorem absurd : False</code> の型検査を完了しました。' +
+              'ガイドラインの推奨が論理的に矛盾することが数学的に証明されています。<br><br>' +
+              '信頼公理の一覧には、証明に関与したガイドライン公理と患者所見が列挙されます。' +
+              '<code>sorryAx</code> が含まれていないことが、証明の健全性を保証します。'
+          }},
+          /* 15 — translation */
+          { element: '#tour-translation', popover: {
+            title: '平易な言葉での解説',
+            description:
+              '形式証明の意味を、専門用語を使わずに平易な言葉で要約しています。<br><br>' +
+              'この翻訳は、Lean の証明が臨床現場で何を意味するかを' +
+              '医療従事者に伝えるためのものです。'
+          }},
+          /* 16 — terminal */
+          { element: '#tour-terminal', popover: {
+            title: 'コンパイラ出力',
+            description:
+              'Lean コンパイラの生の出力です。<code>#print axioms absurd</code> の結果として、' +
+              '証明が依拠した公理の完全なリストが表示されています。<br><br>' +
+              'これはシステムの信頼根拠であり、ホストプログラムはこの出力を解析して' +
+              '検証結果を判定します。'
+          }},
+          /* 17 — lang switcher */
           { element: '#tour-lang', popover: {
             title: 'バイリンガル設計',
             description:
@@ -230,7 +264,7 @@
               '各言語の Lean ファイルは独立したディレクトリ（<code>lean/ja/</code>, ' +
               '<code>lean/en/</code>）に存在します。'
           }},
-          /* 15 — tech stack (detached) */
+          /* 18 — tech stack (detached) */
           { popover: {
             title: '技術スタック',
             description:
@@ -243,7 +277,7 @@
               '<strong>パッケージ管理</strong>：uv（Astral）',
             popoverClass: 'tour-slide'
           }},
-          /* 16 — conclusion (detached) */
+          /* 19 — conclusion (detached) */
           { popover: {
             title: 'まとめ',
             description:
@@ -252,7 +286,7 @@
               '• 各証明は完全に静的であり、入力値の操作は不可能です<br>' +
               '• <code>#print axioms</code> が信頼根拠を透明化します<br>' +
               '• 証明構造は人間が読める形で提示されます<br><br>' +
-              'ツアーを終了後、ぜひ「<strong>Lean 形式検証を実行</strong>」ボタンをお試しください。',
+              '他のシナリオもぜひお試しください。',
             popoverClass: 'tour-slide'
           }}
         ]
@@ -388,16 +422,43 @@
               '• <strong>Proof tactics</strong> (by, unfold, apply, exact)<br>' +
               '• <strong>Contradiction</strong> (And.intro, False, absurd)'
           }},
-          /* 13 — verify */
+          /* 13 — verify (triggers click on Next) */
           { element: '#tour-verify', popover: {
             title: 'Running Formal Verification',
             description:
-              'Pressing this button invokes the Lean 4 compiler on the server, ' +
-              'type-checking the scenario\'s <code>.lean</code> file.<br><br>' +
-              'On success, a "<strong>Collision Verified</strong>" alert appears with the list ' +
-              'of trusted axioms. On failure, the raw compiler output is displayed in a terminal view.'
+              'Press "Next" to automatically trigger this button. The Lean 4 compiler will ' +
+              'type-check the scenario\'s <code>.lean</code> file on the server.<br><br>' +
+              'The tour will advance to the results once verification completes.',
+            onNextClick: triggerVerify
           }},
-          /* 14 — lang switcher */
+          /* 14 — result alert */
+          { element: '#tour-result-alert', popover: {
+            title: 'Verification Result: Collision Proven',
+            description:
+              'The Lean 4 kernel has type-checked <code>theorem absurd : False</code>. ' +
+              'The guideline recommendations are proven to logically contradict each other.<br><br>' +
+              'The trusted axiom list shows exactly which guideline axioms and patient findings ' +
+              'participated in the proof. The absence of <code>sorryAx</code> guarantees ' +
+              'the proof is sound.'
+          }},
+          /* 15 — translation */
+          { element: '#tour-translation', popover: {
+            title: 'Plain Language Explanation',
+            description:
+              'A summary of what the formal proof means in plain, non-technical language.<br><br>' +
+              'This translation conveys the clinical significance of the Lean proof ' +
+              'to healthcare practitioners without requiring any formal methods background.'
+          }},
+          /* 16 — terminal */
+          { element: '#tour-terminal', popover: {
+            title: 'Compiler Output',
+            description:
+              'The raw output from the Lean compiler. The <code>#print axioms absurd</code> ' +
+              'command prints the complete list of axioms the proof depends on.<br><br>' +
+              'This is the system\'s trust basis — the host program parses this output ' +
+              'to determine the verification verdict.'
+          }},
+          /* 17 — lang switcher */
           { element: '#tour-lang', popover: {
             title: 'Bilingual Design',
             description:
@@ -408,7 +469,7 @@
               'Each language\'s Lean files live in separate directories ' +
               '(<code>lean/ja/</code>, <code>lean/en/</code>) with independent identifier vocabularies.'
           }},
-          /* 15 — tech stack (detached) */
+          /* 18 — tech stack (detached) */
           { popover: {
             title: 'Technology Stack',
             description:
@@ -421,7 +482,7 @@
               '<strong>Package manager</strong>: uv (Astral)',
             popoverClass: 'tour-slide'
           }},
-          /* 16 — conclusion (detached) */
+          /* 19 — conclusion (detached) */
           { popover: {
             title: 'Summary',
             description:
@@ -430,7 +491,7 @@
               '• Each proof is fully static — no input manipulation is possible<br>' +
               '• <code>#print axioms</code> makes the trust basis transparent<br>' +
               '• Proof structure is presented in human-readable form<br><br>' +
-              'After this tour, try pressing "<strong>Run Lean Formal Verification</strong>" yourself.',
+              'Try the other scenarios to see different guideline collisions.',
             popoverClass: 'tour-slide'
           }}
         ]
@@ -443,7 +504,7 @@
         return;
       }
 
-      var driverObj = window.driver.js.driver({
+      driverObj = window.driver.js.driver({
         showProgress: true,
         animate: true,
         allowClose: true,
