@@ -58,6 +58,7 @@ UI_STRINGS: Final[dict[str, dict[str, str]]] = {
             "臨床ガイドラインを符号化しています。形式検証エンジンは、"
             "符号化された公理から論理的矛盾を導出することを試みます。"
         ),
+        "copyright_affiliation": "北海道大学病院",
         "status_pending": "検証待ち",
         "status_failed": "検証失敗",
         "status_collision": "衝突を検証済み",
@@ -148,6 +149,7 @@ UI_STRINGS: Final[dict[str, dict[str, str]]] = {
             "formal verification engine attempts to derive a logical "
             "contradiction from the encoded axioms."
         ),
+        "copyright_affiliation": "Hokkaido University Hospital",
         "status_pending": "Awaiting Verification",
         "status_failed": "Verification Failed",
         "status_collision": "Collision Verified",
