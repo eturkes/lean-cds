@@ -40,7 +40,7 @@
 
   <div class="two-column">
     <div class="column-stack">
-      <section class="column" aria-labelledby="guidelines-heading">
+      <section id="tour-guidelines" class="column" aria-labelledby="guidelines-heading">
         <h3 id="guidelines-heading" class="column-title">{{ t.guidelines_heading }}</h3>
 
         <article class="guideline">
@@ -60,7 +60,7 @@
         </article>
       </section>
 
-      <div class="action-bar">
+      <div id="tour-verify" class="action-bar">
         <button type="button"
                 class="verify-button"
                 hx-post="/scenarios/{{ scenario.id }}/verify"
@@ -81,7 +81,7 @@
       </div>
     </div>
 
-    <section class="column column-code" aria-labelledby="lean-heading">
+    <section id="tour-lean-code" class="column column-code" aria-labelledby="lean-heading">
       <h3 id="lean-heading" class="column-title">{{ t.lean_heading }}</h3>
       <div class="code-frame">
         <div class="code-frame-header">

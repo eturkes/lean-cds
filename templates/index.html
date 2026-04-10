@@ -7,6 +7,8 @@
   <title>{{ t.page_title }}</title>
   <link rel="stylesheet" href="/static/styles.css" />
   <link rel="stylesheet" href="/static/syntax.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css" />
+  <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
   <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
   <script src="/static/tooltips.js" defer></script>
 </head>
@@ -24,6 +26,12 @@
       </div>
     </div>
     <div class="header-meta">
+      <button type="button" id="start-tour" class="tour-button" aria-label="{% if lang == 'ja' %}ツアーを開始する{% else %}Start Tour{% endif %}">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 5h2v2h-2V7Zm0 4h2v6h-2v-6Z"/>
+        </svg>
+        {% if lang == 'ja' %}ツアーを開始する{% else %}Start Tour{% endif %}
+      </button>
       <div class="lang-switcher" role="group" aria-label="{{ t.lang_switcher_label }}">
         <a class="lang-option{% if lang == 'ja' %} is-active{% endif %}"
            href="/?lang=ja"
@@ -45,7 +53,7 @@
   </header>
 
   <main class="layout">
-    <aside class="sidebar" aria-label="{{ t.sidebar_title }}">
+    <aside id="tour-sidebar" class="sidebar" aria-label="{{ t.sidebar_title }}">
       <h2 class="sidebar-title">{{ t.sidebar_title }}</h2>
       <nav class="scenario-list">
         {% for s in scenarios %}
@@ -74,5 +82,51 @@
       {% include "_scenario_panel.html" %}
     </section>
   </main>
+
+  <script>
+    document.getElementById('start-tour').addEventListener('click', function () {
+      var lang = '{{ lang }}';
+      var t = lang === 'ja' ? {
+        noScenario: '先に左側のパネルからシナリオを選択してください。',
+        s1Title: 'シナリオ選択',
+        s1Desc: '左側のパネルから、検証したい臨床シナリオを選択します。',
+        s2Title: '診療ガイドライン（自然言語）',
+        s2Desc: '実際の日本高血圧学会などのガイドラインが、医師が読む自然言語のまま表示されます。',
+        s3Title: 'Lean 4 ソースコード',
+        s3Desc: 'ガイドラインを数学的な公理（Axiom）として翻訳したコードです。日本語の識別子を使用しており、ツールチップで詳細を確認できます。',
+        s4Title: '形式的検証の実行',
+        s4Desc: 'このボタンを押すと、バックグラウンドでLeanコンパイラが走り、薬の適応と禁忌の「矛盾」を自動証明します。'
+      } : {
+        noScenario: 'Please select a scenario from the left panel first.',
+        s1Title: 'Scenario Selection',
+        s1Desc: 'Choose a clinical scenario you would like to verify from the left panel.',
+        s2Title: 'Clinical Guidelines (Natural Language)',
+        s2Desc: 'Authoritative clinical guidelines are displayed in the same natural language that physicians read.',
+        s3Title: 'Lean 4 Source Code',
+        s3Desc: 'The guidelines translated into mathematical axioms in Lean 4. Hover over identifiers to see tooltip details.',
+        s4Title: 'Run Formal Verification',
+        s4Desc: 'Press this button to invoke the Lean compiler, which automatically proves whether the drug indications and contraindications are contradictory.'
+      };
+
+      if (!document.getElementById('tour-lean-code')) {
+        alert(t.noScenario);
+        return;
+      }
+
+      var driverObj = window.driver.js.driver({
+        showProgress: true,
+        animate: true,
+        allowClose: true,
+        steps: [
+          { element: '#tour-sidebar', popover: { title: t.s1Title, description: t.s1Desc } },
+          { element: '#tour-guidelines', popover: { title: t.s2Title, description: t.s2Desc } },
+          { element: '#tour-lean-code', popover: { title: t.s3Title, description: t.s3Desc } },
+          { element: '#tour-verify', popover: { title: t.s4Title, description: t.s4Desc } }
+        ]
+      });
+
+      driverObj.drive();
+    });
+  </script>
 </body>
 </html>

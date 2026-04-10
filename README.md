@@ -46,6 +46,7 @@ structure with completely separate identifier vocabularies.
 | ASGI server      | **uvicorn**                       |
 | Templates        | **Jinja2**                        |
 | Frontend         | **HTMX 2** (CDN, no build step)   |
+| Product tour     | **driver.js 1.3** (CDN, no build step) |
 | Syntax highlight | **Pygments** `Lean4Lexer` (server-side, dual light/dark) |
 | Theming          | CSS `prefers-color-scheme`        |
 | Localization     | In-process JA/EN catalogs (`i18n.py`), JA default, query+cookie toggle |
