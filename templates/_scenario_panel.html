@@ -7,12 +7,12 @@
     <span id="scenario-status-pill" class="status-pill status-pending">{{ t.status_pending }}</span>
   </header>
 
-  <section class="patient-card" aria-label="{{ t.patient_context_label }}">
+  <section id="tour-patient" class="patient-card" aria-label="{{ t.patient_context_label }}">
     <h3 class="card-label">{{ t.patient_context_label }}</h3>
     <p>{{ scenario.patient_summary | safe }}</p>
   </section>
 
-  <section class="cds-legend" aria-label="{{ t.lean_mapping_label }}">
+  <section id="tour-legend" class="cds-legend" aria-label="{{ t.lean_mapping_label }}">
     <h3 class="card-label">{{ t.lean_mapping_label }}</h3>
     <div class="cds-legend-items">
       <span class="cds-legend-item">
@@ -43,7 +43,7 @@
       <section id="tour-guidelines" class="column" aria-labelledby="guidelines-heading">
         <h3 id="guidelines-heading" class="column-title">{{ t.guidelines_heading }}</h3>
 
-        <article class="guideline">
+        <article id="tour-guideline-a" class="guideline">
           <header class="guideline-header">
             <span class="guideline-tag">{{ t.guideline_tag_a }}</span>
             <p class="guideline-source">{{ scenario.guideline_a.source }}</p>
@@ -51,7 +51,7 @@
           <p class="guideline-body">{{ scenario.guideline_a.body | safe }}</p>
         </article>
 
-        <article class="guideline">
+        <article id="tour-guideline-b" class="guideline">
           <header class="guideline-header">
             <span class="guideline-tag">{{ t.guideline_tag_b }}</span>
             <p class="guideline-source">{{ scenario.guideline_b.source }}</p>
@@ -83,7 +83,7 @@
 
     <section id="tour-lean-code" class="column column-code" aria-labelledby="lean-heading">
       <h3 id="lean-heading" class="column-title">{{ t.lean_heading }}</h3>
-      <div class="code-frame">
+      <div id="tour-code-frame" class="code-frame">
         <div class="code-frame-header">
           <span class="code-frame-title">{{ scenario.lean_filename }}</span>
           <span class="code-frame-hint" aria-hidden="true">
@@ -101,7 +101,7 @@
 
   <div id="verification-result" class="verification-result-container" aria-live="polite"></div>
 
-  <section class="syntax-decoder" aria-labelledby="syntax-decoder-heading">
+  <section id="tour-decoder" class="syntax-decoder" aria-labelledby="syntax-decoder-heading">
     <header class="syntax-decoder-header">
       <span class="syntax-decoder-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="16" height="16">

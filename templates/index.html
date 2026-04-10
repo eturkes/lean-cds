@@ -14,7 +14,7 @@
 </head>
 <body class="locale-{{ lang }}">
   <header class="app-header">
-    <div class="brand">
+    <div id="tour-brand" class="brand">
       <div class="brand-mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="22" height="22">
           <path fill="currentColor" d="M12 2 4 6v6c0 5 3.4 9.5 8 10 4.6-.5 8-5 8-10V6l-8-4Zm-1 14-4-4 1.4-1.4L11 13.2l5.6-5.6L18 9l-7 7Z"/>
@@ -32,7 +32,7 @@
         </svg>
         {% if lang == 'ja' %}ツアーを開始する{% else %}Start Tour{% endif %}
       </button>
-      <div class="lang-switcher" role="group" aria-label="{{ t.lang_switcher_label }}">
+      <div id="tour-lang" class="lang-switcher" role="group" aria-label="{{ t.lang_switcher_label }}">
         <a class="lang-option{% if lang == 'ja' %} is-active{% endif %}"
            href="/?lang=ja"
            hx-boost="false"
@@ -86,30 +86,360 @@
   <script>
     document.getElementById('start-tour').addEventListener('click', function () {
       var lang = '{{ lang }}';
-      var t = lang === 'ja' ? {
+
+      var ja = {
         noScenario: '先に左側のパネルからシナリオを選択してください。',
-        s1Title: 'シナリオ選択',
-        s1Desc: '左側のパネルから、検証したい臨床シナリオを選択します。',
-        s2Title: '診療ガイドライン（自然言語）',
-        s2Desc: '実際の日本高血圧学会などのガイドラインが、医師が読む自然言語のまま表示されます。',
-        s3Title: 'Lean 4 ソースコード',
-        s3Desc: 'ガイドラインを数学的な公理（Axiom）として翻訳したコードです。日本語の識別子を使用しており、ツールチップで詳細を確認できます。',
-        s4Title: '形式的検証の実行',
-        s4Desc: 'このボタンを押すと、バックグラウンドでLeanコンパイラが走り、薬の適応と禁忌の「矛盾」を自動証明します。'
-      } : {
-        noScenario: 'Please select a scenario from the left panel first.',
-        s1Title: 'Scenario Selection',
-        s1Desc: 'Choose a clinical scenario you would like to verify from the left panel.',
-        s2Title: 'Clinical Guidelines (Natural Language)',
-        s2Desc: 'Authoritative clinical guidelines are displayed in the same natural language that physicians read.',
-        s3Title: 'Lean 4 Source Code',
-        s3Desc: 'The guidelines translated into mathematical axioms in Lean 4. Hover over identifiers to see tooltip details.',
-        s4Title: 'Run Formal Verification',
-        s4Desc: 'Press this button to invoke the Lean compiler, which automatically proves whether the drug indications and contraindications are contradictory.'
+        nextBtn: '次へ',
+        prevBtn: '前へ',
+        doneBtn: '完了',
+        steps: [
+          /* 1  — title (detached) */
+          { popover: {
+            title: 'Lean-CDS：形式検証による臨床意思決定支援',
+            description:
+              'ポリファーマシーにおけるガイドライン衝突を、定理証明器 Lean 4 で' +
+              '数学的に検出するシステムのデモンストレーションです。<br><br>' +
+              'このツアーでは、課題の背景からシステム設計、操作手順までを順にご案内します。',
+            popoverClass: 'tour-slide'
+          }},
+          /* 2  — problem (detached) */
+          { popover: {
+            title: '課題：ガイドライン間の衝突',
+            description:
+              '複数の診療ガイドラインを同時に適用すると、ある薬剤が「<strong>適応</strong>」' +
+              'かつ「<strong>禁忌</strong>」になる矛盾が生じ得ます。<br><br>' +
+              '多剤併用（ポリファーマシー）の現場では、この衝突の自動検出が患者安全の鍵です。' +
+              '従来のルールエンジンは網羅性の保証が困難ですが、形式検証はカーネルレベルの' +
+              '数学的証明を提供します。',
+            popoverClass: 'tour-slide'
+          }},
+          /* 3  — approach (detached) */
+          { popover: {
+            title: 'アプローチ：依存型理論による形式検証',
+            description:
+              'ガイドラインの推奨と患者の所見を Lean 4 の<strong>公理（axiom）</strong>として' +
+              '符号化し、「適応 ∧ 禁忌」の矛盾を型検査器自身に証明させます。<br><br>' +
+              'ランタイム推論ではなく、Lean カーネルによる数学的保証です。証明が型検査を' +
+              '通過すれば、符号化された公理の下での矛盾は<strong>論理的に確実</strong>です。',
+            popoverClass: 'tour-slide'
+          }},
+          /* 4  — brand */
+          { element: '#tour-brand', popover: {
+            title: 'システム概要',
+            description:
+              '「検証可能な臨床意思決定支援」 ― ガイドライン衝突の形式検証デモです。<br><br>' +
+              '日本語・英語の完全バイリンガル設計で、各言語の医学会ガイドラインを' +
+              '個別に符号化しています。'
+          }},
+          /* 5  — sidebar */
+          { element: '#tour-sidebar', popover: {
+            title: 'シナリオ選択',
+            description:
+              '左側のパネルから、検証したい臨床シナリオを選択します。' +
+              '各シナリオは、現実の診療ガイドラインに基づく薬剤衝突の事例です。<br><br>' +
+              '<strong>A</strong>：高血圧 vs. 脱水（サイアザイド系利尿薬）<br>' +
+              '<strong>B</strong>：DKA vs. 低K血症（インスリン静注）<br>' +
+              '<strong>C</strong>：パニック症 vs. OSA（ベンゾジアゼピン）'
+          }},
+          /* 6  — patient */
+          { element: '#tour-patient', popover: {
+            title: '患者背景',
+            description:
+              '各シナリオの患者プロファイルです。年齢、併存疾患、検査値など、' +
+              'Lean の所見公理（<code>axiom obs_…</code>）に直接対応する臨床情報が記載されています。<br><br>' +
+              'ここに記載された所見が、形式証明の「入力」となります。'
+          }},
+          /* 7  — legend */
+          { element: '#tour-legend', popover: {
+            title: 'Lean マッピング凡例',
+            description:
+              '自然言語のガイドラインが Lean コードのどの構造に対応するかを示す色分け凡例です。<br><br>' +
+              '<strong>病態</strong> → <code>Has… : Patient → Prop</code><br>' +
+              '<strong>所見</strong> → <code>axiom obs_…</code><br>' +
+              '<strong>介入</strong> → <code>Treatment.drug</code><br>' +
+              '<strong>適応</strong> → <code>Indicated p t</code><br>' +
+              '<strong>禁忌</strong> → <code>Contraindicated p t</code>'
+          }},
+          /* 8  — guideline A */
+          { element: '#tour-guideline-a', popover: {
+            title: 'ガイドライン 1（適応）',
+            description:
+              '最初のガイドラインは「この病態を持つ患者にはこの薬剤が<strong>適応</strong>である」と推奨します。<br><br>' +
+              '出典は実在する学会ガイドラインで、原文に基づいてそのまま表示しています。' +
+              'これが Lean の適応公理（<code>Indicated p t</code>）に対応します。'
+          }},
+          /* 9  — guideline B */
+          { element: '#tour-guideline-b', popover: {
+            title: 'ガイドライン 2（禁忌）',
+            description:
+              '二つ目のガイドラインは同じ薬剤について「この別の病態を持つ患者には' +
+              '<strong>禁忌</strong>である」と記述します。<br><br>' +
+              '同一患者が両方の病態を持つとき、二つのガイドラインは論理的に矛盾します。' +
+              'これが Lean の禁忌公理（<code>Contraindicated p t</code>）です。'
+          }},
+          /* 10 — lean code */
+          { element: '#tour-lean-code', popover: {
+            title: 'Lean 4 による形式化',
+            description:
+              'ガイドラインと患者所見を数学的公理として翻訳した Lean 4 ソースコードです。<br><br>' +
+              '日本語版では全ての識別子が漢字（<code>«山田太郎»</code>, ' +
+              '<code>«適応»</code>）で書かれ、英語版では ASCII 名' +
+              '（<code>JohnDoe</code>, <code>Indicated</code>）を使います。<br><br>' +
+              'コードは <code>import</code> → <code>namespace</code> → ' +
+              '<code>axiom</code> → <code>theorem</code> の構造を持ち、' +
+              '最終的に <code>theorem absurd : False</code> を証明します。'
+          }},
+          /* 11 — tooltips */
+          { element: '#tour-code-frame', popover: {
+            title: 'インタラクティブなツールチップ',
+            description:
+              'コード中の<strong>下線付き記号</strong>にマウスを合わせると、' +
+              'その行に固有のツールチップが表示されます。<br><br>' +
+              '宣言の意味、証明される主張、適用されるガイドライン公理など、' +
+              'プログラミング知識なしで読める説明がすべてのキーワードに用意されています。'
+          }},
+          /* 12 — decoder */
+          { element: '#tour-decoder', popover: {
+            title: 'Lean 構文ガイド',
+            description:
+              'Lean やプログラミングの予備知識がなくても証明を読めるよう、' +
+              '主要な構文を 4 カテゴリに分類して解説しています。<br><br>' +
+              '• <strong>ファイル構造</strong>（import, namespace, open）<br>' +
+              '• <strong>宣言</strong>（axiom, theorem, :, :=）<br>' +
+              '• <strong>証明戦術</strong>（by, unfold, apply, exact）<br>' +
+              '• <strong>矛盾</strong>（And.intro, False, absurd）'
+          }},
+          /* 13 — verify */
+          { element: '#tour-verify', popover: {
+            title: '形式検証の実行',
+            description:
+              'このボタンを押すと、サーバー側で Lean 4 コンパイラが起動し、' +
+              'シナリオの <code>.lean</code> ファイルを型検査します。<br><br>' +
+              '成功すると「<strong>衝突を検証済み</strong>」のアラートと' +
+              '信頼公理の一覧が表示されます。失敗すると、コンパイラ出力が' +
+              '端末形式で表示されます。'
+          }},
+          /* 14 — lang switcher */
+          { element: '#tour-lang', popover: {
+            title: 'バイリンガル設計',
+            description:
+              'UI テキスト、ガイドライン引用、Lean ソースコード、ホバーツールチップまで、' +
+              'すべてが日英完全二重言語化されています。<br><br>' +
+              '• <strong>日本語版</strong>：JSH, JSN, JDS, JRS の各学会ガイドライン<br>' +
+              '• <strong>英語版</strong>：ACC/AHA, KDIGO, ADA, APA, AASM<br><br>' +
+              '各言語の Lean ファイルは独立したディレクトリ（<code>lean/ja/</code>, ' +
+              '<code>lean/en/</code>）に存在します。'
+          }},
+          /* 15 — tech stack (detached) */
+          { popover: {
+            title: '技術スタック',
+            description:
+              '<strong>証明器</strong>：Lean 4（定理証明器）<br>' +
+              '<strong>バックエンド</strong>：Python 3.13 + Litestar 2<br>' +
+              '<strong>フロントエンド</strong>：HTMX 2（ビルドステップなし）<br>' +
+              '<strong>テンプレート</strong>：Jinja2<br>' +
+              '<strong>構文強調</strong>：Pygments（サーバーサイド、ライト/ダーク両対応）<br>' +
+              '<strong>テーマ</strong>：CSS prefers-color-scheme<br>' +
+              '<strong>パッケージ管理</strong>：uv（Astral）',
+            popoverClass: 'tour-slide'
+          }},
+          /* 16 — conclusion (detached) */
+          { popover: {
+            title: 'まとめ',
+            description:
+              'Lean-CDS は、臨床ガイドラインの矛盾をランタイム推論ではなく' +
+              'カーネルレベルの型検査で数学的に証明します。<br><br>' +
+              '• 各証明は完全に静的であり、入力値の操作は不可能です<br>' +
+              '• <code>#print axioms</code> が信頼根拠を透明化します<br>' +
+              '• 証明構造は人間が読める形で提示されます<br><br>' +
+              'ツアーを終了後、ぜひ「<strong>Lean 形式検証を実行</strong>」ボタンをお試しください。',
+            popoverClass: 'tour-slide'
+          }}
+        ]
       };
 
+      var en = {
+        noScenario: 'Please select a scenario from the left panel first.',
+        nextBtn: 'Next',
+        prevBtn: 'Back',
+        doneBtn: 'Done',
+        steps: [
+          /* 1  — title (detached) */
+          { popover: {
+            title: 'Lean-CDS: Formal Verification for Clinical Decision Support',
+            description:
+              'A demonstration of mathematically detecting guideline collisions ' +
+              'in polypharmacy using the Lean 4 theorem prover.<br><br>' +
+              'This tour walks through the motivation, system design, and operation step by step.',
+            popoverClass: 'tour-slide'
+          }},
+          /* 2  — problem (detached) */
+          { popover: {
+            title: 'The Problem: Guideline Collisions',
+            description:
+              'When multiple clinical guidelines are applied simultaneously, a drug may be both ' +
+              '"<strong>indicated</strong>" and "<strong>contraindicated</strong>" for the same patient ' +
+              '— a logical contradiction.<br><br>' +
+              'In polypharmacy settings, detecting these collisions is critical for patient safety. ' +
+              'Traditional rule engines struggle to guarantee completeness; formal verification ' +
+              'provides a kernel-level mathematical proof.',
+            popoverClass: 'tour-slide'
+          }},
+          /* 3  — approach (detached) */
+          { popover: {
+            title: 'The Approach: Formal Verification via Dependent Type Theory',
+            description:
+              'We encode guideline recommendations and patient findings as ' +
+              '<strong>axioms</strong> in Lean 4, then ask the type-checker itself to prove ' +
+              'the contradiction "Indicated ∧ Contraindicated".<br><br>' +
+              'This is not runtime inference — it is a guarantee from the Lean kernel. ' +
+              'If the proof type-checks, the contradiction is ' +
+              '<strong>logically certain</strong> under the encoded axioms.',
+            popoverClass: 'tour-slide'
+          }},
+          /* 4  — brand */
+          { element: '#tour-brand', popover: {
+            title: 'System Overview',
+            description:
+              '"Verifiable Clinical Decision Support" — a formal verification demo ' +
+              'for guideline collision detection.<br><br>' +
+              'The interface is fully bilingual (Japanese / English), with each language ' +
+              'encoding its own medical society guidelines independently.'
+          }},
+          /* 5  — sidebar */
+          { element: '#tour-sidebar', popover: {
+            title: 'Scenario Selection',
+            description:
+              'Choose a clinical scenario to verify from the left panel. ' +
+              'Each scenario represents a real-world drug collision grounded in published guidelines.<br><br>' +
+              '<strong>A</strong>: Hypertension vs. Dehydration (thiazide diuretic)<br>' +
+              '<strong>B</strong>: DKA vs. Hypokalemia (IV insulin)<br>' +
+              '<strong>C</strong>: Panic Disorder vs. OSA (benzodiazepine)'
+          }},
+          /* 6  — patient */
+          { element: '#tour-patient', popover: {
+            title: 'Patient Context',
+            description:
+              'The patient profile for this scenario. Age, comorbidities, and lab values are listed ' +
+              '— each corresponding directly to a Lean observation axiom ' +
+              '(<code>axiom obs_…</code>) that the proof will consume.<br><br>' +
+              'The findings listed here are the "inputs" to the formal proof.'
+          }},
+          /* 7  — legend */
+          { element: '#tour-legend', popover: {
+            title: 'Lean Mapping Legend',
+            description:
+              'A color-coded legend showing how natural-language guideline concepts ' +
+              'map to Lean 4 structures.<br><br>' +
+              '<strong>Condition</strong> → <code>Has… : Patient → Prop</code><br>' +
+              '<strong>Finding</strong> → <code>axiom obs_…</code><br>' +
+              '<strong>Intervention</strong> → <code>Treatment.drug</code><br>' +
+              '<strong>Indicated</strong> → <code>Indicated p t</code><br>' +
+              '<strong>Contraindicated</strong> → <code>Contraindicated p t</code>'
+          }},
+          /* 8  — guideline A */
+          { element: '#tour-guideline-a', popover: {
+            title: 'Guideline 1 (Indication)',
+            description:
+              'The first guideline recommends: "For patients with this condition, this drug is ' +
+              '<strong>indicated</strong>."<br><br>' +
+              'The citation is from a real published guideline, displayed verbatim. ' +
+              'This maps to the indication axiom (<code>Indicated p t</code>) in the Lean formalization.'
+          }},
+          /* 9  — guideline B */
+          { element: '#tour-guideline-b', popover: {
+            title: 'Guideline 2 (Contraindication)',
+            description:
+              'The second guideline states: "For patients with this other condition, the same drug is ' +
+              '<strong>contraindicated</strong>."<br><br>' +
+              'When a single patient has both conditions, the two guidelines logically contradict. ' +
+              'This maps to the contraindication axiom (<code>Contraindicated p t</code>).'
+          }},
+          /* 10 — lean code */
+          { element: '#tour-lean-code', popover: {
+            title: 'Lean 4 Formalization',
+            description:
+              'The Lean 4 source code encoding the guidelines and patient findings ' +
+              'as mathematical axioms.<br><br>' +
+              'The Japanese build uses kanji identifiers ' +
+              '(<code>«山田太郎»</code>, <code>«適応»</code>); the English build uses ' +
+              'ASCII names (<code>JohnDoe</code>, <code>Indicated</code>).<br><br>' +
+              'The code follows the structure: <code>import</code> → <code>namespace</code> → ' +
+              '<code>axiom</code> → <code>theorem</code>, culminating in ' +
+              '<code>theorem absurd : False</code>.'
+          }},
+          /* 11 — tooltips */
+          { element: '#tour-code-frame', popover: {
+            title: 'Interactive Tooltips',
+            description:
+              'Hover over any <strong>underlined symbol</strong> in the code to see ' +
+              'a context-aware tooltip.<br><br>' +
+              'Each tooltip explains the declaration, the claim being proved, or ' +
+              'the guideline axiom being applied — no programming knowledge required.'
+          }},
+          /* 12 — decoder */
+          { element: '#tour-decoder', popover: {
+            title: 'Lean Syntax Guide',
+            description:
+              'A reference guide organized into four categories so the proof is readable ' +
+              'without any Lean or programming background.<br><br>' +
+              '• <strong>File structure</strong> (import, namespace, open)<br>' +
+              '• <strong>Declarations</strong> (axiom, theorem, :, :=)<br>' +
+              '• <strong>Proof tactics</strong> (by, unfold, apply, exact)<br>' +
+              '• <strong>Contradiction</strong> (And.intro, False, absurd)'
+          }},
+          /* 13 — verify */
+          { element: '#tour-verify', popover: {
+            title: 'Running Formal Verification',
+            description:
+              'Pressing this button invokes the Lean 4 compiler on the server, ' +
+              'type-checking the scenario\'s <code>.lean</code> file.<br><br>' +
+              'On success, a "<strong>Collision Verified</strong>" alert appears with the list ' +
+              'of trusted axioms. On failure, the raw compiler output is displayed in a terminal view.'
+          }},
+          /* 14 — lang switcher */
+          { element: '#tour-lang', popover: {
+            title: 'Bilingual Design',
+            description:
+              'Every layer is fully bilingual — UI text, guideline citations, ' +
+              'Lean source code, and hover tooltips.<br><br>' +
+              '• <strong>Japanese</strong>: JSH, JSN, JDS, JRS society guidelines<br>' +
+              '• <strong>English</strong>: ACC/AHA, KDIGO, ADA, APA, AASM<br><br>' +
+              'Each language\'s Lean files live in separate directories ' +
+              '(<code>lean/ja/</code>, <code>lean/en/</code>) with independent identifier vocabularies.'
+          }},
+          /* 15 — tech stack (detached) */
+          { popover: {
+            title: 'Technology Stack',
+            description:
+              '<strong>Prover</strong>: Lean 4 (theorem prover)<br>' +
+              '<strong>Backend</strong>: Python 3.13 + Litestar 2<br>' +
+              '<strong>Frontend</strong>: HTMX 2 (no build step)<br>' +
+              '<strong>Templates</strong>: Jinja2<br>' +
+              '<strong>Syntax highlighting</strong>: Pygments (server-side, light / dark)<br>' +
+              '<strong>Theming</strong>: CSS prefers-color-scheme<br>' +
+              '<strong>Package manager</strong>: uv (Astral)',
+            popoverClass: 'tour-slide'
+          }},
+          /* 16 — conclusion (detached) */
+          { popover: {
+            title: 'Summary',
+            description:
+              'Lean-CDS proves clinical guideline contradictions via kernel-level ' +
+              'type-checking, not runtime inference.<br><br>' +
+              '• Each proof is fully static — no input manipulation is possible<br>' +
+              '• <code>#print axioms</code> makes the trust basis transparent<br>' +
+              '• Proof structure is presented in human-readable form<br><br>' +
+              'After this tour, try pressing "<strong>Run Lean Formal Verification</strong>" yourself.',
+            popoverClass: 'tour-slide'
+          }}
+        ]
+      };
+
+      var cfg = lang === 'ja' ? ja : en;
+
       if (!document.getElementById('tour-lean-code')) {
-        alert(t.noScenario);
+        alert(cfg.noScenario);
         return;
       }
 
@@ -117,12 +447,10 @@
         showProgress: true,
         animate: true,
         allowClose: true,
-        steps: [
-          { element: '#tour-sidebar', popover: { title: t.s1Title, description: t.s1Desc } },
-          { element: '#tour-guidelines', popover: { title: t.s2Title, description: t.s2Desc } },
-          { element: '#tour-lean-code', popover: { title: t.s3Title, description: t.s3Desc } },
-          { element: '#tour-verify', popover: { title: t.s4Title, description: t.s4Desc } }
-        ]
+        nextBtnText: cfg.nextBtn,
+        prevBtnText: cfg.prevBtn,
+        doneBtnText: cfg.doneBtn,
+        steps: cfg.steps
       });
 
       driverObj.drive();
