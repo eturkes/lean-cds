@@ -14,6 +14,18 @@ Format per entry:
 
 ---
 
+## [LSN-003] 2026-05-14 — Don't infer purpose from filenames; confirm by reference
+
+**What happened**: When writing ARCHITECTURE.md I labeled `artifacts/proofs/*.alethe` as "Generated proof artifacts (build output)" based on the directory name alone. User asked what to do with the folder; investigation showed `.alethe` is the cvc5/veriT SMT proof-trace format, **not** Lean output, and *nothing* in the current codebase reads, writes, or imports those files. They are remnants of an earlier SMT-based verification approach that was abandoned for the current Lean-kernel approach. ARCHITECTURE.md was actively misleading future agents.
+
+**Root cause**: Inferred role from path + extension without grepping the codebase to confirm any code path actually produces or consumes them. Path "artifacts/proofs/" sounds plausible as build output, and `.alethe` sounds like a proof format, so the wrong story stuck.
+
+**Fix**: Deleted `artifacts/`; removed the line from ARCHITECTURE.md.
+
+**Prevention**: When documenting a directory's role in ARCHITECTURE.md, **grep the codebase for the directory name and a sample filename first**. If zero references, the directory is either orphaned or external-facing — say so explicitly (e.g. "orphaned, candidate for removal") rather than inventing a plausible-sounding role. The phrases "build output", "generated", "cache" should each be backed by an actual writer in the code.
+
+---
+
 ## [LSN-002] 2026-05-14 — Stale `.olean` caches silently fail with "incompatible header" or 60s timeouts
 
 **What happened**: First `uv run python scripts/check_scenarios.py` run hit 5/6 scenario timeouts at 60s. Initial reading suggested my docstring trims had broken the verification pipeline. Investigation showed: (a) `lean` shim reported "no default toolchain configured"; (b) when invoked with `ELAN_HOME` set, it downloaded the project's required Lean version (`v4.29.1`); (c) running scenarios then failed with `error: failed to read file './MedicalKnowledge.olean', incompatible header` because the cached `.olean`/`.ilean` files were built against an older Lean. The 60s "timeouts" were really `elan` blocking on a toolchain download for the first scenario, then a fast-failing subsequent scenarios that I had already exceeded the budget for.

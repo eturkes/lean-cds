@@ -36,7 +36,6 @@ scripts/check_scenarios.py   — Batch-verify all scenarios kernel-typecheck
 lean/en/                     — EN Lean tree (AHA/ACC, KDIGO, ADA, APA, AASM)
 lean/ja/                     — JA Lean tree (JSH, JSN, JDS, JSAD/JSNP, JRS); kanji ids via «…»
 lean/MedicalKnowledge.lean   — Shared DSL; precompiled at app boot to .olean
-artifacts/proofs/            — Generated proof artifacts (build output)
 templates/index.html         — Main shell
 templates/_scenario_panel.html, _verification_result.html — HTMX fragments
 static/styles.css, syntax.css, tooltips.js
