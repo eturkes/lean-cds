@@ -19,9 +19,7 @@ def normalize_locale(value: str | None) -> str:
     return DEFAULT_LOCALE
 
 
-# ---------------------------------------------------------------------------
 # UI string catalogs.
-# ---------------------------------------------------------------------------
 
 UI_STRINGS: Final[dict[str, dict[str, str]]] = {
     "ja": {

@@ -4,44 +4,41 @@ Per-session ephemeral notes. Wipe at session start unless explicitly continuing 
 
 ---
 
-## Session: 2026-05-14 — Memory-system bootstrap + LLM-optimization pass
+## Session: 2026-05-14 — Broad bloat audit + ARCHITECTURE.md consolidation
 
-**Goal**: Set up `.agent/` memory system, LLM-optimize README + docstrings, audit code for token-bloat, output reusable session prompt.
+**Goal**: User pushed back on first-pass trim, asked for broader codebase audit.
 
 **Status**: complete.
 
-**Done**:
-- `.agent/` created: `INDEX.md`, `ARCHITECTURE.md`, `DECISIONS.md` (DEC-001..003), `LESSONS.md` (empty), `SCRATCH.md`, `SESSION_PROMPT.md`.
-- `README.md` rewritten: 326 → 220 lines (33% reduction). All factual content preserved; added `## Agent workflow` section linking to `.agent/`.
-- Module + dataclass + function docstrings compressed across `app.py`, `i18n.py`, `scenarios.py`, `lean_decorate.py`, `lean_vocab.py`, `scripts/check_scenarios.py`.
-- Dead code removed: unused `SCENARIOS` alias (scenarios.py), unused `MEDKB_VOCAB` alias (lean_vocab.py), unused `LEAN_DIR` import (app.py), unused `DEFAULT_LOCALE`/`SUPPORTED_LOCALES` imports (scenarios.py).
-- `pyflakes` clean across modified files.
-- Smoke import: all modules load.
+**Findings & actions**:
 
-**Line-count deltas**:
-- app.py: 408 → 353 (−55, ~13%)
-- i18n.py: 237 → 218 (−19, ~8%)
-- scenarios.py: 588 → 565 (−23, ~4%)
-- lean_decorate.py: 1824 → 1678 (−146, ~8%)
-- lean_vocab.py: 504 → 458 (−46, ~9%)
-- scripts/check_scenarios.py: 118 → 101 (−17, ~14%)
-- README.md: 326 → 220 (−106, ~33%)
-- Total: 4225 → 3593 (−632 lines, ~15%).
+| Finding | Action |
+|---|---|
+| Prompt ↔ README overlap (1 identity sentence) | Defensible; left as-is. Prompt needs immediate self-grounding. |
+| **README ↔ ARCHITECTURE.md** — ~104 of 220 lines duplicated (Stack, Layout, Routes, Pipeline) + `Scenario data model` duplicated `scenarios.py` source | README collapsed to 6-line stub. Unique content absorbed into ARCHITECTURE.md. Logged [DEC-005]. |
+| ARCHITECTURE.md route path wrong (`POST /verify` vs actual `POST /scenarios/{id}/verify`) | Fixed in ARCHITECTURE.md; logged [LSN-004]. |
+| `pyproject.toml` description = "Add your description here" | Replaced with real one-line description. |
+| 22 ASCII rule-line comments (`# ---...---`) across 4 .py files | Stripped via `sed '/^# -\{50,\}$/d'`. Label comments preserved. -22 lines total. |
+| Empty `tests/` directory (only stale `__pycache__`) | Deleted. |
+| Code docstrings | Already tight from prior session; no further action. |
+| Templates / static/ | Not deep-audited; no obvious bloat surfaced. |
+| `.agent/INDEX.md` minor self-overlap | Tolerable; left alone. |
+
+**File deltas**:
+- README.md: 220 → 6 lines (-214).
+- ARCHITECTURE.md: 80 → ~165 lines (+85, absorbed README content).
+- i18n.py: 218 → 216 (-2).
+- scenarios.py: 561 → 555 (-6).
+- lean_decorate.py: 1678 → 1668 (-10).
+- lean_vocab.py: 456 → 452 (-4).
+- tests/: removed.
+- Net repo-wide: −151 lines (excluding INDEX/DEC/LSN updates).
 
 **Verification**:
-- `uv run python -m pyflakes …` → clean.
-- `uv run python -c "import app; …"` → all modules import.
-- `lean_decorate.render_lean_with_tooltips` smoke render → tooltip attrs present in EN and JA.
-- `uv run python scripts/check_scenarios.py` → 6/6 PASS (exit 0). Stale `.olean` caches cleared first (see [LSN-002]).
-
-**Open**:
-- None for this session. Future possible work surfaced: see [LSN-002] enhancement note (auto-detect toolchain-incompatible olean).
-
-**Blockers**:
-- None.
+- `uv run python -c "import app, i18n, scenarios, lean_decorate, lean_vocab"` → clean.
+- `uv run python scripts/check_scenarios.py` → 6/6 PASS in ~30s.
 
 **Notes for future sessions**:
-- User dropped old CLAUDE.md operational rules ([DEC-001]). Don't re-introduce them via the back door (e.g., by enforcing "enterprise UI" in an audit pass).
-- `_tip_*` and `_compose_*` functions in `lean_decorate.py` look long but they're locale-specific tooltip return strings, not docstrings. Compressing them changes user-visible tooltips — out of scope for doc-optimization passes.
-- All `.agent/` files are themselves LLM-optimized — eating the dog food. If you find a denser format that works, propose a DEC-NNN.
-- Survey agents can over- or under-count; always cross-check before acting on a survey's "trim X lines" claim. [Could become an LSN entry if it bites a future session.]
+- ARCHITECTURE.md is now the canonical project doc. If you find yourself updating README beyond a tiny stub, you're probably reintroducing the drift class [DEC-005] eliminated.
+- When documenting routes/CLI/env vars in any `.agent/` file, grep source first ([LSN-004]).
+- The remaining 1-line in-dict separators in `lean_vocab.py` (`# ---- Types / constants ---`) were left intact — they're 1 line each and serve sub-section navigation within long dicts. Different cost/benefit than the 3-line block separators.

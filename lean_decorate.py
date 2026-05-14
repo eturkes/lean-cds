@@ -13,9 +13,7 @@ from pygments.lexer import Lexer
 import lean_vocab
 
 
-# ---------------------------------------------------------------------------
 # Parser
-# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -403,9 +401,7 @@ def parse_lean_contexts(source: str, locale: str = "en") -> ParseResult:
     return ParseResult(line_to_decl, line_to_groups, file_ctx)
 
 
-# ---------------------------------------------------------------------------
 # Tooltip text generators
-# ---------------------------------------------------------------------------
 #
 # Each generator takes the declaration owning the current line (or
 # ``None`` if the parser didn't recognise it) and the raw source line,
@@ -962,9 +958,7 @@ def _tip_print_axioms(decl: Optional[LeanDecl], src: str, locale: str) -> str:
     )
 
 
-# ---------------------------------------------------------------------------
 # Phrase-group tooltip composer
-# ---------------------------------------------------------------------------
 #
 # A group tooltip has to answer "what does this multi-word phrase
 # mean?" for a reader with no Lean background. The composer walks the
@@ -1373,9 +1367,7 @@ _TIP_DISPATCH: dict[str, _TipFn] = {
 }
 
 
-# ---------------------------------------------------------------------------
 # HTML decoration
-# ---------------------------------------------------------------------------
 #
 # Each target rewrites a specific Pygments span (or span sequence) on a
 # single source line into a tooltip-bearing span whose `data-lean-tip`
@@ -1495,9 +1487,7 @@ def _decorate_line(
     return html_line
 
 
-# ---------------------------------------------------------------------------
 # Phrase-group HTML wrapping
-# ---------------------------------------------------------------------------
 #
 # After individual-token decoration, we walk each HTML line one top-level
 # ``<span>…</span>`` chunk at a time, track each chunk's visible column

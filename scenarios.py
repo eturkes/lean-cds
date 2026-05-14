@@ -47,9 +47,7 @@ class Scenario:
         return self.lean_path.read_text(encoding="utf-8")
 
 
-# ---------------------------------------------------------------------------
 # English (American clinical guidelines).
-# ---------------------------------------------------------------------------
 
 _EN_SCENARIO_A = Scenario(
     id="scenario-a",
@@ -296,9 +294,7 @@ _EN_SCENARIO_C = Scenario(
 )
 
 
-# ---------------------------------------------------------------------------
 # Japanese (Japanese clinical guidelines).
-# ---------------------------------------------------------------------------
 
 _JA_SCENARIO_A = Scenario(
     id="scenario-a",
@@ -538,9 +534,7 @@ _JA_SCENARIO_C = Scenario(
 )
 
 
-# ---------------------------------------------------------------------------
 # Public registry.
-# ---------------------------------------------------------------------------
 
 SCENARIOS_BY_LOCALE: dict[str, dict[str, Scenario]] = {
     "ja": {

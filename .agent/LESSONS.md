@@ -14,6 +14,18 @@ Format per entry:
 
 ---
 
+## [LSN-004] 2026-05-14 — ARCHITECTURE.md had wrong route path; uncaught for ~1 day
+
+**What happened**: ARCHITECTURE.md "Public surfaces" table listed `POST /verify` and data-flow step 4 said the same. Actual `app.py:324` defines `@post("/scenarios/{scenario_id:str}/verify", name="verify_scenario")`. Discrepancy surfaced only during the README → ARCHITECTURE consolidation pass when both docs were diffed side-by-side. README had the correct path; ARCHITECTURE was wrong. Any agent who'd used ARCHITECTURE.md as ground truth for routing would have generated invalid links / curl commands.
+
+**Root cause**: ARCHITECTURE.md was hand-written without a verification step against `app.py`. The route name "POST `/verify`" is a *plausible* shortening that survived undetected.
+
+**Fix**: ARCHITECTURE.md "Public surfaces" + "Request lifecycle" sections updated to `POST /scenarios/{scenario_id}/verify` to match `app.py:324`. README absorbed into ARCHITECTURE in same pass; single source of truth eliminates this drift class for routes.
+
+**Prevention**: When documenting routes/CLI commands/file paths/env vars in any `.agent/` file, **grep the source for the literal string** before committing. For routes specifically: `grep -n '@get\|@post' app.py` and copy verbatim. The Public-surfaces table should be regenerable from a `grep` of `app.py`; if it can't be, the doc has drifted.
+
+---
+
 ## [LSN-003] 2026-05-14 — Don't infer purpose from filenames; confirm by reference
 
 **What happened**: When writing ARCHITECTURE.md I labeled `artifacts/proofs/*.alethe` as "Generated proof artifacts (build output)" based on the directory name alone. User asked what to do with the folder; investigation showed `.alethe` is the cvc5/veriT SMT proof-trace format, **not** Lean output, and *nothing* in the current codebase reads, writes, or imports those files. They are remnants of an earlier SMT-based verification approach that was abandoned for the current Lean-kernel approach. ARCHITECTURE.md was actively misleading future agents.

@@ -1,7 +1,7 @@
 [project]
 name = "lean-cds"
 version = "0.1.0"
-description = "Add your description here"
+description = "Lean 4 / Python / Litestar PoC for verifiable clinical decision support. Encodes published clinical guidelines as axioms; per-patient guideline collisions are verified by kernel typecheck of `theorem absurd : False`. Bilingual JA/EN."
 requires-python = ">=3.13"
 dependencies = [
     "litestar[jinja,standard]>=2.13",
