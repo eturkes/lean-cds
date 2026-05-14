@@ -1,18 +1,4 @@
-"""Verifiable Clinical Decision Support — Litestar application.
-
-Serves the bilingual Guideline Collision Gallery UI (Japanese default,
-English toggle) and exposes a verification endpoint that invokes the
-Lean 4 compiler against a *static*, pre-written ``ScenarioX.lean`` file.
-No user input is ever interpolated into Lean source: each scenario id is
-mapped through an in-process whitelist (``scenarios.get_scenarios``) to
-a fixed filename in the ``lean/`` directory.
-
-At import time the shared knowledge base (``lean/MedicalKnowledge.lean``)
-is compiled once to ``lean/MedicalKnowledge.olean`` so that subsequent
-scenario verifications can `import` it as a precompiled module — this
-keeps each verification a single, fast ``lean`` invocation rather than a
-cold compile of the whole DSL on every request.
-"""
+"""Litestar app + Lean subprocess wrapper. Bilingual UI (JA default). ``/verify`` invokes ``lean`` on a static whitelisted scenario file; no user input is ever interpolated into Lean source. At import, each locale's ``MedicalKnowledge.lean`` is precompiled to ``.olean`` so per-request verification is a single fast ``lean`` invocation."""
 
 from __future__ import annotations
 
@@ -44,7 +30,6 @@ from i18n import (
 from lean_decorate import render_lean_with_tooltips
 from scenarios import (
     KNOWLEDGE_BASE_MODULE,
-    LEAN_DIR,
     Scenario,
     get_scenarios,
     knowledge_base_file,
@@ -56,16 +41,9 @@ STATIC_DIR = BASE_DIR / "static"
 
 
 def _resolve_lean_binary() -> str:
-    """Resolve the ``lean`` executable, preferring a project-local elan install.
-
-    The project keeps elan isolated under ``<project>/.elan`` so the host
-    home directory is never tainted; that directory is not on ``PATH`` by
-    default, so check the shim explicitly before falling back to whatever
-    ``lean`` ``shutil.which`` finds on the inherited environment. The
-    elan shim resolves its installed toolchains relative to ``ELAN_HOME``,
-    so when we pick the project-local shim we point ``ELAN_HOME`` at the
-    same directory for every subprocess we will spawn later.
-    """
+    """Project-local ``./.elan/bin/lean`` if present, else ``shutil.which("lean")``."""
+    # Project-local elan is off PATH by default; pin ELAN_HOME so spawned
+    # subprocesses resolve toolchains against the same isolated tree.
     project_local_root = BASE_DIR / ".elan"
     project_local = project_local_root / "bin" / "lean"
     if project_local.is_file() and os.access(project_local, os.X_OK):
@@ -81,20 +59,7 @@ _LEXER = Lean4Lexer()
 _FORMATTER = HtmlFormatter(nowrap=False, cssclass="lean-code", noclasses=False)
 
 def _highlight_lean(code: str, locale: str) -> str:
-    """Render Lean 4 source as syntax-highlighted HTML with per-line tips.
-
-    The real work lives in `lean_decorate.render_lean_with_tooltips`: it
-    parses the scenario file into a line → declaration map, runs Pygments
-    normally, and then rewrites every recognised token span so its
-    `data-lean-tip` attribute holds a plain-English (or plain-Japanese)
-    sentence composed from *that specific line's* declaration (name,
-    type, proof body, or tactic argument). The browser tooltip popover
-    in `static/tooltips.js` reads the attribute value directly.
-
-    ``locale`` selects which medical-knowledge vocabulary table to read
-    for guideline-axiom and patient-name glosses, so the JA build of a
-    scenario file gets Japanese tooltips referencing JSH/JDS/JRS axioms.
-    """
+    """Pygments-highlight Lean source with per-line ``data-lean-tip`` attrs (locale-aware vocab)."""
     return render_lean_with_tooltips(code, _LEXER, _FORMATTER, locale=locale)
 
 
@@ -119,12 +84,7 @@ _write_syntax_css()
 
 
 def _ensure_knowledge_base_compiled(locale: str) -> str | None:
-    """Compile a locale's ``MedicalKnowledge.lean`` to ``.olean`` if stale.
-
-    Returns ``None`` on success or a human-readable error string on
-    failure. The compiled artefact is what every scenario file in the
-    locale's ``lean/<locale>/`` directory imports.
-    """
+    """Compile locale's ``MedicalKnowledge.lean`` to ``.olean`` if mtime-stale. Returns ``None`` on success or an error string."""
     src = knowledge_base_file(locale)
     locale_dir = src.parent
     olean_path = locale_dir / f"{KNOWLEDGE_BASE_MODULE}.olean"
@@ -203,12 +163,7 @@ _AXIOMS_RE = re.compile(
 
 
 def _parse_trusted_axioms(stdout: str) -> tuple[str, ...]:
-    """Extract the axiom dependency list emitted by ``#print axioms``.
-
-    Lean's pretty printer wraps the bracketed list across multiple lines
-    and indents continuation lines, so the regex spans newlines and we
-    normalise whitespace before splitting on commas.
-    """
+    """Parse axiom list from ``#print axioms`` output. Regex spans newlines (Lean wraps the bracketed list)."""
     match = _AXIOMS_RE.search(stdout)
     if match is None:
         return ()
@@ -220,7 +175,7 @@ def _parse_trusted_axioms(stdout: str) -> tuple[str, ...]:
 def _classify(
     exit_code: int, stdout: str, stderr: str, axioms: tuple[str, ...]
 ) -> Verdict:
-    """Map the Lean compiler outcome onto a `Verdict`."""
+    """Map Lean compiler outcome → ``Verdict`` (CollisionVerified|ProofUnsound|CompilerError)."""
     if exit_code != 0:
         return Verdict.CompilerError
     if not axioms:
@@ -234,13 +189,7 @@ def _classify(
 
 
 def _run_lean(scenario: Scenario) -> VerificationResult:
-    """Invoke ``lean`` against the scenario's static ``.lean`` file.
-
-    Each scenario lives under ``lean/<locale>/`` and imports the
-    sibling ``MedicalKnowledge.olean`` from that same directory, so the
-    subprocess is run with ``cwd`` and ``LEAN_PATH`` both set to the
-    locale-specific subdirectory.
-    """
+    """Invoke ``lean`` on the scenario's static file. ``cwd`` and ``LEAN_PATH`` set to ``lean/<locale>/`` so ``import MedicalKnowledge`` resolves to the locale's precompiled ``.olean``."""
     locale_error = _KNOWLEDGE_BASE_ERRORS.get(scenario.lean_subdir)
     if locale_error is not None:
         return VerificationResult(
@@ -304,12 +253,7 @@ def _run_lean(scenario: Scenario) -> VerificationResult:
 
 
 def _resolve_locale(request: Request) -> str:
-    """Pick the active locale from query string, then cookie, then default.
-
-    Query parameter ``?lang=ja|en`` always wins so a deep link or the
-    header toggle can override a previously stored cookie. Anything else
-    falls back to the JA default.
-    """
+    """Locale order: ``?lang=`` query → ``cds_lang`` cookie → JA default. Query wins so deep links override prior cookie."""
     query_lang = request.query_params.get("lang") if request.query_params else None
     if query_lang is not None:
         return normalize_locale(query_lang)

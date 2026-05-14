@@ -1,29 +1,4 @@
-"""Per-locale plain-language gloss table for every MedicalKnowledge symbol.
-
-The scenario files in ``lean/<locale>/`` never define the medical
-vocabulary themselves; they import a sibling ``MedicalKnowledge`` and
-apply its predicates and axioms to a fresh patient. A reader with no
-Lean background can follow the local declarations once the syntax
-tooltips are in place, but they still have no way of knowing what
-``JSH2019_Ch5_FirstLine`` does or how ``Indicated p t`` is meant to be
-read.
-
-This module is the single source of truth for that mapping. Each
-locale has its own dictionary so:
-
-* the **English** build (``lean/en/``) talks about ``JohnDoe``,
-  ``AHA_ACC_HTN_8_1_5``, ``KDIGO_AKI_3_1_2``, etc., with English
-  tooltip prose;
-* the **Japanese** build (``lean/ja/``) talks about ``TaroYamada``,
-  ``JSH2019_Ch5_FirstLine``, ``JSN_AKI2016_Diuretics``, etc., with
-  Japanese tooltip prose.
-
-Universal medical predicates such as ``HasEssentialHypertension`` keep
-the same Lean identifier in both locales but their plain-language
-``reads`` text is translated. Keeping every entry here (rather than
-scattered through ``lean_decorate.py``) makes it obvious where to edit
-when a new guideline is added to either ``MedicalKnowledge.lean``.
-"""
+"""Per-locale gloss table for every MedicalKnowledge symbol. Single source of truth for tooltip prose; EN talks AHA/KDIGO/ADA/APA/AASM with English glosses, JA talks JSH/JSN/JDS/JSAD/JRS with Japanese glosses. Universal Lean identifiers (e.g. ``HasEssentialHypertension``) share keys across locales but their ``reads`` text is translated."""
 
 from __future__ import annotations
 
@@ -48,23 +23,19 @@ ROLE_AND_INTRO = "and_intro"  # `And.intro`
 
 @dataclass(frozen=True)
 class VocabEntry:
-    """One imported MedicalKnowledge symbol as the tooltip should read it."""
+    """One MedicalKnowledge symbol's tooltip prose. Fields:
+    - ``plain``: atomic noun phrase when mentioned but not applied (e.g. "the AHA/ACC hypertension guideline").
+    - ``reads``: reading when applied to args (e.g. ``HasEssentialHypertension p`` → "has essential hypertension").
+    - ``shape``: Lean type signature for fallback reference.
+    - ``source``: real-world publication encoded (only for ``ROLE_GUIDELINE_AXIOM``).
+    - ``noun``: treatment-constructor reading as deontic-predicate arg (e.g. "a thiazide diuretic").
+    """
 
     role: str
-    # ``plain`` is the atomic noun phrase used when the symbol is
-    # mentioned but not applied — "the AHA/ACC hypertension guideline".
     plain: str
-    # ``reads`` is how the symbol reads when applied to its arguments —
-    # for ``HasEssentialHypertension``, "has essential hypertension".
     reads: str = ""
-    # ``shape`` captures the Lean type signature the reader can refer
-    # back to when the composed tooltip is not enough.
     shape: str = ""
-    # ``source`` names the real-world publication a guideline axiom
-    # encodes. Only populated for ``ROLE_GUIDELINE_AXIOM``.
     source: str = ""
-    # ``noun`` is the way a treatment constructor reads when it is an
-    # argument of a deontic predicate — ``a thiazide diuretic``.
     noun: str = ""
 
 
@@ -473,32 +444,13 @@ _VOCAB_BY_LOCALE: dict[str, dict[str, VocabEntry]] = {
 }
 
 
-# Backwards-compatible alias used by any caller that doesn't yet pass a
-# locale. Defaults to English so old call sites keep working.
-MEDKB_VOCAB: dict[str, VocabEntry] = _EN_VOCAB
-
-
 def lookup(symbol: str, locale: str = "en") -> Optional[VocabEntry]:
-    """Return the vocab entry for an imported MedicalKnowledge symbol.
-
-    Returns ``None`` if ``symbol`` isn't in the table — callers should
-    fall back to a generic composition for identifiers declared locally
-    in the scenario file (patient names, observation axioms, earlier
-    theorems).
-    """
+    """Vocab entry for an imported MedicalKnowledge symbol in ``locale``; ``None`` for locally-declared names (patients, observations, prior theorems) — callers fall back to a generic composition."""
     table = _VOCAB_BY_LOCALE[normalize_locale(locale)]
     return table.get(symbol)
 
 
 def symbols_by_role(role: str, locale: str = "en") -> list[str]:
-    """Return every Lean identifier in ``locale``'s vocab with ``role``.
-
-    Used by the decorator to recover locale-specific identifiers without
-    hard-coding the English names — e.g. the Patient type symbol is
-    ``"Patient"`` in English and ``"«患者»"`` in Japanese, and the deontic
-    predicates are ``("Indicated", "Contraindicated")`` vs
-    ``("«適応»", "«禁忌»")``. Order within the role is the insertion order
-    of the locale's vocab table, which is stable Python dict iteration.
-    """
+    """Identifiers in ``locale``'s vocab with ``role`` (insertion order). Lets the decorator recover locale-specific names without hard-coding e.g. ``"Patient"`` vs ``"«患者»"``."""
     table = _VOCAB_BY_LOCALE[normalize_locale(locale)]
     return [sym for sym, entry in table.items() if entry.role == role]

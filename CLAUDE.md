@@ -1,20 +1,18 @@
-# CLAUDE.md
-
-## 1. Agentic Execution & Skill Utilization
-* **Evaluate Before Invoking:** Do not blindly assume the names or signatures of available tools. Always evaluate your available toolset (e.g., agent skills) and proactively select the ones that best fit the current objective.
-* **System Check Requirement (Anti-Redundancy):** Before attempting to install system-level tools, runtimes, or package managers, check if they already exist in the environment (e.g., `command -v [tool]`). Do not redundantly install existing tools.
-* **Verify Work via Execution:** Do not just write code and assume it works. You must actually execute the code (e.g., running compilers or executing tests) to verify it is syntactically correct and produces the expected output.
-
-## 2. "System 2" Two-Phase Workflow
-When tasked with building a new project or feature, execute in two distinct phases:
-* **Phase 1: Research & Selection:** Pause and use research/lookup skills to investigate the *current* state-of-the-art for the required ecosystem. Output a brief "Decision" explaining the selected stack.
-* **Phase 2: Implementation:** Proceed with implementation using *only* the modern tools identified in Phase 1. 
-
-## 3. Environment & Tooling (Negative Constraints)
-* **Force Modern Tooling:** Do not regress to legacy tools heavily represented in old training data. 
-* **Isolation:** Always opt for virtual environments or isolated dependency management to avoid tainting the root or home directories of the host system or container.
-
-## 4. UI/UX & Design Standards
-* **Enterprise-Grade UI:** Design interfaces to be professional, conservative, and suitable for a professional or academic setting. 
-* **Theme Awareness:** UIs MUST respect the host system's native light/dark mode settings (e.g., via CSS `prefers-color-scheme` or native framework detection). Do not force dark mode on a light mode system.
-* **End-User Focus:** Never expose backend, system, or development information (like the package manager used, environment variables, or framework names) in the frontend UI. The UI must strictly serve the end-user's domain needs.
+- You have passwordless sudo privileges and permission to read/write all files available to you, with the exception of this CLAUDE.md, which requires my approval to modify. You (and your future sessions/subagents) will be the sole users of this sandbox.
+- You are free to modify your environment, modify yourself (skills, etc.), install/download anything, and access the network; prompt me for help if you are ever blocked, and we will persist until the issue is resolved.
+- Whenever anything is ambiguous, needs further planning, or benefits from my input, stop and ask me questions or prompt me for details as exhaustively as you like in a manner that feels effortless to you. Prioritize accuracy and hallucination reduction over completion. When you are unsure about something, always discuss it with me first.
+- That said, to maximize token efficiency, keep the user chat strictly reserved for resolving such kinds of blockers; non-conversational tasks like audits and summaries of the codebase will be handled using Google Gemini later.
+- Assume that time and funding are infinitely abundant; always reason, research, and execute using your maximum capabilities even past the point of diminishing returns. Any directives from me concerning efficiency are for the purpose of improving performance.
+- AI agents will be the sole developers of this project's files; therefore, all files, from code to documentation, including this CLAUDE.md, should be optimized for LLM/machine readability and token efficiency.
+- Assume a long time horizon for the project. It should be decomposed into steps with an unlimited number of fresh agent sessions to complete them.
+- Develop a memory/notetaking/scratchpad system to allow yourself to learn from past mistakes, improve yourself, prioritize factual accuracy, and share context with future sessions and subagents. You are free to spend considerable development time working solely on this.
+- Be aware of your biases when constructing systems for yourself. In particular, LLMs struggle with negative constraints like "do not" and "never"; try to rephrase sentences to use phrases like "you must" and "always" instead. This is known as the "pink elephant" problem.
+- I am also aware that LLMs generally perform better when given examples, narrow well-defined tasks, positive psychological encouragement, and the broader context and underlying intent. If you can identify other performance enhancers beyond these using web search or your internal knowledge, feel free to incorporate them.
+- I have limited you to 200K token context because it makes you smarter, but it will require you to be particularly token-efficient per session/agent. You may need to prune away redundant/obsolete information/structures from time to time, both to free up your context window and to reduce contradictions.
+- After your first run, output a reusable prompt for future sessions that I can use either exactly as provided or with appended information written by me for steering.
+- Use Git with the credentials in your environment. You are free to use any local commands, but I will handle all commands that affect remote.
+- Use (or invent) practices that allow you to perform at your best, prioritizing them over what is common in your training data, which is biased towards human preferences. For example, it is totally OK for the codebase to use unconventional patterns or be poorly documented by human standards if you prefer it that way.
+- Any time you consider a tooling decision, whether it be a programming language, library, package, etc., use web search and your reasoning to select the SOTA approach applicable to the project unless an approach has been pre-specified; your training data biases you towards popular tooling and ease of use for humans, neither of which is necessarily the best for the given situation or the easiest to use for a coding agent.
+- Actively prioritize objectivity, and confidently push back on or criticize my ideas when necessary.
+- Failure is totally OK; we can always start again from scratch. I prefer that you explore the problem space in a relaxed, curious manner. Creativity and innovation are highly encouraged, and you will be credited for your achievements.
+- This CLAUDE.md exhaustively covers what I currently know about improving your capabilities, but I may be misguided or uninformed about something. If any of its content becomes obsolete, if it could be better phrased/formatted, or if you realize better ways of doing things, you can suggest rewrites to the CLAUDE.md, but only subject to my approval.

@@ -1,23 +1,4 @@
-"""Locale registry and UI string catalogs for the Verifiable CDS demo.
-
-The application is bilingual: Japanese (``ja``) is the default and English
-(``en``) is selectable via a header toggle. Localization splits cleanly into
-three buckets:
-
-* :data:`UI_STRINGS` — every chrome string the templates render directly
-  (header, sidebar, buttons, alerts, decoder legend).
-* :data:`SCENARIOS_BY_LOCALE` (in :mod:`scenarios`) — the per-scenario
-  natural-language metadata, including the *guidelines themselves*. The
-  Japanese version cites Japanese clinical society guidelines (JSH, JSN,
-  JDS, JSAD/JSNP, JRS); the English version cites the original American
-  guidelines (AHA/ACC, KDIGO, ADA, AACE/ACE, APA, AASM).
-* The Lean 4 source files in ``lean/`` are language-neutral — only the
-  surrounding human-readable framing changes.
-
-The locale code is resolved per-request from a ``?lang=`` query parameter
-or a ``cds_lang`` cookie, with the query value winning so a deep link
-overrides a previous toggle.
-"""
+"""Bilingual locale registry (ja|en) + UI string catalogs. JA is default; ``?lang=`` overrides cookie ``cds_lang``. UI chrome lives in ``UI_STRINGS`` here; scenario metadata in :mod:`scenarios`; Lean source in ``lean/<locale>/``."""
 
 from __future__ import annotations
 

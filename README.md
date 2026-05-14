@@ -1,82 +1,54 @@
 # lean-cds
 
-A local proof-of-concept that encodes published clinical guidelines as
-Lean 4 `axiom`s on a `Patient → Prop` deontic predicate algebra and asks
-the Lean kernel to *prove* that two guidelines, applied to a single
-patient, derive `False`. The audit is not a runtime evaluator: each
-scenario lives in a static `.lean` file containing a `theorem absurd :
-False` whose proof is built from the encoded clinical-guideline axioms,
-the patient's chart-derived observation axioms, and a global
-`incompatible_modalities` axiom forbidding any treatment from being both
-indicated and contraindicated for the same patient. A successful kernel
-typecheck of `absurd` is the verification that the two guidelines collide.
+Local PoC encoding published clinical guidelines as Lean 4 `axiom`s over a `Patient → Prop` deontic predicate algebra. Each scenario is a static `.lean` file whose `theorem absurd : False` is proved from (a) two guideline axioms, (b) chart-derived observation axioms, (c) a global `incompatible_modalities` axiom forbidding any treatment from being both `Indicated` and `Contraindicated` for the same patient. **Successful kernel typecheck of `absurd` = the two guidelines collide on this patient.** Not a runtime evaluator; no user input is interpolated into Lean source.
 
-The UI is an HTMX gallery with a sidebar of scenarios, a two-column main
-panel (natural-language guidelines on the left, the static Lean 4 source
-on the right), and a verification button that runs the `lean` compiler
-against the scenario's pre-written file and surfaces the trusted-axiom
-list extracted from `#print axioms absurd`.
+UI: HTMX gallery (sidebar of scenarios + two-column body: NL guidelines | Lean source). The verify button runs `lean` against the scenario file and surfaces the axiom witness from `#print axioms absurd`.
 
-The interface is bilingual end-to-end. **Japanese (日本語) is the
-default** and the header carries a JA/EN toggle. The Japanese build
-cites Japanese medical society guidelines (JSH 2019, JSN AKI 2016,
-JDS 2024, JSAD/JSNP 2025 パニック症診療ガイドライン, JRS SAS 2020) and
-ships its own `lean/ja/` source tree in which **every Lean identifier
-is kanji**, French-quoted via Lean 4's `«…»` syntax — patient names
-(`«山田太郎»`, `«鈴木花子»`, `«田中一郎»`), the type and predicates
-(`«患者»`, `«治療»`, `«適応»`, `«禁忌»`, `«衝突»`), the condition
-predicates (`«本態性高血圧を有する»`, `«重症脱水を呈する»`, …), and the
-guideline axioms themselves (`«高血圧2019_第5章_第一選択»`,
-`«腎臓AKI2016_利尿薬»`, `«糖尿病2024_第20_1項_DKA»`, …). The English build
-ships `lean/en/` with the original American guidelines (ACC/AHA, KDIGO,
-ADA, APA, AASM) and `JohnDoe / JaneRoe / RichardRoe`. Hover
-tooltips on the highlighted Lean source are likewise localized: the
-JA build's `data-lean-tip` attributes hold Japanese explanations, the
-EN build's hold English. The two trees prove the same theorem
-structure with completely separate identifier vocabularies.
+**Bilingual end-to-end. Japanese (日本語) is the default**; header carries a JA/EN toggle.
+
+- `lean/ja/`: JSH 2019, JSN AKI 2016, JDS 2024, JSAD/JSNP 2025, JRS SAS 2020. Every Lean identifier is kanji via Lean 4's `«…»` syntax (`«山田太郎»`, `«患者»`, `«治療»`, `«適応»`, `«禁忌»`, `«衝突»`, `«本態性高血圧を有する»`, `«高血圧2019_第5章_第一選択»`, …).
+- `lean/en/`: ACC/AHA, KDIGO, ADA, APA, AASM. ASCII identifiers (`JohnDoe`, `AHA_ACC_HTN_8_1_6`, …).
+
+The two trees prove the same theorem shape with disjoint identifier vocabularies. Tooltips (`data-lean-tip` attrs) are locale-matched.
 
 ## Stack
 
-| Layer            | Tool                              |
-|------------------|-----------------------------------|
-| Verifier         | **Lean 4** (`lean` on PATH)       |
-| Package manager  | **uv** (Astral)                   |
-| Language         | **Python 3.13**                   |
-| Web framework    | **Litestar 2** (`litestar[jinja,standard]`) |
-| ASGI server      | **uvicorn**                       |
-| Templates        | **Jinja2**                        |
-| Frontend         | **HTMX 2** (CDN, no build step)   |
-| Product tour     | **driver.js 1.3** (CDN, no build step) |
-| Syntax highlight | **Pygments** `Lean4Lexer` (server-side, dual light/dark) |
-| Theming          | CSS `prefers-color-scheme`        |
-| Localization     | In-process JA/EN catalogs (`i18n.py`), JA default, query+cookie toggle |
+| Layer | Tool |
+|-------|------|
+| Verifier | Lean 4 (`lean` on PATH; `./.elan/bin/lean` preferred) |
+| Package manager | uv (Astral) |
+| Language | Python 3.13 |
+| Web framework | Litestar 2 (`litestar[jinja,standard]`) |
+| ASGI server | uvicorn |
+| Templates | Jinja2 |
+| Frontend | HTMX 2 (CDN, no build) |
+| Product tour | driver.js 1.3 (CDN, no build) |
+| Syntax highlight | Pygments `Lean4Lexer` (server-side, dual light/dark) |
+| Theming | CSS `prefers-color-scheme` |
+| Localization | In-process JA/EN catalogs (`i18n.py`), JA default, query+cookie toggle |
 
 ## Prerequisites
 
-- **Lean 4** installed via [`elan`](https://github.com/leanprover/elan).
-  Verify with `lean --version`. If you would rather keep elan out of
-  `$HOME`, install it into the project tree instead — `app.py` checks
-  `./.elan/bin/lean` before falling back to `PATH`:
+- Lean 4 via [`elan`](https://github.com/leanprover/elan). Project-local install (preferred — `app.py` checks `./.elan/bin/lean` first):
 
   ```bash
   ELAN_HOME="$PWD/.elan" curl -fsSL https://elan.lean-lang.org/elan-init.sh \
       | sh -s -- -y --no-modify-path --default-toolchain stable
   ```
 
-- **uv** ≥ 0.11. Verify with `uv --version`.
-- Python 3.13 (uv will fetch it on demand if missing).
+- uv ≥ 0.11.
+- Python 3.13 (uv fetches on demand).
 
 ## Quick start
 
 ```bash
 git clone git@github.com:eturkes/lean-cds.git
 cd lean-cds
-uv sync                                         # creates .venv from uv.lock
+uv sync
 uv run uvicorn app:app --host 127.0.0.1 --port 8000
 ```
 
-Open <http://127.0.0.1:8000>. Pick a scenario and click **Run Lean Formal
-Verification**.
+Open <http://127.0.0.1:8000>, pick a scenario, click **Run Lean Formal Verification**.
 
 ## Project layout
 
@@ -84,104 +56,77 @@ Verification**.
 .
 ├── app.py                          # Litestar app + Lean subprocess wrapper
 ├── i18n.py                         # JA/EN UI string catalogs + locale resolver
-├── scenarios.py                    # Per-locale scenario metadata, ID → .lean filename map
-├── lean_decorate.py                # Pygments → per-line tooltip HTML renderer (locale-aware)
-├── lean_vocab.py                   # Per-locale glosses for every MedicalKnowledge symbol
+├── scenarios.py                    # Per-locale scenario metadata, ID → .lean filename
+├── lean_decorate.py                # Pygments → per-line tooltip HTML renderer
+├── lean_vocab.py                   # Per-locale glosses for MedicalKnowledge symbols
 ├── lean/
-│   ├── en/                         # American guideline axioms + romanized patient names
-│   │   ├── MedicalKnowledge.lean   #   AHA/KDIGO/ADA/APA/AASM
-│   │   ├── ScenarioA.lean          #   JohnDoe — hypertension vs. severe dehydration
-│   │   ├── ScenarioB.lean          #   JaneRoe — DKA vs. severe hypokalaemia
-│   │   └── ScenarioC.lean          #   RichardRoe — acute panic vs. untreated severe OSA
-│   └── ja/                         # Japanese guideline axioms + fully kanji identifiers
-│       ├── MedicalKnowledge.lean   #   JSH/JSN/JDS/JSAD-JSNP/JRS, all names in «…»
-│       ├── ScenarioA.lean          #   «山田太郎» — 高血圧症 vs. 重症脱水
-│       ├── ScenarioB.lean          #   «鈴木花子» — DKA vs. 重症低カリウム血症
-│       └── ScenarioC.lean          #   «田中一郎» — 急性パニック症 vs. 重症 OSA
+│   ├── en/                         # AHA/KDIGO/ADA/APA/AASM; ASCII names
+│   │   ├── MedicalKnowledge.lean
+│   │   ├── ScenarioA.lean          # JohnDoe — HTN vs. severe dehydration
+│   │   ├── ScenarioB.lean          # JaneRoe — DKA vs. severe hypokalaemia
+│   │   └── ScenarioC.lean          # RichardRoe — acute panic vs. untreated severe OSA
+│   └── ja/                         # JSH/JSN/JDS/JSAD-JSNP/JRS; kanji names in «…»
+│       ├── MedicalKnowledge.lean
+│       ├── ScenarioA.lean          # «山田太郎» — 高血圧症 vs. 重症脱水
+│       ├── ScenarioB.lean          # «鈴木花子» — DKA vs. 重症低カリウム血症
+│       └── ScenarioC.lean          # «田中一郎» — 急性パニック症 vs. 重症 OSA
 ├── scripts/
-│   └── check_scenarios.py          # Regression harness asserting expected axiom sets
+│   └── check_scenarios.py          # Regression harness pinning expected axiom sets
 ├── templates/
 │   ├── index.html                  # Full page shell + sidebar
 │   ├── _scenario_panel.html        # Scenario two-column body (HTMX target)
 │   └── _verification_result.html   # Compiler-result alert + terminal
 ├── static/
-│   ├── styles.css                  # Hand-written enterprise theme (light/dark)
+│   ├── styles.css                  # Hand-written theme (light/dark)
 │   ├── syntax.css                  # Pygments CSS, regenerated at app import
-│   └── tooltips.js                 # Vanilla-JS tooltip popovers for Lean keywords
+│   └── tooltips.js                 # Tooltip popovers for Lean keywords
+├── .agent/                         # Agent memory system (see .agent/INDEX.md)
 ├── pyproject.toml                  # uv-managed metadata + deps
 ├── uv.lock                         # cross-platform lockfile
 └── LICENSE                         # Apache 2.0
 ```
 
-## How it works
+## Routes (`app.py`)
 
-### Routes (`app.py`)
+| Method | Path | Returns |
+|--------|------|---------|
+| GET | `/` | Full page (`index.html` + first scenario) |
+| GET | `/scenarios/{scenario_id}` | `_scenario_panel.html` HTMX fragment |
+| POST | `/scenarios/{scenario_id}/verify` | `_verification_result.html` HTMX fragment |
+| GET | `/static/*` | `static/` files |
 
-| Method | Path                              | Returns                                    |
-|--------|-----------------------------------|--------------------------------------------|
-| GET    | `/`                               | Full page (`index.html` + first scenario)  |
-| GET    | `/scenarios/{scenario_id}`        | `_scenario_panel.html` HTMX swap fragment  |
-| POST   | `/scenarios/{scenario_id}/verify` | `_verification_result.html` HTMX fragment  |
-| GET    | `/static/*`                       | `static/` files                            |
+Every route accepts `?lang=ja|en`. Resolution order (in `_resolve_locale`): query → `cds_lang` cookie → JA default. Each response sets `cds_lang` for stickiness.
 
-Every route accepts an optional `?lang=ja|en` query parameter. The
-resolver in `app.py` (`_resolve_locale`) prefers the query string, then
-falls back to the `cds_lang` cookie, then to the JA default. Each
-response sets the `cds_lang` cookie so a one-time toggle is sticky.
+## Verification pipeline (`app.py` `_run_lean`)
 
-### Verification pipeline (`app.py` `_run_lean`)
+1. **At import.** `_precompile_all_knowledge_bases()` calls `_ensure_knowledge_base_compiled(locale)` per supported locale. If `lean/<locale>/MedicalKnowledge.{olean,ilean}` are missing or stale relative to the `.lean`, it runs `lean -o MedicalKnowledge.olean -i MedicalKnowledge.ilean MedicalKnowledge.lean` (cwd `lean/<locale>`). Scenarios import the precompiled module.
 
-1. At import time, `_precompile_all_knowledge_bases()` walks every
-   supported locale and runs `_ensure_knowledge_base_compiled(locale)`,
-   which checks the mtimes of `lean/<locale>/MedicalKnowledge.lean`
-   against its `.olean` / `.ilean` companions and runs
-   `lean -o MedicalKnowledge.olean -i MedicalKnowledge.ilean
-   MedicalKnowledge.lean` (with `cwd=lean/<locale>`) if either is missing
-   or stale. The compiled module is what each locale's scenario files
-   import.
-2. A request to `POST /scenarios/{id}/verify` looks the scenario up in
-   the per-locale `scenarios.get_scenarios(locale)` whitelist. Unknown
-   ids 404. **No request data is ever interpolated into Lean source** —
-   the only thing the handler does is map an id to a fixed filename,
-   which is identical across locales.
-3. `subprocess.run([LEAN_BINARY, scenario.lean_filename],
-   cwd=lean/<locale>/, env={"LEAN_PATH": "lean/<locale>/", ...},
-   timeout=60)`. Setting `LEAN_PATH` to the locale subdirectory lets the
-   static `import MedicalKnowledge` line in each scenario resolve against
-   the locale-specific precompiled `.olean` (so the JA build sees the
-   JSH / JDS / JRS axioms and the EN build sees the AHA / ADA / AASM
-   axioms).
-4. `_parse_trusted_axioms()` scans stdout for the
-   `'…absurd' depends on axioms: [ … ]` block emitted by the
-   `#print axioms absurd` line at the end of every scenario file and
-   returns the list of axiom names.
-5. `_classify()` maps the compiler outcome onto a three-state `Verdict`:
-   `CollisionVerified` (exit 0, axiom list present, no `sorryAx`,
-   no `error:` lines), `ProofUnsound` (axiom list contains `sorryAx`),
-   or `CompilerError` (any other failure). The Jinja template renders
-   `alert-danger` for a verified collision, `alert-warning` for the two
-   failure modes, and a fallback when the compiler is missing or timed
-   out.
+2. **Per request.** `POST /scenarios/{id}/verify` looks `id` up in `scenarios.get_scenarios(locale)`. Unknown → 404. **No request data is ever interpolated into Lean source.** Handler maps id → fixed filename.
 
-`LEAN_BINARY` is resolved once at import time via `shutil.which("lean")`.
-Override by exporting a different `lean` on PATH or editing the constant.
+3. **Subprocess.** `subprocess.run([LEAN_BIN, scenario.lean_filename], cwd=lean/<locale>/, env={"LEAN_PATH": "lean/<locale>/", ...}, timeout=60)`. `LEAN_PATH` lets `import MedicalKnowledge` resolve to the locale's precompiled `.olean`.
 
-### Syntax highlighting
+4. **Parse.** `_parse_trusted_axioms()` scans stdout for `'…absurd' depends on axioms: [ … ]` and returns the list.
 
-`_write_syntax_css()` runs at module import and writes `static/syntax.css`
-containing two Pygments stylesheets wrapped in
-`@media (prefers-color-scheme: ...)` blocks (Tango for light, Monokai for
-dark). Per-scenario highlighted HTML is computed on demand in
-`_scenario_context()` from the static `.lean` file's contents and passed
-to templates as `highlighted_lean | safe`.
+5. **Classify** (`_classify`). Three-state `Verdict`:
+   - `CollisionVerified` — exit 0, axiom list present, no `sorryAx`, no `error:`.
+   - `ProofUnsound` — axiom list contains `sorryAx`.
+   - `CompilerError` — any other failure.
 
-### Scenario data model (`scenarios.py`)
+Template renders `alert-danger` for verified collision, `alert-warning` for failures, fallback when compiler is missing or timed out.
+
+`LEAN_BIN` resolves once at import (`_resolve_lean_binary`): project-local `./.elan/bin/lean` first, then `shutil.which("lean")`.
+
+## Syntax highlighting
+
+`_write_syntax_css()` runs at module import; writes `static/syntax.css` with two Pygments stylesheets wrapped in `@media (prefers-color-scheme: …)` blocks (Tango light, Monokai dark). Per-scenario highlighted HTML is computed on demand in `_scenario_context()` from the static `.lean` and passed to templates as `highlighted_lean | safe`.
+
+## Scenario data model (`scenarios.py`)
 
 ```python
 @dataclass(frozen=True)
 class Guideline:
     source: str        # journal/society + section
-    body: str          # natural-language guideline excerpt
+    body: str          # natural-language excerpt
 
 @dataclass(frozen=True)
 class Scenario:
@@ -191,97 +136,56 @@ class Scenario:
     patient_summary: str
     guideline_a: Guideline
     guideline_b: Guideline
-    lean_filename: str         # filename, e.g. "ScenarioA.lean"
-    lean_subdir: str           # locale dir, e.g. "ja" or "en"
-    audit_summary: str         # short technical caption under the code frame
-    plain_english: str         # narrative shown in the verification result alert
+    lean_filename: str         # e.g. "ScenarioA.lean"
+    lean_subdir: str           # "ja" or "en"
+    audit_summary: str
+    plain_english: str
 
 SCENARIOS_BY_LOCALE: dict[str, dict[str, Scenario]] = {
-    "ja": { ... },   # JSH / JSN / JDS / JSAD-JSNP / JRS citations
+    "ja": { ... },   # JSH / JSN / JDS / JSAD-JSNP / JRS
     "en": { ... },   # ACC/AHA / KDIGO / ADA / APA / AASM
 }
-
-def get_scenarios(locale: str) -> dict[str, Scenario]: ...
 ```
 
-Each `Scenario` resolves its file via `lean/<lean_subdir>/<lean_filename>`,
-so the JA and EN copies of `scenario-a` share an `id` and a `lean_filename`
-("ScenarioA.lean") but live in `lean/ja/` and `lean/en/` respectively
-with locale-appropriate identifiers (`«山田太郎»` vs. `JohnDoe`,
-`«高血圧2019_第5章_第一選択»` vs. `AHA_ACC_HTN_8_1_6`). UI chrome strings
-(button labels, alert titles, decoder legend, etc.) live separately in
-`i18n.UI_STRINGS` and reach templates as `t`. Tooltip prose lives in
-`lean_vocab.py` (per-locale `VocabEntry` tables) and `lean_decorate.py`
-(per-locale composer branches), so hovering on `«高血圧2019_第5章_第一選択»`
-in the JA build shows a Japanese explanation while hovering on
-`AHA_ACC_HTN_8_1_6` in the EN build shows an English one.
+JA and EN copies of `scenario-a` share `id` and `lean_filename` but differ in `lean_subdir`. UI chrome strings live in `i18n.UI_STRINGS` (rendered as `t` in templates). Tooltip prose lives in `lean_vocab.py` (per-locale `VocabEntry` tables) and `lean_decorate.py` (per-locale composer branches).
 
-`scenarios.py` carries no Lean source. The actual proof for each
-scenario lives in `lean/<lean_subdir>/<lean_filename>` and follows the
-same shape (shown here in the EN naming convention; the JA tree uses
-the kanji equivalents `«臨床監査».«シナリオX»`, `«患者»`, `«所見_…»`,
-`«背理»`, etc.):
+Each Lean scenario follows the same shape (EN names shown; JA uses `«臨床監査».«シナリオX»`, `«患者»`, `«所見_…»`, `«背理»`, etc.):
 
-* `import MedicalKnowledge`
-* a fresh `namespace ClinicalAudit.ScenarioX`
-* an `axiom` introducing the patient inhabitant of the locale's
-  `Patient` type
-* one `axiom obs_*` per chart-derived finding
-* `theorem absurd : False := by …` deriving the contradiction with
-  explicit tactics (`apply And.intro`, `exact`, `unfold`, etc.) from the
-  guideline axioms in `MedicalKnowledge.lean`
-* `#print axioms absurd` emitting the trusted-axiom witness the host
-  parser uses to confirm the kernel really used the expected guidelines.
+- `import MedicalKnowledge`
+- `namespace ClinicalAudit.ScenarioX`
+- `axiom` for the patient inhabitant
+- one `axiom obs_*` per chart finding
+- `theorem absurd : False := by …` deriving the contradiction
+- `#print axioms absurd` emitting the trusted-axiom witness
 
-### Adding a new scenario
+## Adding a new scenario
 
-1. Add the new guideline (or two) and any new condition predicates to
-   **both** `lean/en/MedicalKnowledge.lean` and
-   `lean/ja/MedicalKnowledge.lean`. Each guideline is a single `axiom`
-   of shape `∀ p, HasFooCondition p → Indicated p Treatment.bar` (or
-   `Contraindicated`); the EN file uses ASCII identifiers and names the
-   axiom after the American society (e.g. `AHA_…`), and the JA file
-   uses kanji identifiers French-quoted with Lean's `«…»` syntax and
-   names the axiom after the Japanese society (e.g. `«高血圧2019_…»`).
-   Delete the cached `MedicalKnowledge.olean` in each locale directory
-   so the host recompiles it on next request.
-2. Create `lean/en/ScenarioD.lean` and `lean/ja/ScenarioD.lean`
-   following the structure above and prove `theorem absurd : False`
-   with explicit tactics. Run
-   `(cd lean/en && LEAN_PATH=. lean ScenarioD.lean)` and the
-   corresponding `lean/ja/` invocation by hand to confirm the kernel
-   accepts each proof.
-3. Append a new `Scenario` constant to `scenarios.py` for **both**
-   locales (`_JA_SCENARIO_D` citing the Japanese guideline and
-   `_EN_SCENARIO_D` citing the American one) with `lean_filename=
-   "ScenarioD.lean"` and `lean_subdir="ja"` / `lean_subdir="en"`. Add
-   each to the matching entry in `SCENARIOS_BY_LOCALE` at the bottom of
-   the module.
-4. Add `VocabEntry` records for any new symbols to **both**
-   `_EN_VOCAB` and `_JA_VOCAB` in `lean_vocab.py` so the tooltip
-   composer has English and Japanese glosses for them.
-5. Append the expected axiom set to **both** locale dicts in
-   `scripts/check_scenarios.py` so the regression harness pins the new
-   proof in each language.
-6. The sidebar, fragment endpoint, and verify endpoint all pick the new
-   scenario up automatically — no template edits required.
+1. **Update both `MedicalKnowledge.lean`** (`lean/en/`, `lean/ja/`) with the new guideline(s) and any new condition predicates. Each guideline is one `axiom` of shape `∀ p, HasFoo p → Indicated p Treatment.bar` (or `Contraindicated`). EN: ASCII + American society prefix (`AHA_…`). JA: kanji in `«…»` + Japanese society prefix (`«高血圧2019_…»`). **Delete cached `MedicalKnowledge.olean` in both dirs.**
+
+2. **Create both scenario files** `lean/{en,ja}/ScenarioD.lean`. Sanity-check by hand:
+
+   ```bash
+   (cd lean/en && LEAN_PATH=. lean ScenarioD.lean)
+   (cd lean/ja && LEAN_PATH=. lean ScenarioD.lean)
+   ```
+
+3. **Append `Scenario` constants** to `scenarios.py` for both locales (`_JA_SCENARIO_D`, `_EN_SCENARIO_D`) with `lean_filename="ScenarioD.lean"` and matching `lean_subdir`. Add to `SCENARIOS_BY_LOCALE`.
+
+4. **Add `VocabEntry` records** for any new symbols to both `_EN_VOCAB` and `_JA_VOCAB` in `lean_vocab.py`.
+
+5. **Append expected axiom set** to both locale dicts in `scripts/check_scenarios.py`.
+
+6. Sidebar, fragment endpoint, verify endpoint auto-discover the new scenario. No template edits needed.
 
 ## Common dev tasks
 
 ```bash
-# Install / sync deps after a pull
-uv sync
+uv sync                                         # install / sync deps
+uv add <package>                                # add runtime dep
+uv add --dev <package>                          # add dev-only dep
+uv run <command>                                # run in project venv
 
-# Add a runtime dep
-uv add <package>
-
-# Add a dev-only dep
-uv add --dev <package>
-
-# Run an arbitrary command in the project venv
-uv run <command>
-
-# Re-verify all 6 Lean scenarios (3 × 2 locales) from the CLI (no server)
+# Verify all 6 scenarios (3 × 2 locales) headless
 uv run python -c "
 from app import _run_lean
 from scenarios import get_scenarios
@@ -291,35 +195,25 @@ for locale in ('ja', 'en'):
         print(locale, sid, r.verdict, list(r.trusted_axioms), r.exit_code)
 "
 
-# Run the regression harness (pins both locales)
+# Regression harness (pins both locales)
 uv run python scripts/check_scenarios.py
 
-# Compile a single scenario by hand against its locale's knowledge base
+# Compile one scenario by hand
 (cd lean/ja && LEAN_PATH=. lean ScenarioA.lean)
 (cd lean/en && LEAN_PATH=. lean ScenarioA.lean)
 ```
 
-`static/syntax.css` is overwritten on every app import — don't hand-edit it;
-edit the Pygments style names in `_write_syntax_css()` instead.
+`static/syntax.css` is overwritten on every app import — don't hand-edit. Edit Pygments style names in `_write_syntax_css()` instead.
+
+## Agent workflow
+
+This project is developed by AI agents under instructions in [`CLAUDE.md`](CLAUDE.md). Cross-session memory and conventions live in [`.agent/`](.agent/) — start with [`.agent/SESSION_PROMPT.md`](.agent/SESSION_PROMPT.md) to bootstrap a fresh session, then [`.agent/INDEX.md`](.agent/INDEX.md) for the memory-system map.
 
 ## Limitations
 
-- The knowledge base is hand-curated. There is no automatic translation
-  from natural-language guidelines to `axiom` declarations; encoder
-  discipline is the dominant correctness constraint, and a misencoded
-  precondition or modality will silently produce the wrong proof
-  obligation.
-- The deontic semantics is monotonic. `incompatible_modalities` flatly
-  forbids `Indicated p t ∧ Contraindicated p t` for any `p`, `t`, so
-  there is no built-in mechanism for guideline defeasibility,
-  prioritisation, or context-conditioned exceptions. Conditional
-  guidelines must be encoded as guideline axioms with the precondition
-  in the antecedent.
-- There is no separate metatheorem proving that the encoded axioms
-  faithfully represent the published guidelines. The verification claim
-  is "the Lean kernel typechecks `theorem absurd : False` from exactly
-  this list of trusted axioms," not "this list of axioms is a sound
-  formalisation of the underlying clinical literature."
+- **Encoder discipline is the dominant correctness constraint.** The knowledge base is hand-curated. There is no automatic translation from natural-language guidelines to `axiom` declarations; misencoded preconditions or modalities silently produce the wrong proof obligation.
+- **Deontic semantics is monotonic.** `incompatible_modalities` flatly forbids `Indicated p t ∧ Contraindicated p t` for any `p`, `t`. No defeasibility, prioritisation, or context-conditioned exceptions. Conditional guidelines must be encoded as axioms with the precondition in the antecedent.
+- **No metatheorem of fidelity.** The verification claim is "Lean kernel typechecks `theorem absurd : False` from exactly this list of trusted axioms" — not "this list of axioms soundly formalises the underlying clinical literature."
 
 ## License
 

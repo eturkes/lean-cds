@@ -1,21 +1,4 @@
-"""Regression harness: assert each scenario's Lean theorem typechecks.
-
-For every entry in :data:`EXPECTED` we invoke the Lean compiler on the
-scenario's static ``.lean`` file (via :func:`app._run_lean`) and check
-that:
-
-  * the verdict is :class:`app.Verdict.CollisionVerified`,
-  * the dependency list extracted from ``#print axioms absurd`` is exactly
-    the expected set of guideline + observation axioms (no ``sorryAx``,
-    no extras), and
-  * the compiler exit code is zero.
-
-Both locales are exercised — the EN build pins the AHA / KDIGO / ADA /
-APA / AASM axiom names against ``JohnDoe / JaneRoe / RichardRoe``,
-and the JA build pins the fully kanji-localized identifiers (each
-French-quoted via Lean's ``«…»`` syntax) against ``«山田太郎» / «鈴木花子»
-/ «田中一郎»``.
-"""
+"""Regression harness. For every entry in ``EXPECTED``, runs ``app._run_lean`` and asserts: verdict == ``CollisionVerified``; the ``#print axioms absurd`` list matches expected exactly (no ``sorryAx``, no extras); exit code 0. Both locales pinned — EN against AHA/KDIGO/ADA/APA/AASM identifiers, JA against ``«…»``-quoted kanji identifiers."""
 
 from __future__ import annotations
 

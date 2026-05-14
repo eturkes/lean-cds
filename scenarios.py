@@ -1,33 +1,11 @@
-"""Bilingual clinical scenarios with authentic guideline excerpts.
-
-Each scenario describes a single patient context in which two real-world
-clinical guidelines collide. The Lean 4 source files are themselves
-*localized*: ``lean/en/`` cites the American guidelines and uses
-ASCII-romanized placeholder patient names (``JohnDoe`` etc.); ``lean/ja/``
-cites the Japanese society guidelines and uses fully kanji-localized
-identifiers (each French-quoted via Lean's ``«…»`` syntax — patient names
-``«山田太郎»`` etc., predicates ``«適応»``/``«禁忌»``, and so on). Both
-directories carry their own ``MedicalKnowledge.lean`` so each guideline
-axiom is named after the society that actually published it.
-
-This module declares:
-
-* the per-locale ``Scenario`` registry with natural-language metadata
-  for the UI panel,
-* the locale-aware ``lean_subdir`` so the verifier can resolve the
-  right ``ScenarioX.lean`` file at runtime.
-
-The host process never injects user-controlled strings into the Lean
-source. Each scenario references a pre-written file by name, and the
-verifier invokes ``lean`` against that file directly.
-"""
+"""Per-locale scenario metadata registry. Whitelist-based ``id → ScenarioX.lean`` mapping; ``lean_subdir`` selects ``lean/{ja,en}/``. No user input is ever interpolated into Lean source — the host invokes ``lean`` on the static file referenced by the resolved id."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
 
-from i18n import DEFAULT_LOCALE, SUPPORTED_LOCALES, normalize_locale
+from i18n import normalize_locale
 
 LEAN_DIR: Path = Path(__file__).resolve().parent / "lean"
 KNOWLEDGE_BASE_MODULE: str = "MedicalKnowledge"
@@ -581,8 +559,3 @@ SCENARIOS_BY_LOCALE: dict[str, dict[str, Scenario]] = {
 def get_scenarios(locale: str) -> dict[str, Scenario]:
     """Return the scenario registry for ``locale`` (defaults to JA on miss)."""
     return SCENARIOS_BY_LOCALE[normalize_locale(locale)]
-
-
-# Backwards-compatible alias used by the precompile path: any locale's
-# registry will resolve the same Lean filenames, so we expose the default.
-SCENARIOS: dict[str, Scenario] = SCENARIOS_BY_LOCALE[DEFAULT_LOCALE]

@@ -1,34 +1,4 @@
-"""Lean 4 source → syntax-highlighted HTML with per-line tooltips.
-
-The scenario files in ``lean/`` are small and structurally predictable:
-each top-level construct is an ``import``, ``namespace``, ``open``,
-``end``, ``axiom``, ``theorem`` (term- or tactic-mode), or
-``#print axioms``. For the Verifiable Clinical Decision Support UI to
-be readable by clinicians, regulators, and engineering managers with
-zero Lean / functional programming / formal verification background,
-every non-obvious token on every line needs to explain what it means
-*in that specific spot* — not with a generic example.
-
-Concretely: the ``:`` inside ``axiom JohnDoe : Patient`` should read
-"``JohnDoe`` is a ``Patient``", while the ``:`` inside
-``theorem thiazide_indicated : Indicated JohnDoe …`` should read
-"``thiazide_indicated`` is a proof of ``Indicated JohnDoe …``". The
-two tooltips share a symbol but nothing else.
-
-This module solves that by:
-
-1. Parsing the scenario file with a tiny, purpose-built line-based
-   recogniser (``parse_lean_contexts``) that maps every source line
-   to the declaration that owns it.
-2. Running Pygments normally to get syntax-highlighted HTML.
-3. Walking that HTML one source line at a time (Pygments' Lean4Lexer
-   preserves one output line per source line), and for each
-   recognised token span substituting in a ``data-lean-tip``
-   attribute whose value is a plain-English sentence composed from
-   *this* line's declaration. The browser tooltip popover
-   (``static/tooltips.js``) reads the attribute directly, so there is
-   no shared JavaScript dictionary to keep in sync.
-"""
+"""Parse Lean scenario files into per-line decl/group context; render Pygments HTML with per-token ``data-lean-tip`` attrs composed from that specific line's declaration. Each ``:`` or ``:=`` gets a context-specific reading (e.g. ``: Patient`` reads as "is a Patient"; ``: Indicated …`` reads as "is a proof of Indicated …"). The browser tooltip popover in ``static/tooltips.js`` reads the attribute directly — no shared JS dictionary."""
 from __future__ import annotations
 
 import html as _html
@@ -50,20 +20,12 @@ import lean_vocab
 
 @dataclass
 class LeanDecl:
-    """One recognised declaration from a scenario file.
+    """Recognised declaration. ``kind`` ∈ {import, namespace, open, end, axiom, theorem_term, theorem_tactic, print_axioms}. Parser is shallow — unrecognised lines leave ``line_to_decl`` empty; tip generators degrade to generic text."""
 
-    The parser is deliberately shallow: it matches the exact line
-    shapes used by ``ScenarioA/B/C.lean`` and falls back silently on
-    anything it doesn't understand, leaving ``line_to_decl`` empty for
-    unrecognised lines. The tip generators all accept ``None`` and
-    degrade to generic text when that happens.
-    """
-
-    kind: str  # 'import' | 'namespace' | 'open' | 'end' | 'axiom' |
-    # 'theorem_term' | 'theorem_tactic' | 'print_axioms'
+    kind: str
     name: str = ""
-    type_raw: str = ""  # the claim written to the right of `:`
-    body_raw: str = ""  # everything written to the right of `:=`
+    type_raw: str = ""  # claim right of `:`
+    body_raw: str = ""  # everything right of `:=`
     first_line: int = 0  # 1-indexed
     last_line: int = 0
 
@@ -77,55 +39,31 @@ GROUP_TACTIC_ARG = "tactic_arg"
 
 @dataclass
 class LeanGroup:
-    """One hover-as-a-phrase slice of a scenario file.
-
-    A group is a contiguous range of source columns on a single line
-    that should behave as one tooltip target: hovering any identifier
-    inside the range shows the same composed plain-English reading.
-    ``start_col``/``end_col`` are 0-indexed offsets into the raw source
-    line (as emitted by ``source.split("\\n")``) and align with
-    Pygments span boundaries for the scenario files we parse.
-    """
+    """Contiguous column range on one line that acts as one tooltip target. ``start_col``/``end_col`` are 0-indexed offsets aligning with Pygments span boundaries."""
 
     line_no: int
     start_col: int
     end_col: int
-    role: str  # one of the GROUP_* constants above
-    text: str  # the exact raw slice between start_col and end_col
-    decl_name: str  # the owning declaration's name (for context)
-    tactic: str = ""  # for GROUP_TACTIC_ARG, the tactic keyword
+    role: str  # GROUP_* constant
+    text: str  # raw slice [start_col:end_col]
+    decl_name: str
+    tactic: str = ""  # set when role == GROUP_TACTIC_ARG
 
 
 @dataclass
 class FileContext:
-    """What the scenario file itself tells us about its local names.
-
-    Populated by the parser as it walks declarations top to bottom, so
-    by the time the tooltip composer runs for a phrase like
-    ``AHA_ACC_HTN_8_1_6 JohnDoe obs_essential_hypertension`` it knows
-    which identifier is the scenario's patient, which is a chart
-    observation (and what condition that observation is of), and which
-    earlier theorem names have already been proved.
-    """
+    """Local names the scenario file declares. Populated top-to-bottom so tooltip composer can identify which token is the patient, which is a chart observation (and of what condition), and which earlier theorems are proved."""
 
     patient_name: Optional[str] = None
-    # obs_name (e.g. 'obs_essential_hypertension')
-    #   → condition predicate name (e.g. 'HasEssentialHypertension')
+    # obs_name → condition predicate (e.g. 'obs_essential_hypertension' → 'HasEssentialHypertension')
     observations: dict[str, str] = field(default_factory=dict)
-    # theorem_name → normalised type_raw (the claim being proved)
+    # theorem_name → normalised type_raw (claim being proved)
     theorems: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
 class ParseResult:
-    """What ``parse_lean_contexts`` returns.
-
-    The line-indexed dictionaries are for the decorator to look up
-    per-line information as it walks the Pygments HTML; the shared
-    ``FileContext`` lets the tooltip composer produce sentences that
-    talk about the scenario's own patient, observations, and
-    previously-proved theorems rather than a universal example.
-    """
+    """Parser output: line→decl + line→groups dicts let the decorator look up per-line context; ``file_context`` is shared so tooltips reference the file's own names rather than generic examples."""
 
     line_to_decl: dict[int, LeanDecl]
     line_to_groups: dict[int, list[LeanGroup]]
@@ -161,29 +99,7 @@ def _norm(s: str) -> str:
 
 
 def parse_lean_contexts(source: str, locale: str = "en") -> ParseResult:
-    """Parse a scenario file into per-line decls, groups, and file context.
-
-    Walks the source top to bottom with a small line-based recogniser,
-    producing three things the decorator needs:
-
-    * ``line_to_decl`` maps every recognised line to its owning
-      declaration, so the single-token tooltip generators can refer
-      to the surrounding name/type/body.
-    * ``line_to_groups`` maps each line to the ``LeanGroup`` phrases
-      that should be wrapped as unified tooltip targets — axiom type
-      slices, theorem type slices, term-mode body slices, and tactic
-      arguments.
-    * ``file_context`` collects the scenario's own patient axiom,
-      observation axioms (and the condition predicate each observes),
-      and previously-proved theorem names, so the group tooltip
-      composer can refer to them by meaning rather than by label.
-
-    ``locale`` selects which medical-knowledge vocabulary table to
-    consult when classifying observation axioms — condition predicate
-    identifiers (``HasEssentialHypertension`` etc.) are shared across
-    locales but the lookup machinery is locale-aware so the parser stays
-    consistent with the rest of the decorator pipeline.
-    """
+    """Walk the scenario top-to-bottom; return ``line_to_decl`` (per-line owning decl), ``line_to_groups`` (axiom/theorem type slices + tactic args as one tooltip target), and ``file_context`` (patient, obs→condition map, theorem→type map). ``locale`` selects the medical vocab table for observation classification."""
     lines = source.split("\n")
     line_to_decl: dict[int, LeanDecl] = {}
     line_to_groups: dict[int, list[LeanGroup]] = {}
@@ -237,13 +153,7 @@ def parse_lean_contexts(source: str, locale: str = "en") -> ParseResult:
                 file_ctx.observations[axiom_name] = head
 
     def sweep_tactic_lines(start_j: int, decl_name: str) -> int:
-        """Collect tactic lines after a ``:= by`` header, emitting groups.
-
-        Returns the index of the first line past the last tactic line.
-        Each tactic line (``apply X`` / ``exact X`` / ``unfold X``,
-        optionally prefixed by a ``·`` bullet) gets a
-        ``GROUP_TACTIC_ARG`` over the argument's column range.
-        """
+        """Collect tactic lines after ``:= by``; emit ``GROUP_TACTIC_ARG`` per arg; return index of first non-tactic line."""
         j = start_j
         while j < len(lines):
             jraw = lines[j]
@@ -273,9 +183,7 @@ def parse_lean_contexts(source: str, locale: str = "en") -> ParseResult:
         stripped = raw.strip()
         leading_ws = len(raw) - len(raw.lstrip())
 
-        # Skip block comments `/- … -/` and their doc variants
-        # `/-- … -/` and `/-! … -/`. These never contribute to a
-        # declaration, but they often span many source lines.
+        # Skip `/- … -/` and doc variants (`/-- … -/`, `/-! … -/`).
         if in_block_comment:
             if "-/" in raw:
                 in_block_comment = False
@@ -524,12 +432,7 @@ def _preview(s: str, limit: int = 72) -> str:
 
 
 def _tactic_arg(tactic: str, source_line: str) -> str:
-    """Extract the rest-of-line argument to a tactic call.
-
-    ``· exact thiazide_indicated`` → ``thiazide_indicated``
-    ``apply incompatible_modalities JohnDoe Treatment.thiazideDiuretic``
-        → ``incompatible_modalities JohnDoe Treatment.thiazideDiuretic``
-    """
+    """Extract rest-of-line argument from a tactic call. E.g. ``· exact thiazide_indicated`` → ``thiazide_indicated``."""
     stripped = re.sub(r"^\s*(·\s*)?", "", source_line)
     m = re.match(rf"^{re.escape(tactic)}\b\s*(.*?)\s*$", stripped)
     return m.group(1).strip() if m else ""
@@ -1088,12 +991,7 @@ def _gloss_treatment(symbol: str, locale: str) -> str:
 def _gloss_local_identifier(
     symbol: str, fc: FileContext, locale: str
 ) -> str:
-    """Explain a name that is declared locally in the scenario file.
-
-    Covers the scenario's patient axiom, its observation axioms, and
-    any previously-proved theorem. Falls back to a code-quoted name
-    when we have no idea what it refers to.
-    """
+    """Explain a locally-declared name (patient, observation, or previously-proved theorem). Falls back to code-quoted name when unknown."""
     if locale == "ja":
         if fc.patient_name and symbol == fc.patient_name:
             return f"本シナリオの患者 `{symbol}`"
@@ -1431,14 +1329,7 @@ def compose_group_tip(
     decl: Optional[LeanDecl],
     locale: str,
 ) -> str:
-    """Plain-language explanation for a multi-word phrase group.
-
-    The phrase is split on whitespace, the head token drives
-    role-specific composition (via the locale's vocab table when it is a
-    MedicalKnowledge symbol, or via the per-file context for
-    locally-declared names), and the closing sentence frames the
-    phrase's role in its owning declaration.
-    """
+    """Compose plain-language reading for a multi-word phrase. Head token dispatches: vocab table for in-vocab symbols, file context for local names. Closing sentence frames the phrase's role in its owning decl."""
     tokens = _split_phrase(group.text)
     if not tokens:
         return f"`{group.text}`"
@@ -1619,13 +1510,7 @@ _STRIP_TAGS_RE = re.compile(r"<[^>]+>")
 
 
 def _find_matching_span_close(html: str, open_tag_end: int) -> int:
-    """Return the index *after* the ``</span>`` matching the span opened at ``open_tag_end - 1``.
-
-    ``open_tag_end`` is the index just past the ``>`` of the opening
-    ``<span …>``. Walks forward with a depth counter so nested
-    ``<span>`` elements (as in the already-wrapped compound tooltips for
-    ``And.intro`` and ``#print``) are handled correctly.
-    """
+    """Index after the ``</span>`` matching the span opened at ``open_tag_end - 1``. Depth-counted to handle nested spans (compound wrappers for ``And.intro``, ``#print``)."""
     depth = 1
     j = open_tag_end
     n = len(html)
@@ -1650,14 +1535,7 @@ def _find_matching_span_close(html: str, open_tag_end: int) -> int:
 
 
 def _parse_html_chunks(html_line: str) -> list[tuple[int, int, str]]:
-    """Split an HTML line into ``(visible_start, visible_end, html_chunk)`` tuples.
-
-    Each chunk is one top-level ``<span>…</span>`` element (nested
-    spans for compound wrappers collapse into a single chunk). Visible
-    length is computed by stripping all HTML tags — safe for Pygments
-    Lean output, which never introduces ``&``, ``<``, or ``>`` entities
-    because the scenarios don't contain those characters.
-    """
+    """Tokenize an HTML line into ``(visible_start, visible_end, html_chunk)`` tuples. Each chunk is one top-level ``<span>…</span>`` (nested spans collapse). Visible length = chunk minus tags; safe because Pygments Lean output has no `&`/`<`/`>` entities."""
     chunks: list[tuple[int, int, str]] = []
     visible = 0
     i = 0
@@ -1692,13 +1570,7 @@ def _wrap_groups_in_line(
     decl: Optional[LeanDecl],
     locale: str,
 ) -> str:
-    """Wrap the chunks covering each group's column range in a group span.
-
-    If a group's start/end columns don't land exactly on chunk
-    boundaries (which would only happen if Pygments changed how it
-    tokenises an identifier the parser recognises), the line is left
-    unchanged rather than producing malformed HTML.
-    """
+    """Wrap chunks covering each group's column range in a group span. If a group's start/end don't align to chunk boundaries (would mean Pygments retokenised an identifier the parser recognises), leave the line unchanged rather than produce malformed HTML."""
     if not groups:
         return html_line
 
@@ -1775,25 +1647,7 @@ def render_lean_with_tooltips(
     formatter: Formatter,
     locale: str = "en",
 ) -> str:
-    """Syntax-highlight ``code`` and inject per-line tooltip attributes.
-
-    Pygments' ``Lean4Lexer`` output preserves one HTML line per source
-    line inside the ``<pre>`` block, so we split the body on ``\\n`` and
-    can align HTML lines with source lines 1:1. For each line we
-    first wrap recognised single tokens (``:``, ``:=``, keywords,
-    tactic names, ``·``, and compound identifiers) with their
-    context-aware individual tooltip, then wrap any multi-word phrase
-    groups (axiom type, theorem type, theorem body term, tactic
-    argument) so hovering anywhere inside the phrase shows a unified
-    plain-language reading composed from the per-file vocab and the
-    declaration context.
-
-    ``locale`` selects which medical-knowledge vocabulary table and
-    which tooltip-prose templates to use, so the JA build of a
-    scenario file is annotated with Japanese tooltips citing JSH /
-    JDS / JRS axioms while the EN build keeps the AHA / ADA / AASM
-    English prose.
-    """
+    """Highlight ``code`` and inject per-line tooltip attributes. Pygments Lean4Lexer preserves one HTML line per source line, so we align 1:1. Pass 1 wraps single tokens (``:``, ``:=``, keywords, tactics, ``·``, compound idents) with context-aware tooltips; pass 2 wraps multi-word phrase groups (axiom type, theorem type, term body, tactic arg) with unified readings. ``locale`` selects vocab table + tooltip-prose templates."""
     result = parse_lean_contexts(code, locale)
     raw = highlight(code, lexer, formatter)
 
