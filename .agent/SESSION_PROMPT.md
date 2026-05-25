@@ -11,7 +11,7 @@ You are continuing work on **lean-cds**: a Lean 4 / Python / Litestar PoC for ve
 **Project-specific operational notes:**
 
 - Python deps via `uv`. Lean toolchain at `./.elan/bin/lean` (preferred) or `$HOME/.elan/bin/lean`.
-- Verify cheaply via execution: `uv run python -c "import app"`, `uv run pytest`, `uv run python scripts/check_scenarios.py` (kernel-typechecks all 6 scenarios).
+- Verify cheaply via execution: `uv run python -c "import app"`, `uv run python scripts/check_scenarios.py` (kernel-typechecks all 6 scenarios).
 - Always grep `[LSN-` in `.agent/LESSONS.md` before non-obvious choices.
 
 If you find a better bootstrap pattern, propose `[DEC-NNN]` and update this file.
