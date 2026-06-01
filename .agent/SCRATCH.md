@@ -4,25 +4,18 @@ Per-session ephemeral notes. Wipe at session start unless explicitly continuing 
 
 ---
 
-## Session: 2026-06-01 — Incorporate `compaction.sh` workflow
+## Session: 2026-06-01 — Relocate `compaction.sh` to global; 90% → 80% threshold
 
-**Goal**: User added `compaction.sh` + a compaction-at-90% workflow to CLAUDE.md (both uncommitted). Make the tool a tracked, verified, documented part of the repo.
+**Trigger**: User edited CLAUDE.md — gauge now referenced as `$HOME/.claude/compaction.sh`, wrap-up threshold 90% → 80%.
 
-**CLAUDE.md uncommitted diff** (vs committed `6121d90`):
-
-| Change | Disposition |
-|---|---|
-| Wording: "I have limited" → "I usually limit" you to 200K | Trivial. |
-| NEW: ≥90% ctx → wrap up cleanly for user-issued `/compact`; monitor with `compaction.sh` | Core task. Workflow lives in CLAUDE.md (read #1); not restated elsewhere per [DEC-004]/[DEC-006]. |
-| NEW: subagent rate-limiting → sequential chunking; verify all agents completed | Go-forward operational; already in CLAUDE.md, no code action. |
-
-**Verification** (`./compaction.sh`): prints `15% 30K/200K`; `jq-1.7`; `git check-ignore` → not ignored (trackable); resolves this session's jsonl via `$CLAUDE_CODE_SESSION_ID` even with newer sibling-project sessions present. Script correct + fit-for-purpose; left unmodified.
+**Finding**: `$HOME/.claude/compaction.sh` is a symlink → `pro/agents/claude/compaction.sh` (outside lean-cds) — a newer dual-mode + color-coded version (red ≥80%, yellow ≥60%). The tracked repo-root `compaction.sh` was the older single-mode fork with a stale `>=90%` comment → redundant, drifted duplicate.
 
 **Actions**:
-1. Verified script + environment (above).
-2. Appended [DEC-008] (adopt as canonical gauge; root placement; no restatement).
-3. Committed CLAUDE.md (user edit) + compaction.sh + .agent updates.
+1. `git rm compaction.sh` (repo-root duplicate; superseded by global canonical).
+2. [DEC-010] appended; [DEC-008] marked superseded.
+3. Verified global gauge runs this session (`15% 30K/200K`).
+4. Committed.
 
-**Resolved**: statusline **declined** — user is building one global statusline across all projects, so a project-local one is out of scope here. Explored 3 impls (verified against mock stdin), then reverted the probe `.claude/settings.json`; nothing committed. Recorded durably as [DEC-009] (SCRATCH is wiped per session). compaction.sh CLI gauge ([DEC-008]) unaffected.
+**Scope note**: Global script lives outside project root — left untouched (already encodes 80%, no stale refs).
 
 **Status**: complete.
