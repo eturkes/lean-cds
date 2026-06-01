@@ -4,18 +4,16 @@ Per-session ephemeral notes. Wipe at session start unless explicitly continuing 
 
 ---
 
-## Session: 2026-06-01 — Relocate `compaction.sh` to global; 90% → 80% threshold
+## Session: 2026-06-01 — `compaction.sh`: 90% → 80%, relocate-to-global, then re-vendor in-repo
 
-**Trigger**: User edited CLAUDE.md — gauge now referenced as `$HOME/.claude/compaction.sh`, wrap-up threshold 90% → 80%.
+**Trigger**: Series of CLAUDE.md edits. Net result: threshold 90% → **80%**; gauge referenced path-lessly as "the supplied `compaction.sh`" (in-repo).
 
-**Finding**: `$HOME/.claude/compaction.sh` is a symlink → `pro/agents/claude/compaction.sh` (outside lean-cds) — a newer dual-mode + color-coded version (red ≥80%, yellow ≥60%). The tracked repo-root `compaction.sh` was the older single-mode fork with a stale `>=90%` comment → redundant, drifted duplicate.
+**Final state**:
+- Repo-root `compaction.sh` is a regular file, byte-identical to canonical global `$HOME/.claude/compaction.sh` (real path `~/agents/claude/compaction.sh`) — dual-mode + color-coded, red ≥80%. Tracked, executable.
+- The old stale single-mode `>=90%` fork is gone; current copy is the newer canonical content.
 
-**Actions**:
-1. `git rm compaction.sh` (repo-root duplicate; superseded by global canonical).
-2. [DEC-010] appended; [DEC-008] marked superseded.
-3. Verified global gauge runs this session (`15% 30K/200K`).
-4. Committed.
+**Arc** (newest decision wins): [DEC-008] adopt repo-root → [DEC-010] remove, point to global → **[DEC-011] re-vendor in-repo** (user reversed). DEC-010 partially superseded; its "canonical originates globally" finding stands (in-repo file is a vendored snapshot, can drift; re-sync via `cp "$HOME/.claude/compaction.sh" ./compaction.sh`).
 
-**Scope note**: Global script lives outside project root — left untouched (already encodes 80%, no stale refs).
+**Scope note**: Global script lives outside project root — untouched; already encodes 80%.
 
 **Status**: complete.

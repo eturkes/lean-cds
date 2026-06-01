@@ -14,7 +14,24 @@ Format per entry:
 
 ---
 
+## [DEC-011] 2026-06-01 — Re-vendor `compaction.sh` in-repo (reverses [DEC-010] removal)
+
+**Context**: Immediately after [DEC-010] removed the repo-root copy, the user re-edited CLAUDE.md — reverting the gauge reference from `$HOME/.claude/compaction.sh` back to the path-less "the supplied `compaction.sh`" (threshold stays 80%) — and asked to keep a copy in-repo. Explicit user instruction; per CLAUDE.md, user instruction is final say over standing doctrine.
+
+**Decision**: Vendor the current canonical script into repo-root `compaction.sh` as a regular file (not a symlink), byte-identical to global `$HOME/.claude/compaction.sh` — the newer dual-mode + color-coded version (red ≥80%), **not** the stale single-mode `>=90%` fork [DEC-010] deleted. Tracked, executable. The global script stays the upstream source; the in-repo file is a vendored snapshot. Verified: regular file, `diff` clean vs canonical, runs in-session (`25% 51K/200K`).
+
+**Alternatives rejected**:
+- `git revert`/restore the deleted blob — that was the stale `>=90%` single-mode fork; re-introduces the wrong threshold. Vendor the current canonical instead.
+- Track a symlink repo-root → `$HOME/.claude/compaction.sh` — an absolute-$HOME symlink breaks on clone and on the host/container path split (`/run/host/...` vs `/var/home/...`); not a self-contained copy.
+- Fork/simplify to manual-mode-only — spawns a third variant to maintain; verbatim vendoring keeps one content source, divergence caught by a one-line `diff`.
+
+**Rationale**: Satisfies the user's explicit "keep a copy in-repo" with the best available content, and makes `./compaction.sh` work without depending on `$HOME/.claude`. Accepted tradeoff — the in-repo copy can drift from global; mitigated by vendoring verbatim so re-sync is a trivial `diff`/`cp`.
+
+---
+
 ## [DEC-010] 2026-06-01 — Canonical gauge relocated to global `$HOME/.claude/compaction.sh`; repo-root copy removed (supersedes [DEC-008])
+
+**Partially superseded by [DEC-011]** (2026-06-01): the user re-vendored an in-repo copy, reversing the removal below. The finding that the canonical script originates globally (`$HOME/.claude/compaction.sh`, real path `~/agents/claude/compaction.sh`) still holds — the in-repo file is a vendored snapshot of it.
 
 **Context**: The user moved `compaction.sh` out of lean-cds. `$HOME/.claude/compaction.sh` is now a symlink → `pro/agents/claude/compaction.sh` (a sibling tree *outside* this repo), and the 2026-06-01 CLAUDE.md edit references it path-fully as `$HOME/.claude/compaction.sh` while lowering the wrap-up threshold 90% → 80%. The global script is a newer, evolved version: dual-mode (manual transcript read when `CLAUDE_CODE_SESSION_ID` is set; statusline stdin-JSON otherwise — realizing the [DEC-009] statusline finding) and color-coded (red ≥80%, yellow ≥60%, encoding the new threshold). The tracked repo-root `compaction.sh` was the older single-mode fork still carrying the stale `>=90%` comment — a drifted duplicate. Verified this session: the global gauge runs clean (`15% 30K/200K`) via `$CLAUDE_CODE_SESSION_ID`.
 
