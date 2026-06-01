@@ -26,8 +26,6 @@ Per-session ephemeral notes. Wipe at session start unless explicitly continuing 
 2. Removed orphaned `./__pycache__` + `./scripts/__pycache__` (held stale `smt_runtime.cpython-313.pyc` for a module deleted in the SMT->Lean migration, cf [LSN-003]). Verified `import app` -> `IMPORT_OK`; regenerated cache orphan-free.
 3. SCRATCH refreshed; [DEC-006] appended.
 
-**Open (for user) -- raised in closing message, no action taken**:
-- Adopt/trial an agent-oriented language or other AI-targeted tooling? Current stack is a Lean+Python PoC; wholesale adoption not obviously warranted. Needs direction on scope (e.g. a narrow experiment vs. none).
-- Stand up `bgcmd` REPLs / LSP servers (pyright, lean LSP) for this env as standing capability? No active coding task needs it yet; would be a setup investment.
+**Resolved (user)**: Both forward-looking capability hints (AOP / AI-tooling; LSP + `bgcmd` REPL setup) -> **defer both**, task-driven not speculative. Recorded as [DEC-007] so future sessions don't re-litigate.
 
-**Status**: complete pending commit.
+**Status**: complete. Committed `a9cbc72` (hygiene sync) + DEC-007 follow-up.

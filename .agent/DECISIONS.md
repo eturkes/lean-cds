@@ -14,6 +14,20 @@ Format per entry:
 
 ---
 
+## [DEC-007] 2026-06-01 — Capability investments (AOP tooling, LSP/REPL setup) are task-driven, not standing
+
+**Context**: The 2026-06-01 CLAUDE.md edit adds two forward-looking capability hints: "consider … agent-oriented programming languages … as well as any other tooling … that targets AI" and "Make full use of … LSP servers and REPLs." Asked whether to act now, the user chose **defer both**.
+
+**Decision**: Treat both as standing encouragements, not speculative this-session work. Stand up LSP servers / `bgcmd` REPLs, or trial an agent-oriented language, when a *concrete coding task* would materially benefit — evaluate per task. The current docs/maintenance phase triggers neither.
+
+**Alternatives rejected**:
+- Set the tooling up speculatively now — investment with no active consumer; risks the home-dir/project cruft the same CLAUDE.md edit's clean-up directive warns against.
+- Read the hints as a one-time prompt and drop them — they are standing guidance; this entry records *timing*, not rejection.
+
+**Rationale**: Avoids speculative setup and prevents future sessions re-asking, while preserving the CLAUDE.md encouragement. Re-evaluation trigger is explicit: a coding task the tooling demonstrably accelerates.
+
+---
+
 ## [DEC-006] 2026-06-01 — Docs carry only version info a grep can't cheaply recover
 
 **Context**: CLAUDE.md (2026-06-01 edit) added: entries "must provide value beyond what the project documentation, codebase, and Git history already provide; superfluous information like package versions only add bloat and the potential for drift." ARCHITECTURE.md carried precise pins (`driver.js 1.3`, `uv ≥ 0.11`, `Python 3.13`) that duplicate `pyproject.toml` (`requires-python >=3.13`, `litestar>=2.13`, `uvicorn>=0.34`) and `templates/index.html` (`driver.js@1.3.1`, `htmx.org@2.0.4`). `driver.js 1.3` was already mildly stale vs the actual `1.3.1`.
