@@ -14,6 +14,21 @@ Format per entry:
 
 ---
 
+## [DEC-009] 2026-06-01 — No project-local statusline in lean-cds; context gauge stays CLI-only here
+
+**Context**: This session explored wiring `compaction.sh` into a Claude Code `statusLine` (`.claude/settings.json`) so context usage shows every turn. Three implementations were verified against mock stdin: reuse `compaction.sh` via its `CLAUDE_CODE_SESSION_ID`/`CLAUDE_CONTEXT_WINDOW` override knobs; a native `jq` one-liner over the stdin JSON; or plain `compaction.sh`. Before choosing, the user decided to build a **single global statusline used across all their projects** instead.
+
+**Decision**: Do **not** add a project-local `statusLine` to this repo. `compaction.sh` remains the committed CLI gauge ([DEC-008]); in-UI context display is handled by the user's global statusline (`~/.claude/settings.json`), outside this repo's scope. The probe `.claude/settings.json` created during exploration was reverted; no `.claude/` is tracked.
+
+**Alternatives rejected**:
+- Project-local `statusLine` (any of the three implementations above) — redundant with the user's global statusline, adds per-repo UI config to maintain, and a project setting can conflict with the global one.
+
+**Rationale**: A statusline is cross-project agent UX, not lean-cds infrastructure — it belongs at the user/global level, matching the "portable, universal tool" framing in [DEC-008]. Recorded here rather than only in the ephemeral SCRATCH so future sessions do not resurface the offer.
+
+**Reusable finding** (for any statusline, including the global one): the `statusLine` stdin JSON carries live context — `context_window.used_percentage`, `context_window.context_window_size` (200000, or 1000000 on the 1M beta), and `context_window.total_input_tokens` (= `input + cache_creation + cache_read`, the same input-only formula `compaction.sh` derives from the transcript jsonl). A newly-added shell-executing `statusLine` needs a Claude Code restart + workspace-trust accept to activate (no mid-session hot-reload).
+
+---
+
 ## [DEC-008] 2026-06-01 — Adopt `compaction.sh` as canonical context gauge; lives at repo root
 
 **Context**: The 2026-06-01 CLAUDE.md edit adds a compaction workflow — "As you cross 90% usage of your context window, prepare yourself for compaction … Monitor your context usage often using the supplied `compaction.sh`" — and ships `compaction.sh` (untracked, executable, read-only `sh`+`jq`). It prints the latest main-thread turn's context usage as `NN% used/window` (e.g. `15% 30K/200K`), resolving the window from launcher env (`CLAUDE_CODE_DISABLE_1M_CONTEXT` ⇒ 200K, else 1M; `CLAUDE_CONTEXT_WINDOW` overrides). Verified this session: runs clean, `jq-1.7` present, `git check-ignore` confirms trackable, and it resolves *this* session's jsonl via `$CLAUDE_CODE_SESSION_ID` even with newer sibling-project sessions present (SID-first, not merely newest).

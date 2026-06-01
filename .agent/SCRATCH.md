@@ -23,6 +23,6 @@ Per-session ephemeral notes. Wipe at session start unless explicitly continuing 
 2. Appended [DEC-008] (adopt as canonical gauge; root placement; no restatement).
 3. Committed CLAUDE.md (user edit) + compaction.sh + .agent updates.
 
-**Open (optional, surfaced to user)**: wire `compaction.sh` as a Claude Code statusline (`.claude/settings.json`, machine-local — out of "codebase" scope, hence not done unprompted).
+**Resolved**: statusline **declined** — user is building one global statusline across all projects, so a project-local one is out of scope here. Explored 3 impls (verified against mock stdin), then reverted the probe `.claude/settings.json`; nothing committed. Recorded durably as [DEC-009] (SCRATCH is wiped per session). compaction.sh CLI gauge ([DEC-008]) unaffected.
 
 **Status**: complete.
