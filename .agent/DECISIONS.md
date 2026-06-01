@@ -14,6 +14,20 @@ Format per entry:
 
 ---
 
+## [DEC-006] 2026-06-01 — Docs carry only version info a grep can't cheaply recover
+
+**Context**: CLAUDE.md (2026-06-01 edit) added: entries "must provide value beyond what the project documentation, codebase, and Git history already provide; superfluous information like package versions only add bloat and the potential for drift." ARCHITECTURE.md carried precise pins (`driver.js 1.3`, `uv ≥ 0.11`, `Python 3.13`) that duplicate `pyproject.toml` (`requires-python >=3.13`, `litestar>=2.13`, `uvicorn>=0.34`) and `templates/index.html` (`driver.js@1.3.1`, `htmx.org@2.0.4`). `driver.js 1.3` was already mildly stale vs the actual `1.3.1`.
+
+**Decision**: `pyproject.toml` + `templates/index.html` own exact versions. ARCHITECTURE.md keeps a version token only when the *major* is load-bearing architecture — i.e. the major changes the API an agent codes against (`Lean 4`, `Litestar 2`, `HTMX 2`). Precise minor/patch pins are dropped; where the exact value matters, the doc points to the file the toolchain actually reads. Historical version mentions inside postmortems (e.g. `v4.29.1` in [LSN-002]) stay — they narrate a past incident, not current config.
+
+**Alternatives rejected**:
+- Strip every version token — loses the major-version API signal (`Litestar 2` vs `1` is a real code difference) for no drift reduction (majors rarely churn).
+- Keep all pins — the exact duplicated drift surface the new rule targets; `driver.js 1.3` had already drifted.
+
+**Rationale**: Single source of truth is the file the toolchain reads, not a prose mirror of it. The doc carries only what an agent cannot recover with one `grep pyproject.toml`. Generalises the DEC-005 single-source principle from prose sections to version tokens.
+
+---
+
 ## [DEC-005] 2026-05-14 — README.md collapsed to a 6-line stub; ARCHITECTURE.md is canonical
 
 **Context**: README.md (220 lines) duplicated ~104 lines of ARCHITECTURE.md content (Stack table, File/Project layout, Routes / Public surfaces, Verification pipeline / Data flow) and additionally contained a `## Scenario data model` section that pasted Python dataclass defs from `scenarios.py` verbatim. ~47% of the README was duplication. Same drift class as DEC-004 (SESSION_PROMPT ↔ CLAUDE.md). The discrepancy in route paths (README correct, ARCHITECTURE.md wrong — `POST /verify` vs actual `POST /scenarios/{id}/verify`) surfaced only during the diff pass and is logged as [LSN-004].

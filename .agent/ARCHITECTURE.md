@@ -21,12 +21,12 @@ The two trees prove the same theorem shape with disjoint identifier vocabularies
 |-------|------|
 | Verifier | Lean 4 (`./.elan/bin/lean` preferred, else `lean` on PATH) |
 | Package mgr | uv (Astral) |
-| Language | Python 3.13 |
+| Language | Python 3 |
 | Web | Litestar 2 with `litestar[jinja,standard]` |
 | ASGI | uvicorn |
 | Templates | Jinja2 |
 | Frontend | HTMX 2 (CDN, no build step) |
-| Tour | driver.js 1.3 (CDN) |
+| Tour | driver.js (CDN) |
 | Syntax HL | Pygments `Lean4Lexer` (server-side, dual light/dark) |
 | Theme | CSS `prefers-color-scheme` |
 | i18n | In-process JA/EN catalogs (`i18n.py`); JA default; query+cookie toggle |
@@ -40,7 +40,7 @@ The two trees prove the same theorem shape with disjoint identifier vocabularies
       | sh -s -- -y --no-modify-path --default-toolchain stable
   ```
 
-- uv ≥ 0.11. Python 3.13 (uv fetches on demand).
+- uv. Python per `requires-python` in `pyproject.toml` (uv fetches on demand).
 
 ## Quick start
 
