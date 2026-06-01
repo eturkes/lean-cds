@@ -14,6 +14,24 @@ Format per entry:
 
 ---
 
+## [DEC-008] 2026-06-01 — Adopt `compaction.sh` as canonical context gauge; lives at repo root
+
+**Context**: The 2026-06-01 CLAUDE.md edit adds a compaction workflow — "As you cross 90% usage of your context window, prepare yourself for compaction … Monitor your context usage often using the supplied `compaction.sh`" — and ships `compaction.sh` (untracked, executable, read-only `sh`+`jq`). It prints the latest main-thread turn's context usage as `NN% used/window` (e.g. `15% 30K/200K`), resolving the window from launcher env (`CLAUDE_CODE_DISABLE_1M_CONTEXT` ⇒ 200K, else 1M; `CLAUDE_CONTEXT_WINDOW` overrides). Verified this session: runs clean, `jq-1.7` present, `git check-ignore` confirms trackable, and it resolves *this* session's jsonl via `$CLAUDE_CODE_SESSION_ID` even with newer sibling-project sessions present (SID-first, not merely newest).
+
+**Decision**: Adopt as the canonical context gauge. Keep it at **repo root**, tracked, unmodified. Documentation surface is this entry plus the script's own header. The *workflow rule* (monitor often; wrap up cleanly ≥90% for a user-issued `/compact`) stays solely in CLAUDE.md; it is not restated in SESSION_PROMPT.md or INDEX.md.
+
+**Alternatives rejected**:
+- Move to `scripts/` — that dir is app-scoped (`check_scenarios.py` verifies the Lean app); `compaction.sh` is agent-meta, reads Claude Code session files, orthogonal to lean-cds.
+- Move to `.agent/` — that tree is markdown memory; an executable changes its character, and the tool is portable across projects, not lean-cds-specific memory.
+- Restate the workflow in SESSION_PROMPT.md / INDEX.md — violates [DEC-004] (prompt defers to CLAUDE.md) and [DEC-006] (carry only info not recoverable elsewhere); CLAUDE.md is read #1 and the script self-documents.
+- Rewrite/wrap the script — it is correct and fit-for-purpose; gratuitous churn.
+
+**Rationale**: CLAUDE.md references it path-lessly as "the supplied `compaction.sh`," signalling a portable, universal agent tool (works in any Claude Code project) — root placement matches that framing and keeps it visible. One durable record (this DEC) + the self-documenting script + the CLAUDE.md directive covers future sessions with zero redundancy.
+
+**Note**: The same CLAUDE.md edit adds subagent rate-limiting guidance ("sequential chunking; verify all agents ran to completion") — go-forward operational behaviour already captured in CLAUDE.md, no separate action needed.
+
+---
+
 ## [DEC-007] 2026-06-01 — Capability investments (AOP tooling, LSP/REPL setup) are task-driven, not standing
 
 **Context**: The 2026-06-01 CLAUDE.md edit adds two forward-looking capability hints: "consider … agent-oriented programming languages … as well as any other tooling … that targets AI" and "Make full use of … LSP servers and REPLs." Asked whether to act now, the user chose **defer both**.
