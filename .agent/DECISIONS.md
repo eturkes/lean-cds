@@ -14,6 +14,18 @@ Format per entry:
 
 ---
 
+## [DEC-013] 2026-06-04 — Olean cache keyed to toolchain via `.olean.stamp` sidecar (not import-probe)
+
+**Context**: `_ensure_knowledge_base_compiled` recompiled only on source-mtime staleness, so a floated `stable` channel (v4.29.1 → v4.30.0) left mtime-fresh oleans that fail the kernel with "incompatible header" at verify time — the recurring [LSN-002]/[LSN-005] class. Needed an import-time auto-heal.
+
+**Decision**: Capture the active toolchain once at import (`LEAN_VERSION` = full `lean --version` line incl. commit). After each compile, write it to `MedicalKnowledge.olean.stamp` (gitignored sidecar). Cache is reusable iff mtime-fresh **AND** stamp == `LEAN_VERSION`. If the live version is undeterminable (lean missing), fall back to mtime-only — no regression to prior behaviour.
+
+**Alternatives rejected**: Probe-by-import (run a throwaway `import MedicalKnowledge`, recompile on "incompatible header") — tests the real condition but adds a `lean` subprocess per locale on *every* boot, including steady-state. Oleans are strictly toolchain-locked, so version-string equality is an *exact* proxy, not a heuristic — the cheaper check is equally correct. Pinning a `lean-toolchain` file — would stop the float but overrides the project's deliberate stable-channel design and still wouldn't heal an already-stale cache.
+
+**Rationale**: One `lean --version` at import (~0.3s, once) beats a per-locale subprocess every boot; steady-state boots do zero extra Lean work (verified: olean mtime stable across imports). Auto-heals the toolchain-drift half of [LSN-002]/[LSN-005] with no manual `rm`.
+
+---
+
 ## [DEC-012] 2026-06-04 — Token-efficiency pass: compress settled DECISIONS in place; value-based pruning; add NAVMAP
 
 **Context**: Measured the per-session bootstrap read (CLAUDE.md + `.agent/`) at ~49K chars ≈ 12.3K tokens. DECISIONS.md was the largest single file (~4.6K tok) and the `compaction.sh` location saga ([DEC-008]..[DEC-011]) was **50%** of it (9,167 chars) — four self-superseding entries that net to one durable fact, re-read in full every session. User directive: make working in this codebase more token-efficient.

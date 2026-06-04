@@ -22,7 +22,7 @@ Format per entry:
 
 **Fix**: `rm -rf .venv && uv sync` (regenerates shebangs/activate from `uv.lock`); repoint `.elan/env` PATH to the new root; `rm -f lean/{en,ja}/*.{olean,ilean}` then let app import recompile against the current toolchain ([LSN-002]). Verified: `import app` → KB errors `{ja: None, en: None}`; `check_scenarios.py` 6/6 PASS against v4.30.0.
 
-**Prevention**: After any **clone or directory move**, treat a clean `git status` as meaningless for runtime health — the artifacts that break on move are all gitignored. Run the post-move repair: rebuild venv + repoint `.elan/env` + clear oleans, then `uv run python scripts/check_scenarios.py`. Fast staleness probe: `grep -rIl <old-or-any-foreign-abs-path> .venv .elan` (zero hits = clean); or assert `head -1 .venv/bin/uvicorn` and the `.elan/env` PATH both contain `$PWD`. **Possible enhancement** (deferred, as in [LSN-002]): a `scripts/repair_after_move.sh` one-shot, or teach `_ensure_knowledge_base_compiled` to probe a sentinel olean against the live Lean version and refresh on mismatch (would auto-heal the olean half of this class).
+**Prevention**: After any **clone or directory move**, treat a clean `git status` as meaningless for runtime health — the artifacts that break on move are all gitignored. Run the post-move repair: rebuild venv + repoint `.elan/env` + clear oleans, then `uv run python scripts/check_scenarios.py`. Fast staleness probe: `grep -rIl <old-or-any-foreign-abs-path> .venv .elan` (zero hits = clean); or assert `head -1 .venv/bin/uvicorn` and the `.elan/env` PATH both contain `$PWD`. **Enhancement implemented** ([DEC-013], 2026-06-04): the olean half now auto-heals via a toolchain version stamp in `_ensure_knowledge_base_compiled` — relocation/float no longer needs a manual olean clear. The `.venv` + `.elan/env` halves still require the manual repair above; a `scripts/repair_after_move.sh` one-shot remains an option if it recurs.
 
 ---
 
@@ -60,7 +60,7 @@ Format per entry:
 
 **Prevention**: When verification surfaces a "Lean verification exceeded the 60s time limit" on multiple scenarios, **always rule out toolchain/cache mismatch first** before suspecting Python-side regressions. A quick check: `ls -la lean/<locale>/*.olean` + `lean --version` + try one scenario by hand with `(cd lean/<locale> && LEAN_PATH=. lean ScenarioA.lean)`. If the first lean invocation triggers a download or prints "incompatible header", clear the caches.
 
-**Possible enhancement** (for a future session): teach `_ensure_knowledge_base_compiled` to also probe a sentinel olean against the current Lean version and refresh if incompatible. Out of scope for this session.
+**Enhancement implemented** ([DEC-013], 2026-06-04): `_ensure_knowledge_base_compiled` now recompiles on toolchain change via a `MedicalKnowledge.olean.stamp` version stamp, so this incompatible-header class auto-heals at import — a manual cache-clear is the fallback, no longer the primary remedy.
 
 ---
 

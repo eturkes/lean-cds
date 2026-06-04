@@ -83,7 +83,7 @@ Every route accepts `?lang=ja|en`. Resolution (in `_resolve_locale`): query → 
 
 ## Request lifecycle
 
-1. **At import** — `_precompile_all_knowledge_bases()` calls `_ensure_knowledge_base_compiled(locale)` per supported locale. If `lean/<locale>/MedicalKnowledge.{olean,ilean}` are missing or stale relative to the `.lean`, runs `lean -o MedicalKnowledge.olean -i MedicalKnowledge.ilean MedicalKnowledge.lean` (cwd `lean/<locale>`). `LEAN_BINARY` resolves once via `_resolve_lean_binary` (project-local `./.elan/bin/lean` first, then `shutil.which("lean")`).
+1. **At import** — `_precompile_all_knowledge_bases()` calls `_ensure_knowledge_base_compiled(locale)` per supported locale. If `lean/<locale>/MedicalKnowledge.{olean,ilean}` are missing, mtime-stale relative to the `.lean`, or built against a different toolchain than the active `LEAN_VERSION` (tracked via `MedicalKnowledge.olean.stamp`; [ARC-009]), runs `lean -o MedicalKnowledge.olean -i MedicalKnowledge.ilean MedicalKnowledge.lean` (cwd `lean/<locale>`). `LEAN_BINARY` resolves once via `_resolve_lean_binary` (project-local `./.elan/bin/lean` first, then `shutil.which("lean")`).
 2. **Request** → Litestar route. Locale resolved (`?lang=` → cookie → JA default).
 3. **Render** — template renders sidebar (scenarios) + main panel (guidelines + Lean source, server-side highlighted via Pygments).
 4. **User clicks Verify** → `POST /scenarios/{scenario_id}/verify`. Handler looks `id` up in `scenarios.get_scenarios(locale)`. Unknown → 404. Maps id → fixed filename.
@@ -105,6 +105,7 @@ Every route accepts `?lang=ja|en`. Resolution (in `_resolve_locale`): query → 
 - **[ARC-006]** `./.elan/bin/lean` is preferred over `$HOME/.elan/bin/lean`. `app.py` checks project-local first.
 - **[ARC-007]** HTMX swaps include OOB updates for the header status pill (pattern set by commit `7818641`).
 - **[ARC-008]** Light/dark theme via `prefers-color-scheme`. Two Pygments stylesheets are emitted, gated by `@media`.
+- **[ARC-009]** Olean caches are toolchain-keyed: each `lean/<locale>/` carries a gitignored `MedicalKnowledge.olean.stamp` (the full `lean --version` line). `_ensure_knowledge_base_compiled` recompiles when source is mtime-newer **or** the stamp ≠ live `LEAN_VERSION`, auto-healing the [LSN-002] "incompatible header" class on a floated `stable`. Version-undeterminable (lean missing) falls back to mtime-only. ([DEC-013])
 
 ## Adding a scenario
 
@@ -139,8 +140,8 @@ Standard `uv` (`uv sync`, `uv add [--dev] <pkg>`, `uv run <cmd>`) per Quick star
 
 - `lean` binary must be discoverable; failures surface as 500s. Check `LEAN_BIN` resolution in `app.py` first.
 - Pygments highlights may be implicitly cached by template engine. If stale highlights appear after editing Lean source, investigate cache invalidation.
-- Stale `.olean` artifacts silently fail with "incompatible header" — see [LSN-002].
-- After a **clone or directory move**, gitignored local tooling breaks while `git status` stays clean: `.venv/bin/*` shebangs + `activate*` and `.elan/env` PATH bake the absolute project path. Repair = `rm -rf .venv && uv sync`, repoint `.elan/env`, clear oleans — see [LSN-005].
+- Stale `.olean` artifacts fail the kernel with "incompatible header" ([LSN-002]) — now auto-healed at import via the toolchain stamp ([ARC-009], [DEC-013]); manual `rm -f lean/{en,ja}/*.olean` is the fallback.
+- After a **clone or directory move**, gitignored local tooling breaks while `git status` stays clean: `.venv/bin/*` shebangs + `activate*` and `.elan/env` PATH bake the absolute project path (oleans auto-heal via [ARC-009]). Repair = `rm -rf .venv && uv sync` + repoint `.elan/env` — see [LSN-005].
 
 ## Limitations
 

@@ -17,6 +17,7 @@ venv/
 .lake/
 lake-packages/
 *.olean
+*.olean.stamp
 *.ilean
 
 # Generated agent nav index (regenerate: scripts/gen_navmap.sh) — kept out of git

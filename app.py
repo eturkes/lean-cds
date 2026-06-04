@@ -55,6 +55,27 @@ def _resolve_lean_binary() -> str:
 LEAN_BINARY = _resolve_lean_binary()
 LEAN_TIMEOUT_SECONDS = 60
 
+
+def _lean_version() -> str:
+    """Full ``lean --version`` line (incl. build commit) identifying the active toolchain.
+
+    Oleans are locked to this exact build; a change invalidates cached ``.olean``
+    artifacts ([LSN-002], [LSN-005]). Empty string if lean is unavailable — the
+    missing-compiler error then surfaces downstream at compile time."""
+    try:
+        completed = subprocess.run(
+            [LEAN_BINARY, "--version"],
+            capture_output=True,
+            text=True,
+            timeout=LEAN_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return completed.stdout.strip() if completed.returncode == 0 else ""
+
+
+LEAN_VERSION = _lean_version()
+
 _LEXER = Lean4Lexer()
 _FORMATTER = HtmlFormatter(nowrap=False, cssclass="lean-code", noclasses=False)
 
@@ -84,18 +105,32 @@ _write_syntax_css()
 
 
 def _ensure_knowledge_base_compiled(locale: str) -> str | None:
-    """Compile locale's ``MedicalKnowledge.lean`` to ``.olean`` if mtime-stale. Returns ``None`` on success or an error string."""
+    """Compile locale's ``MedicalKnowledge.lean`` to ``.olean`` if stale; return ``None`` on success or an error string.
+
+    Stale := source newer than the artifacts (mtime) **or** the artifacts were
+    built against a different Lean toolchain than the active one (``.olean.stamp``
+    mismatch). The toolchain check auto-heals the "incompatible header" class
+    ([LSN-002], [LSN-005]): oleans are toolchain-locked, so a floated ``stable``
+    channel silently invalidates mtime-fresh caches. When the live version is
+    undeterminable (lean missing), fall back to mtime-only so a transient outage
+    does not force a doomed recompile."""
     src = knowledge_base_file(locale)
     locale_dir = src.parent
     olean_path = locale_dir / f"{KNOWLEDGE_BASE_MODULE}.olean"
     ilean_path = locale_dir / f"{KNOWLEDGE_BASE_MODULE}.ilean"
+    stamp_path = locale_dir / f"{KNOWLEDGE_BASE_MODULE}.olean.stamp"
     src_mtime = src.stat().st_mtime
-    if (
+    artifacts_fresh = (
         olean_path.exists()
         and olean_path.stat().st_mtime >= src_mtime
         and ilean_path.exists()
         and ilean_path.stat().st_mtime >= src_mtime
-    ):
+    )
+    toolchain_ok = LEAN_VERSION == "" or (
+        stamp_path.exists()
+        and stamp_path.read_text(encoding="utf-8").strip() == LEAN_VERSION
+    )
+    if artifacts_fresh and toolchain_ok:
         return None
     try:
         completed = subprocess.run(
@@ -127,6 +162,8 @@ def _ensure_knowledge_base_compiled(locale: str) -> str | None:
             f"Lean failed to compile {locale}/MedicalKnowledge.lean:\n"
             f"{completed.stdout}\n{completed.stderr}".strip()
         )
+    if LEAN_VERSION:
+        stamp_path.write_text(LEAN_VERSION, encoding="utf-8")
     return None
 
 
