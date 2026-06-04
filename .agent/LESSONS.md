@@ -14,6 +14,18 @@ Format per entry:
 
 ---
 
+## [LSN-005] 2026-06-04 — Relocating the project dir silently breaks gitignored local tooling (`.venv`, `.elan/env`); `git status` stays clean
+
+**What happened**: Project moved `…/Documents/pro/lean-cds` → `…/Projects/lean-cds` (same `/run/host/home/eturkes` root — a plain rename, not a container/host split). `git status` was clean, so nothing flagged breakage. Three local artifacts still carried the **old absolute path**: (1) every `.venv/bin/*` console-script shebang + all `activate*` scripts (`#!/…/Documents/pro/…/.venv/bin/python`) — direct `.venv/bin/uvicorn`/`litestar` and `source .venv/bin/activate` broken; (2) `.elan/env`'s `export PATH="…/Documents/pro/…/.elan/bin:$PATH"`; (3) `lean/{en,ja}/*.olean` were *additionally* stale — built v4.29.1, but `stable` had floated to v4.30.0, a re-occurrence of [LSN-002]. **`uv run …` masks (1)**: it re-resolves the venv and ignores the dead shebang, so `uv run python -c "import app"` "works" while the activate script / direct entry-points fail — a partial green that hides the rot.
+
+**Root cause**: venv console scripts and elan's `env` bake the absolute project path at creation time; relocation invalidates them. All three artifacts are gitignored (correctly — non-portable, reproducible), so `git status` structurally **cannot** surface the drift. `app.py` resolves its own paths from `__file__` and pins `ELAN_HOME=BASE_DIR/.elan`, so the *app* relocates cleanly — only the prebuilt local tooling is path-bound.
+
+**Fix**: `rm -rf .venv && uv sync` (regenerates shebangs/activate from `uv.lock`); repoint `.elan/env` PATH to the new root; `rm -f lean/{en,ja}/*.{olean,ilean}` then let app import recompile against the current toolchain ([LSN-002]). Verified: `import app` → KB errors `{ja: None, en: None}`; `check_scenarios.py` 6/6 PASS against v4.30.0.
+
+**Prevention**: After any **clone or directory move**, treat a clean `git status` as meaningless for runtime health — the artifacts that break on move are all gitignored. Run the post-move repair: rebuild venv + repoint `.elan/env` + clear oleans, then `uv run python scripts/check_scenarios.py`. Fast staleness probe: `grep -rIl <old-or-any-foreign-abs-path> .venv .elan` (zero hits = clean); or assert `head -1 .venv/bin/uvicorn` and the `.elan/env` PATH both contain `$PWD`. **Possible enhancement** (deferred, as in [LSN-002]): a `scripts/repair_after_move.sh` one-shot, or teach `_ensure_knowledge_base_compiled` to probe a sentinel olean against the live Lean version and refresh on mismatch (would auto-heal the olean half of this class).
+
+---
+
 ## [LSN-004] 2026-05-14 — ARCHITECTURE.md had wrong route path; uncaught for ~1 day
 
 **What happened**: ARCHITECTURE.md "Public surfaces" table listed `POST /verify` and data-flow step 4 said the same. Actual `app.py:324` defines `@post("/scenarios/{scenario_id:str}/verify", name="verify_scenario")`. Discrepancy surfaced only during the README → ARCHITECTURE consolidation pass when both docs were diffed side-by-side. README had the correct path; ARCHITECTURE was wrong. Any agent who'd used ARCHITECTURE.md as ground truth for routing would have generated invalid links / curl commands.

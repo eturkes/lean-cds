@@ -140,6 +140,7 @@ Standard `uv` (`uv sync`, `uv add [--dev] <pkg>`, `uv run <cmd>`) per Quick star
 - `lean` binary must be discoverable; failures surface as 500s. Check `LEAN_BIN` resolution in `app.py` first.
 - Pygments highlights may be implicitly cached by template engine. If stale highlights appear after editing Lean source, investigate cache invalidation.
 - Stale `.olean` artifacts silently fail with "incompatible header" — see [LSN-002].
+- After a **clone or directory move**, gitignored local tooling breaks while `git status` stays clean: `.venv/bin/*` shebangs + `activate*` and `.elan/env` PATH bake the absolute project path. Repair = `rm -rf .venv && uv sync`, repoint `.elan/env`, clear oleans — see [LSN-005].
 
 ## Limitations
 
