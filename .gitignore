@@ -19,6 +19,10 @@ lake-packages/
 *.olean
 *.ilean
 
+# Generated agent nav index (regenerate: scripts/gen_navmap.sh) — kept out of git
+# so a stale committed copy can never mislead with wrong line numbers ([LSN-004]).
+.agent/NAVMAP.md
+
 # Project-local elan install (Lean 4 toolchain)
 .elan/
 

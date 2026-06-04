@@ -14,70 +14,39 @@ Format per entry:
 
 ---
 
-## [DEC-011] 2026-06-01 — Re-vendor `compaction.sh` in-repo (reverses [DEC-010] removal)
+## [DEC-012] 2026-06-04 — Token-efficiency pass: compress settled DECISIONS in place; value-based pruning; add NAVMAP
 
-**Context**: Immediately after [DEC-010] removed the repo-root copy, the user re-edited CLAUDE.md — reverting the gauge reference from `$HOME/.claude/compaction.sh` back to the path-less "the supplied `compaction.sh`" (threshold stays 80%) — and asked to keep a copy in-repo. Explicit user instruction; per CLAUDE.md, user instruction is final say over standing doctrine.
+**Context**: Measured the per-session bootstrap read (CLAUDE.md + `.agent/`) at ~49K chars ≈ 12.3K tokens. DECISIONS.md was the largest single file (~4.6K tok) and the `compaction.sh` location saga ([DEC-008]..[DEC-011]) was **50%** of it (9,167 chars) — four self-superseding entries that net to one durable fact, re-read in full every session. User directive: make working in this codebase more token-efficient.
 
-**Decision**: Vendor the current canonical script into repo-root `compaction.sh` as a regular file (not a symlink), byte-identical to global `$HOME/.claude/compaction.sh` — the newer dual-mode + color-coded version (red ≥80%), **not** the stale single-mode `>=90%` fork [DEC-010] deleted. Tracked, executable. The global script stays the upstream source; the in-repo file is a vendored snapshot. Verified: regular file, `diff` clean vs canonical, runs in-session (`25% 51K/200K`).
+**Decision**: (1) Compress settled/superseded entries **in place** to their durable takeaways, **preserving every ID** (greppable; [DEC-008]/[DEC-010] become one-line superseded pointers to [DEC-011]). (2) Generalise the INDEX pruning policy from age-based (90-day) to **value-based**: a *settled or superseded* entry may be compressed to its durable takeaway at any age, IDs retained. (3) Add a regenerable `.agent/NAVMAP.md` (symbol index) + `scripts/gen_navmap.sh` so in-task work targets reads instead of loading whole files; it is **on-demand**, not part of the bootstrap read order. Also: wiped stale SCRATCH; tightened ARCHITECTURE prose. CLAUDE.md left untouched (user-owned).
 
-**Alternatives rejected**:
-- `git revert`/restore the deleted blob — that was the stale `>=90%` single-mode fork; re-introduces the wrong threshold. Vendor the current canonical instead.
-- Track a symlink repo-root → `$HOME/.claude/compaction.sh` — an absolute-$HOME symlink breaks on clone and on the host/container path split (`/run/host/...` vs `/var/home/...`); not a self-contained copy.
-- Fork/simplify to manual-mode-only — spawns a third variant to maintain; verbatim vendoring keeps one content source, divergence caught by a one-line `diff`.
+**Alternatives rejected**: Hot/cold split to a separate archive file — user chose in-place over a second file. Leave logs append-only/age-gated — the 90-day rule would force 90 days of re-reading 7.7K chars of settled churn, itself token-inefficient. Hand-annotated symbol map — drift risk ([LSN-004]); a grep-based generator stays fresh by construction.
 
-**Rationale**: Satisfies the user's explicit "keep a copy in-repo" with the best available content, and makes `./compaction.sh` work without depending on `$HOME/.claude`. Accepted tradeoff — the in-repo copy can drift from global; mitigated by vendoring verbatim so re-sync is a trivial `diff`/`cp`.
+**Rationale**: The compaction saga proved that verbose rejected-alternatives prose on a *peripheral, settled* question becomes pure recurring tax. Value-based compression keeps the re-exploration-preventing facts (why a vendored regular file; the no-statusline finding) while shedding the narrative. Net bootstrap saving ≈ 1.9K tok/session from the saga alone, before ARCHITECTURE trims.
 
 ---
 
-## [DEC-010] 2026-06-01 — Canonical gauge relocated to global `$HOME/.claude/compaction.sh`; repo-root copy removed (supersedes [DEC-008])
+## [DEC-011] 2026-06-01 — `compaction.sh` settled: in-repo vendored copy of the global gauge
 
-**Partially superseded by [DEC-011]** (2026-06-01): the user re-vendored an in-repo copy, reversing the removal below. The finding that the canonical script originates globally (`$HOME/.claude/compaction.sh`, real path `~/agents/claude/compaction.sh`) still holds — the in-repo file is a vendored snapshot of it.
+Canonical state; supersedes the [DEC-008]→[DEC-010] back-and-forth below (kept as terse pointers per the compress-in-place pass [DEC-012]). Repo-root `compaction.sh` is a tracked, executable **regular file** — a byte-identical vendored snapshot of the upstream global `$HOME/.claude/compaction.sh` (real path `~/agents/claude/compaction.sh`), which is dual-mode (manual transcript read when `CLAUDE_CODE_SESSION_ID` is set; statusline stdin-JSON otherwise) and color-coded (red ≥80%, yellow ≥60%). The in-repo copy may drift; re-sync with `cp "$HOME/.claude/compaction.sh" ./compaction.sh` and confirm `diff` clean.
 
-**Context**: The user moved `compaction.sh` out of lean-cds. `$HOME/.claude/compaction.sh` is now a symlink → `pro/agents/claude/compaction.sh` (a sibling tree *outside* this repo), and the 2026-06-01 CLAUDE.md edit references it path-fully as `$HOME/.claude/compaction.sh` while lowering the wrap-up threshold 90% → 80%. The global script is a newer, evolved version: dual-mode (manual transcript read when `CLAUDE_CODE_SESSION_ID` is set; statusline stdin-JSON otherwise — realizing the [DEC-009] statusline finding) and color-coded (red ≥80%, yellow ≥60%, encoding the new threshold). The tracked repo-root `compaction.sh` was the older single-mode fork still carrying the stale `>=90%` comment — a drifted duplicate. Verified this session: the global gauge runs clean (`15% 30K/200K`) via `$CLAUDE_CODE_SESSION_ID`.
+**Why a vendored regular file** (not a symlink, not global-only): an absolute-`$HOME` symlink breaks on clone and on the host/container path split (`/run/host/...` vs `/var/home/...`); a vendored file is self-contained and runs without `$HOME/.claude`. Reversed [DEC-010]'s global-only removal on explicit user instruction (final say). The monitor-often / wrap-up-≥80% *workflow rule* lives in CLAUDE.md only — deliberately not restated here ([DEC-006]).
 
-**Decision**: `git rm` the repo-root `compaction.sh`. The canonical gauge is the global `$HOME/.claude/compaction.sh`, owned outside this repo and shared across the user's projects; lean-cds no longer vendors a copy. CLAUDE.md (read #1) is the sole pointer — no `.agent/` doc restates the path or threshold. Supersedes [DEC-008]'s repo-root placement; the adopt-as-canonical intent carries forward.
+---
 
-**Alternatives rejected**:
-- Keep the repo-root copy as a fresh-clone fallback — reintroduces the exact drift it already showed (90% vs 80%; single- vs dual-mode), the anti-pattern [DEC-006] targets. The agent always runs in this sandbox where the global symlink resolves, so a vendored copy serves no reader.
-- Sync the repo-root copy to match global — perpetuates two truths for a tool the user has made global agent-meta, not lean-cds code.
-- Edit the global script from here — it lives outside the project root (CLAUDE.md scope rule) and already encodes 80%; nothing to fix.
-
-**Rationale**: Completes the trajectory [DEC-008] ("portable, universal agent tool") and [DEC-009] (cross-project agent UX belongs at user/global level) only gestured at — the gauge is now physically global, so the repo-local duplicate is vestigial. Single source of truth, zero drift; the repo carries only lean-cds-specific content.
+## [DEC-010] 2026-06-01 — (superseded by [DEC-011]) Briefly removed the repo copy, pointing to global `$HOME/.claude/compaction.sh`; reverted by the user re-vendoring in-repo. See [DEC-011].
 
 ---
 
 ## [DEC-009] 2026-06-01 — No project-local statusline in lean-cds; context gauge stays CLI-only here
 
-**Context**: This session explored wiring `compaction.sh` into a Claude Code `statusLine` (`.claude/settings.json`) so context usage shows every turn. Three implementations were verified against mock stdin: reuse `compaction.sh` via its `CLAUDE_CODE_SESSION_ID`/`CLAUDE_CONTEXT_WINDOW` override knobs; a native `jq` one-liner over the stdin JSON; or plain `compaction.sh`. Before choosing, the user decided to build a **single global statusline used across all their projects** instead.
+**Decision**: No project-local `statusLine` in this repo — in-UI context display is the user's *global* statusline (`~/.claude/settings.json`), outside repo scope; `compaction.sh` is the committed CLI gauge. A statusline is cross-project agent UX, not lean-cds infrastructure. Logged so future sessions don't re-offer it.
 
-**Decision**: Do **not** add a project-local `statusLine` to this repo. `compaction.sh` remains the committed CLI gauge ([DEC-008]); in-UI context display is handled by the user's global statusline (`~/.claude/settings.json`), outside this repo's scope. The probe `.claude/settings.json` created during exploration was reverted; no `.claude/` is tracked.
-
-**Alternatives rejected**:
-- Project-local `statusLine` (any of the three implementations above) — redundant with the user's global statusline, adds per-repo UI config to maintain, and a project setting can conflict with the global one.
-
-**Rationale**: A statusline is cross-project agent UX, not lean-cds infrastructure — it belongs at the user/global level, matching the "portable, universal tool" framing in [DEC-008]. Recorded here rather than only in the ephemeral SCRATCH so future sessions do not resurface the offer.
-
-**Reusable finding** (for any statusline, including the global one): the `statusLine` stdin JSON carries live context — `context_window.used_percentage`, `context_window.context_window_size` (200000, or 1000000 on the 1M beta), and `context_window.total_input_tokens` (= `input + cache_creation + cache_read`, the same input-only formula `compaction.sh` derives from the transcript jsonl). A newly-added shell-executing `statusLine` needs a Claude Code restart + workspace-trust accept to activate (no mid-session hot-reload).
+**Reusable finding** (any statusline): the stdin JSON carries live context — `context_window.used_percentage`, `context_window.context_window_size` (200000, or 1000000 on the 1M beta), and `context_window.total_input_tokens` (= `input + cache_creation + cache_read`). A newly-added shell-executing `statusLine` needs a Claude Code restart + workspace-trust accept to activate (no mid-session hot-reload).
 
 ---
 
-## [DEC-008] 2026-06-01 — Adopt `compaction.sh` as canonical context gauge; lives at repo root
-
-**Superseded by [DEC-010]** (2026-06-01): the gauge moved to global `$HOME/.claude/compaction.sh` and the repo-root copy was removed. The repo-root placement decided below no longer holds; the adopt-as-canonical intent carries forward.
-
-**Context**: The 2026-06-01 CLAUDE.md edit adds a compaction workflow — "As you cross 90% usage of your context window, prepare yourself for compaction … Monitor your context usage often using the supplied `compaction.sh`" — and ships `compaction.sh` (untracked, executable, read-only `sh`+`jq`). It prints the latest main-thread turn's context usage as `NN% used/window` (e.g. `15% 30K/200K`), resolving the window from launcher env (`CLAUDE_CODE_DISABLE_1M_CONTEXT` ⇒ 200K, else 1M; `CLAUDE_CONTEXT_WINDOW` overrides). Verified this session: runs clean, `jq-1.7` present, `git check-ignore` confirms trackable, and it resolves *this* session's jsonl via `$CLAUDE_CODE_SESSION_ID` even with newer sibling-project sessions present (SID-first, not merely newest).
-
-**Decision**: Adopt as the canonical context gauge. Keep it at **repo root**, tracked, unmodified. Documentation surface is this entry plus the script's own header. The *workflow rule* (monitor often; wrap up cleanly ≥90% for a user-issued `/compact`) stays solely in CLAUDE.md; it is not restated in SESSION_PROMPT.md or INDEX.md.
-
-**Alternatives rejected**:
-- Move to `scripts/` — that dir is app-scoped (`check_scenarios.py` verifies the Lean app); `compaction.sh` is agent-meta, reads Claude Code session files, orthogonal to lean-cds.
-- Move to `.agent/` — that tree is markdown memory; an executable changes its character, and the tool is portable across projects, not lean-cds-specific memory.
-- Restate the workflow in SESSION_PROMPT.md / INDEX.md — violates [DEC-004] (prompt defers to CLAUDE.md) and [DEC-006] (carry only info not recoverable elsewhere); CLAUDE.md is read #1 and the script self-documents.
-- Rewrite/wrap the script — it is correct and fit-for-purpose; gratuitous churn.
-
-**Rationale**: CLAUDE.md references it path-lessly as "the supplied `compaction.sh`," signalling a portable, universal agent tool (works in any Claude Code project) — root placement matches that framing and keeps it visible. One durable record (this DEC) + the self-documenting script + the CLAUDE.md directive covers future sessions with zero redundancy.
-
-**Note**: The same CLAUDE.md edit adds subagent rate-limiting guidance ("sequential chunking; verify all agents ran to completion") — go-forward operational behaviour already captured in CLAUDE.md, no separate action needed.
+## [DEC-008] 2026-06-01 — (superseded by [DEC-011]) Adopted `compaction.sh` as the canonical context gauge at repo root; placement/path since settled in [DEC-011]. Adopt-as-canonical intent carries forward.
 
 ---
 

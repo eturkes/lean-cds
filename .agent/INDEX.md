@@ -11,6 +11,8 @@ Cross-session continuity for AI agents working on **lean-cds**.
 5. `LESSONS.md` — top entries (grep before non-obvious choices).
 6. `SCRATCH.md` — if continuing a prior session.
 
+On-demand (not bootstrap): `NAVMAP.md` — symbol index for targeted reads of large files (e.g. `lean_decorate.py`). Regenerate with `scripts/gen_navmap.sh` before relying on it.
+
 ## Files
 
 | File | Type | Purpose | Update trigger |
@@ -21,6 +23,7 @@ Cross-session continuity for AI agents working on **lean-cds**.
 | `LESSONS.md` | Append-only | Mistakes + root cause + fix + prevention. | After every observed mistake. |
 | `SCRATCH.md` | Ephemeral | Per-session working state. | Continuously. Wipe at session start unless continuing. |
 | `SESSION_PROMPT.md` | Static | Reusable boot prompt for fresh sessions. | Major project shift. |
+| `NAVMAP.md` | Generated | **On-demand** symbol index (file → defs/classes/axioms + line). Read when editing a specific module to target reads; **not** part of bootstrap. | Run `scripts/gen_navmap.sh`. |
 
 ## Where to write
 
@@ -40,7 +43,7 @@ Cross-session continuity for AI agents working on **lean-cds**.
 
 ## Pruning policy
 
-- `DECISIONS.md`, `LESSONS.md`: append-only during a session. If file exceeds ~500 lines, summarize entries older than 90 days into an `## Archive` section.
+- `DECISIONS.md`, `LESSONS.md`: append-only for *active* entries. A **settled or superseded** entry may be compressed in place to its durable takeaway at any age — keep its ID (greppable; never renumber), drop narrative/rejected-alternatives prose once it no longer prevents re-exploration; a superseded entry collapses to a one-line pointer to its replacement. Value-based, not age-based (rationale: [DEC-012]).
 - `SCRATCH.md`: wipe at session start unless explicitly continuing.
 - `ARCHITECTURE.md`: rewrite affected sections in place; do not leave "old version" cruft inline. If history matters, link the relevant DEC-NNN.
 

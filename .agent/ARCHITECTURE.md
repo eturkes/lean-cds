@@ -13,7 +13,7 @@ Bilingual end-to-end. **Japanese (日本語) is the default**; header carries JA
 - `lean/ja/`: JSH 2019, JSN AKI 2016, JDS 2024, JSAD/JSNP 2025, JRS SAS 2020. Lean identifiers are kanji via `«…»` (`«山田太郎»`, `«患者»`, `«適応»`, `«禁忌»`, `«衝突»`, `«高血圧2019_第5章_第一選択»`, …).
 - `lean/en/`: ACC/AHA, KDIGO, ADA, APA, AASM. ASCII identifiers (`JohnDoe`, `AHA_ACC_HTN_8_1_6`, …).
 
-The two trees prove the same theorem shape with disjoint identifier vocabularies. Tooltips (`data-lean-tip` attrs) are locale-matched.
+Tooltips (`data-lean-tip` attrs) are locale-matched. (Trees are structurally parallel but identifier-disjoint — [ARC-003].)
 
 ## Stack
 
@@ -122,20 +122,18 @@ Every route accepts `?lang=ja|en`. Resolution (in `_resolve_locale`): query → 
 ## Common dev tasks
 
 ```bash
-uv sync                                         # install / sync deps
-uv add <package>                                # add runtime dep
-uv add --dev <package>                          # add dev-only dep
-uv run <command>                                # run in project venv
-
-# Regression harness (pins both locales)
+# Regression harness (kernel-typechecks all 6 scenarios; pins both locales' axiom sets)
 uv run python scripts/check_scenarios.py
 
 # Compile one scenario by hand
 (cd lean/ja && LEAN_PATH=. lean ScenarioA.lean)
 (cd lean/en && LEAN_PATH=. lean ScenarioA.lean)
+
+# Regenerate the on-demand symbol index (.agent/NAVMAP.md) after structural edits
+bash scripts/gen_navmap.sh
 ```
 
-`static/syntax.css` is overwritten on every app import — don't hand-edit. Edit Pygments style names in `_write_syntax_css()` instead.
+Standard `uv` (`uv sync`, `uv add [--dev] <pkg>`, `uv run <cmd>`) per Quick start / uv docs. `static/syntax.css` is overwritten on every app import — don't hand-edit; edit Pygments style names in `_write_syntax_css()` instead.
 
 ## Known sensitivities
 
