@@ -14,6 +14,18 @@ Format per entry:
 
 ---
 
+## [DEC-014] 2026-06-08 — `Read()` deny rules in `.claude/settings.json` (token guardrail)
+
+**Context**: New CLAUDE.md directive: maintain `permissions.deny` `Read()` rules against low-benefit paths. Measured: `.elan` 13G, `.venv` 53M, `uv.lock` 112K (~30K tok of version pins), `LICENSE` 12K, plus binaries (`*.olean`, `__pycache__`, `.lake`) and `.git` internals.
+
+**Decision**: Committed `.claude/settings.json` denying Read on `/.elan/**`, `/.venv/**`, `/.git/**`, `/**/__pycache__/**`, `/**/.lake/**`, `/**/*.olean`, `/**/*.ilean`, `/uv.lock`, `/LICENSE`. Leading `/` = **project-root** anchor (docs semantics: `//`=absolute, `~/`=home, `/`=project root, bare or `./`=cwd). Deliberately readable: `*.olean.stamp` (1-line cache-debug text, [ARC-009]), `.agent/NAVMAP.md`, `.env*` (credential use granted by CLAUDE.md).
+
+**Alternatives rejected**: `./`-prefixed patterns — anchor to *cwd*, silently mis-scope if a session/subagent runs from a subdir. Denying `.env*` — would obstruct granted credential use. Trusting in-session probes — settings edits are **not** hot-applied to the running session; verified instead via fresh `claude -p` probes (all four pattern classes DENIED, control file ALLOWED).
+
+**Rationale**: Guardrail, not a security boundary — Bash (`git`, `uv tree`, grep) still reaches these paths when genuinely needed, though deny also covers recognized file commands (`cat`/`head`/`tail`/`sed`). Stops Read/Glob/`@`-mention context burn on toolchain internals, site-packages, lockfile pins, and binaries. Edit the file if a rule proves obstructive.
+
+---
+
 ## [DEC-013] 2026-06-04 — Olean cache keyed to toolchain via `.olean.stamp` sidecar (not import-probe)
 
 **Context**: `_ensure_knowledge_base_compiled` recompiled only on source-mtime staleness, so a floated `stable` channel (v4.29.1 → v4.30.0) left mtime-fresh oleans that fail the kernel with "incompatible header" at verify time — the recurring [LSN-002]/[LSN-005] class. Needed an import-time auto-heal.

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(/.elan/**)",
+      "Read(/.venv/**)",
+      "Read(/.git/**)",
+      "Read(/**/__pycache__/**)",
+      "Read(/**/.lake/**)",
+      "Read(/**/*.olean)",
+      "Read(/**/*.ilean)",
+      "Read(/uv.lock)",
+      "Read(/LICENSE)"
+    ]
+  }
+}

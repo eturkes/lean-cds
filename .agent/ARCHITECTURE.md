@@ -67,6 +67,7 @@ templates/index.html         — Main shell
 templates/_scenario_panel.html, _verification_result.html — HTMX fragments
 static/styles.css, syntax.css, tooltips.js
 .elan/                       — Project-local Lean toolchain (preferred over $HOME/.elan)
+.claude/settings.json        — Read() deny rules (token guardrail): .elan, .venv, .git, __pycache__, .lake, *.olean/*.ilean, uv.lock, LICENSE ([DEC-014])
 ```
 
 ## Public surfaces
