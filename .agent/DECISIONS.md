@@ -14,6 +14,21 @@ Format per entry:
 
 ---
 
+## [DEC-015] 2026-06-08 — Reusable boot prompt becomes the `/session` slash command with roadmap override
+
+**Context**: The reusable session prompt lived at `.agent/SESSION_PROMPT.md`, pasted by hand into each fresh session with user steering appended after a `---`. Pasting is friction; the override convention was prose, not mechanism. CLAUDE.md's "write a reusable prompt to a file" directive ([DEC-004]) is satisfied equally by a slash command, which Claude Code invokes natively.
+
+**Decision**: Relocate the prompt to the `/session` slash command at `.claude/commands/session.md`. Bare `/session` (empty `$ARGUMENTS`) runs the roadmap per usual — `SPEC.md` §0 contract: pick the next §11.3 build unit, load only its §11.4 slice, implement, gate, commit, end. `/session <TASK>` (non-empty `$ARGUMENTS`) makes `<TASK>` the sole focus for that session and defers the roadmap (this relocation task was itself such an override). Bootstrap reads (CLAUDE.md → INDEX.md → …) are unchanged and run in both branches. `SESSION_PROMPT.md` deleted; the `INDEX.md` Files-table row became an external-pointer note; CLAUDE.md's meta-instruction repointed to the command. The [DEC-004] defer-to-CLAUDE.md content principle carries over verbatim.
+
+**Alternatives rejected**:
+- `.claude/skills/session/SKILL.md` — same `/session` invocation but adds a directory + SKILL.md indirection and supporting-file scaffolding this prompt does not need. Commands are skills under the hood, so the single-file command is the KISS endpoint.
+- Keep `SESSION_PROMPT.md` and make the command a thin wrapper — two sources for one prompt; reintroduces the [DEC-004] drift class.
+- Two commands (`/session` + `/session-task`) for the two branches — `$ARGUMENTS` substitution handles both in one file; splitting duplicates the bootstrap.
+
+**Rationale**: One native invocation replaces copy-paste; the override is now a first-class argument, not a prose convention. `disable-model-invocation: true` keeps the boot prompt user-triggered only. Single source of truth preserved — no SESSION_PROMPT ↔ CLAUDE.md mirror left to drift.
+
+---
+
 ## [DEC-014] 2026-06-08 — `Read()` deny rules in `.claude/settings.json` (token guardrail)
 
 **Context**: New CLAUDE.md directive: maintain `permissions.deny` `Read()` rules against low-benefit paths. Measured: `.elan` 13G, `.venv` 53M, `uv.lock` 112K (~30K tok of version pins), `LICENSE` 12K, plus binaries (`*.olean`, `__pycache__`, `.lake`) and `.git` internals.
@@ -118,6 +133,8 @@ Canonical state; supersedes the [DEC-008]→[DEC-010] back-and-forth below (kept
 ---
 
 ## [DEC-004] 2026-05-14 — SESSION_PROMPT.md defers to CLAUDE.md instead of restating it
+
+*Partly superseded by [DEC-015]* — the prompt file moved to the `/session` slash command (`.claude/commands/session.md`); the defer-to-CLAUDE.md content principle below still holds.
 
 **Context**: Original `SESSION_PROMPT.md` (~42 lines) restated ~12 rules already present verbatim or near-verbatim in `CLAUDE.md`: sudo, env-modification, git-locally-only, ask-when-ambiguous, accuracy-over-completion, failure-acceptable, LLM-optimized files, immutable CLAUDE.md, web-search-for-SOTA, pink-elephant negative-constraint framing, conversational-chat-reserved-for-blockers, ambitious-work-welcomed. Two harms: (a) any drift between the two files silently contradicts; (b) bootstrap tokens spent restating known facts instead of project-specific orientation.
 
