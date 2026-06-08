@@ -24,7 +24,7 @@ On-demand (not bootstrap): `NAVMAP.md` — symbol index for targeted reads of la
 | `SCRATCH.md` | Ephemeral | Per-session working state. | Continuously. Wipe at session start unless continuing. |
 | `NAVMAP.md` | Generated | **On-demand** symbol index (file → defs/classes/axioms + line). Read when editing a specific module to target reads; **not** part of bootstrap. | Run `scripts/gen_navmap.sh`. |
 
-**Boot prompt** (external to `.agent/`): the reusable session prompt is the `/session` slash command at `.claude/commands/session.md`. Bare `/session` runs the roadmap (`SPEC.md`); `/session <TASK>` overrides it for one session. See [DEC-015].
+**Boot prompt** (external to `.agent/`): the reusable session prompt is the `/session-prompt` slash command at `.claude/commands/session-prompt.md`. Bare `/session-prompt` runs the roadmap (`SPEC.md`); `/session-prompt <TASK>` overrides it for one session. See [DEC-015].
 
 ## Where to write
 

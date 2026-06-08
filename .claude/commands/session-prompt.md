@@ -1,5 +1,5 @@
 ---
-description: Boot a fresh lean-cds work session. Bare `/session` runs the roadmap; `/session <TASK>` overrides it with a one-off objective.
+description: Boot a fresh lean-cds work session. Bare `/session-prompt` runs the roadmap; `/session-prompt <TASK>` overrides it with a one-off objective.
 argument-hint: [TASK]
 disable-model-invocation: true
 ---
@@ -29,4 +29,4 @@ $ARGUMENTS
 
 **Otherwise**, the text above is a one-session override (typically a meta/tooling task): make it the sole focus of this session and defer the roadmap. Still honor `CLAUDE.md`, and log any non-trivial decision or observed mistake to `.agent/` (`DECISIONS.md` / `LESSONS.md`) per `INDEX.md`.
 
-If you find a better bootstrap pattern, propose `[DEC-NNN]` and update this command file (`.claude/commands/session.md`).
+If you find a better bootstrap pattern, propose `[DEC-NNN]` and update this command file (`.claude/commands/session-prompt.md`).
