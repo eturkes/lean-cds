@@ -14,6 +14,18 @@ Format per entry:
 
 ---
 
+## [DEC-016] 2026-06-15 — Track `.serena/project.yml`; gitignore + Read-deny the rest of Headroom's `.serena/`
+
+**Context**: CLAUDE.md gained a directive: Headroom (the read-compression wrapper) introduces `.serena/`, where `project.yml` is the tracked LSP config and `cache/`, `project.local.yml`, `memories/` "should be ignored both by you and Git." The dir was entirely untracked (`?? .serena/`); Serena's auto-generated `.serena/.gitignore` covered `/cache` + `/project.local.yml` but **not** `/memories`. Nothing was Read-denied.
+
+**Decision**: (1) Added `/memories` to the co-located `.serena/.gitignore`, keeping Serena's own file as the ignore mechanism. (2) Tracked `.serena/.gitignore` + `.serena/project.yml` so the LSP config and its ignore rules survive a fresh clone. (3) Added `Read()` denies for `/.serena/cache/**`, `/.serena/memories/**`, `/.serena/project.local.yml` ([DEC-014] root-anchored pattern) — the "ignored by you" half. `project.yml` stays readable (small, occasionally-useful config).
+
+**Alternatives rejected**: Centralise `.serena/` ignores in the root `.gitignore` — duplicates Serena's co-located `.gitignore` and a fresh Serena/Headroom run regenerates its own anyway. Read-deny `project.yml` too — it is the one file meant to be versioned.
+
+**Rationale**: Matches upstream Serena layout (versioned `project.yml` + co-located ignore). `memories/` is empty and unused — this project's memory system is `.agent/`, not Serena's — so ignoring it forecloses future drift if Serena ever writes there. Read-denies stop LSP-pickle/cache and memory-file context burn, consistent with [DEC-014].
+
+---
+
 ## [DEC-015] 2026-06-08 — Reusable boot prompt becomes the `/session-prompt` slash command with roadmap override
 
 **Context**: The reusable session prompt lived at `.agent/SESSION_PROMPT.md`, pasted by hand into each fresh session with user steering appended after a `---`. Pasting is friction; the override convention was prose, not mechanism. CLAUDE.md's "write a reusable prompt to a file" directive ([DEC-004]) is satisfied equally by a slash command, which Claude Code invokes natively.
