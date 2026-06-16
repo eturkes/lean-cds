@@ -14,11 +14,23 @@ Format per entry:
 
 ---
 
+## [DEC-019] 2026-06-16 — Revert `.serena/` ignores to the co-located `.serena/.gitignore`; drop the repo-root mirror (supersedes [DEC-017])
+
+**Context**: CLAUDE.md's Headroom bullet was re-edited (same-day successor to [DEC-016]→[DEC-018]). Two deltas: (1) the `.serena/` git directive changed from "add `.serena/memories/` to the repo-root gitignore" to "`.serena/` … comes with its own gitignore file and **can be committed as is**," reversing [DEC-017]'s repo-root mirror. (2) A newly-asserted fact — Serena's memory system "has been **disabled globally**" — dissolving [DEC-016]'s rationale for specially ignoring `memories/`. The do-not-read bullet changed only in wording (`ignored_paths` location made explicit as `.serena/project.yml`); [DEC-018]'s `ignored_paths` = `/uv.lock`, `/LICENSE` is unaffected.
+
+**Decision**: Removed the repo-root `.gitignore` `.serena/*` block ([DEC-017]); the nested Serena-native `.serena/.gitignore` (`/cache`, `/project.local.yml`) is again the sole git mechanism. `git check-ignore` confirms `cache/` + `project.local.yml` stay ignored by it post-removal; `memories/` is **empty**, so git tracks nothing there. Left a 3-line guard comment in repo-root `.gitignore` (no `.serena/` rules — self-managed) to stop a future agent re-adding the mirror (this has flip-flopped [DEC-016]→[DEC-017]→[DEC-019]). Still live, unchanged: tracking of `.serena/project.yml` + `.serena/.gitignore`; the three `Read()` denies ([DEC-016]); `ignored_paths` ([DEC-018]).
+
+**Alternatives rejected**: Re-add `/memories` to `.serena/.gitignore` ([DEC-016]'s hack) or keep a repo-root `memories/` line — the global disable makes `memories/` inert, and "committed as is" steers away from both repo-root mirroring and hand-editing Serena's regenerated file ([DEC-017] showed the latter drifts). Add `.serena/*` to `ignored_paths` — Serena auto-excludes its own dir (the reasoning [DEC-018] used to omit `.git`); no `.serena/` path reaches Serena.
+
+**Rationale**: One mechanism, owned by the tool that regenerates it, removes the repo-root↔nested duplication and its drift. `memories/` needs no rule: the global disable keeps it empty and `.agent/` is the sole memory store. The do-not-read half is independent of git and persists via `permissions.deny`. Reversible.
+
+---
+
 ## [DEC-018] 2026-06-16 — Sync Serena `ignored_paths` with the non-gitignored do-not-read set; keep `.serena/.gitignore` tracked
 
 **Context**: CLAUDE.md's Headroom/200K bullets were re-edited (same-day successor to [DEC-016]/[DEC-017]). Two deltas bear on repo state: (1) a generalised **do-not-read** doctrine — a set *distinct from* `.gitignore`, enforced via `permissions.deny Read()`, with the new clause "add any non-gitignored do-not-read entry to Serena's `ignored_paths` and keep those surfaces in sync"; `ignored_paths` was empty. (2) The `.serena/` track list narrowed in prose from "`project.yml` and `.gitignore`" to "`project.yml`", which read literally suggests untracking `.serena/.gitignore`.
 
-**Decision**: (1) Set `.serena/project.yml` `ignored_paths` to `/uv.lock`, `/LICENSE` — the only `permissions.deny Read()` entries that are tracked (not gitignored) **and** would otherwise be surfaced by Serena. Root-anchored `/` mirrors the deny-rule style ([DEC-014]). (2) Keep `.serena/.gitignore` tracked (user-confirmed: the nested file serves a legitimate purpose; CLAUDE.md-designated Serena ignores live in the repo-root `.gitignore`) — [DEC-017]'s tracking state stands; the prose drop is simplification, not an untrack directive.
+**Decision**: (1) Set `.serena/project.yml` `ignored_paths` to `/uv.lock`, `/LICENSE` — the only `permissions.deny Read()` entries that are tracked (not gitignored) **and** would otherwise be surfaced by Serena. Root-anchored `/` mirrors the deny-rule style ([DEC-014]). (2) Keep `.serena/.gitignore` tracked (user-confirmed: the nested file serves a legitimate purpose; as of [DEC-019] it is again the sole git mechanism for `.serena/`) — the prose drop is simplification, not an untrack directive.
 
 **Alternatives rejected**: Add `.git` to `ignored_paths` — non-gitignored + Read-denied, but Serena already auto-excludes VCS dirs, so listing it changes nothing Serena surfaces; sync here is *semantic* (no do-not-read path reaches Serena), not literal 1:1. Untrack `.serena/.gitignore` to match the literal wording — rejected by user; would also need a redundant repo-root ignore to hide it.
 
@@ -26,15 +38,7 @@ Format per entry:
 
 ---
 
-## [DEC-017] 2026-06-16 — Move `.serena/` ignore rules to repo-root `.gitignore` (supersedes [DEC-016] mechanism)
-
-**Context**: CLAUDE.md's Headroom paragraph was rewritten to require that `.serena/`'s `cache/`, `project.local.yml`, and `memories/` live in **the repo-root `.gitignore`** (plus Read-denies), while `project.yml` and `.gitignore` stay Git-tracked. [DEC-016] had centralised those ignores in the co-located, Serena-owned `.serena/.gitignore` and explicitly rejected the repo-root option — the updated wording reverses that choice.
-
-**Decision**: (1) Added `.serena/cache/`, `.serena/project.local.yml`, `.serena/memories/` to repo-root `.gitignore` — now the authoritative ignore. (2) Reverted [DEC-016]'s `/memories` addition to `.serena/.gitignore`, returning that tracked file to Serena's auto-generated content (`/cache`, `/project.local.yml`). Tracking of `.serena/.gitignore` + `.serena/project.yml` and the three `Read()` denies ([DEC-016]) are already correct — unchanged.
-
-**Alternatives rejected**: Keep [DEC-016]'s co-located mechanism — contradicts the updated CLAUDE.md. Add repo-root rules yet leave `/memories` in the co-located file — a redundant line that drifts every time Serena regenerates `.serena/.gitignore` (Serena writes only `/cache` + `/project.local.yml`).
-
-**Rationale**: Repo-root rules are immune to Serena rewriting its own `.gitignore`, fixing the latent drift [DEC-016] accepted; the tracked `.serena/.gitignore` now equals Serena-native output, so regeneration yields no spurious diff. Paths stay ignored throughout — no tracking regression. Reversible.
+## [DEC-017] 2026-06-16 — (superseded by [DEC-019]) Briefly moved `.serena/` ignores to the repo-root `.gitignore`; [DEC-019] reverts to the Serena-native co-located `.serena/.gitignore` (`memories/` now inert — Serena memory disabled globally). See [DEC-019].
 
 ---
 

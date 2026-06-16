@@ -68,7 +68,7 @@ templates/_scenario_panel.html, _verification_result.html — HTMX fragments
 static/styles.css, syntax.css, tooltips.js
 .elan/                       — Project-local Lean toolchain (preferred over $HOME/.elan)
 .claude/settings.json        — Read() deny rules (token guardrail): .elan, .venv, .git, .serena/{cache,memories,project.local.yml}, __pycache__, .lake, *.olean/*.ilean, uv.lock, LICENSE ([DEC-014], [DEC-016])
-.serena/project.yml          — Headroom/Serena LSP config (tracked); sibling cache/, memories/, project.local.yml are gitignored + Read-denied ([DEC-016])
+.serena/project.yml          — Headroom/Serena LSP config (tracked, with .serena/.gitignore); cache/ + project.local.yml ignored via that nested file & Read-denied; memories/ empty/inert — Serena memory disabled globally ([DEC-016], [DEC-019])
 ```
 
 ## Public surfaces
