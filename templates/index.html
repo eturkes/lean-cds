@@ -140,7 +140,7 @@
           { element: '#tour-brand', popover: {
             title: 'システム概要',
             description:
-              '「検証可能な臨床意思決定支援」 ― ガイドライン衝突の形式検証デモです。<br><br>' +
+              '「検証可能な臨床意思決定支援」は、ガイドライン衝突の形式検証デモです。<br><br>' +
               '日本語・英語の完全バイリンガル設計で、各言語の医学会ガイドラインを' +
               '個別に符号化しています。'
           }},
@@ -316,8 +316,8 @@
             title: 'The Problem: Guideline Collisions',
             description:
               'When multiple clinical guidelines are applied simultaneously, a drug may be both ' +
-              '"<strong>indicated</strong>" and "<strong>contraindicated</strong>" for the same patient ' +
-              '— a logical contradiction.<br><br>' +
+              '"<strong>indicated</strong>" and "<strong>contraindicated</strong>" for the same patient' +
+              ', a logical contradiction.<br><br>' +
               'In polypharmacy settings, detecting these collisions is critical for patient safety. ' +
               'Traditional rule engines struggle to guarantee completeness; formal verification ' +
               'provides a kernel-level mathematical proof.',
@@ -330,7 +330,7 @@
               'We encode guideline recommendations and patient findings as ' +
               '<strong>axioms</strong> in Lean 4, then ask the type-checker itself to prove ' +
               'the contradiction "Indicated ∧ Contraindicated".<br><br>' +
-              'This is not runtime inference — it is a guarantee from the Lean kernel. ' +
+              'This is not runtime inference; it is a guarantee from the Lean kernel. ' +
               'If the proof type-checks, the contradiction is ' +
               '<strong>logically certain</strong> under the encoded axioms.',
             popoverClass: 'tour-slide'
@@ -339,7 +339,7 @@
           { element: '#tour-brand', popover: {
             title: 'System Overview',
             description:
-              '"Verifiable Clinical Decision Support" — a formal verification demo ' +
+              '"Verifiable Clinical Decision Support": a formal verification demo ' +
               'for guideline collision detection.<br><br>' +
               'The interface is fully bilingual (Japanese / English), with each language ' +
               'encoding its own medical society guidelines independently.'
@@ -358,8 +358,8 @@
           { element: '#tour-patient', popover: {
             title: 'Patient Context',
             description:
-              'The patient profile for this scenario. Age, comorbidities, and lab values are listed ' +
-              '— each corresponding directly to a Lean observation axiom ' +
+              'The patient profile for this scenario. Age, comorbidities, and lab values are listed' +
+              ', each corresponding directly to a Lean observation axiom ' +
               '(<code>axiom obs_…</code>) that the proof will consume.<br><br>' +
               'The findings listed here are the "inputs" to the formal proof.'
           }},
@@ -413,7 +413,7 @@
               'Hover over any <strong>underlined symbol</strong> in the code to see ' +
               'a context-aware tooltip.<br><br>' +
               'Each tooltip explains the declaration, the claim being proved, or ' +
-              'the guideline axiom being applied — no programming knowledge required.'
+              'the guideline axiom being applied. No programming knowledge required.'
           }},
           /* 12 — decoder */
           { element: '#tour-decoder', popover: {
@@ -459,14 +459,14 @@
             description:
               'The raw output from the Lean compiler. The <code>#print axioms absurd</code> ' +
               'command prints the complete list of axioms the proof depends on.<br><br>' +
-              'This is the system\'s trust basis — the host program parses this output ' +
+              'This is the system\'s trust basis: the host program parses this output ' +
               'to determine the verification verdict.'
           }},
           /* 17 — lang switcher */
           { element: '#tour-lang', popover: {
             title: 'Bilingual Design',
             description:
-              'Every layer is fully bilingual — UI text, guideline citations, ' +
+              'Every layer is fully bilingual: UI text, guideline citations, ' +
               'Lean source code, and hover tooltips.<br><br>' +
               '• <strong>Japanese</strong>: JSH, JSN, JDS, JRS society guidelines<br>' +
               '• <strong>English</strong>: ACC/AHA, KDIGO, ADA, APA, AASM<br><br>' +
@@ -492,7 +492,7 @@
             description:
               'Lean-CDS proves clinical guideline contradictions via kernel-level ' +
               'type-checking, not runtime inference.<br><br>' +
-              '• Each proof is fully static — no input manipulation is possible<br>' +
+              '• Each proof is fully static, no input manipulation is possible<br>' +
               '• <code>#print axioms</code> makes the trust basis transparent<br>' +
               '• Proof structure is presented in human-readable form<br><br>' +
               'Try the other scenarios to see different guideline collisions.',

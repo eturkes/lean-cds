@@ -14,6 +14,30 @@ Format per entry:
 
 ---
 
+## [LSN-007] 2026-06-16 — Lean verify *hangs* (not "incompatible header") when ELAN_HOME points to an elan home missing the active toolchain; an empty version silently disables the [ARC-009] auto-heal
+
+**What happened**: Running the dash work's acceptance gate, `check_scenarios.py` timed out (60s) on all 6 scenarios, and the live `/verify` feature was equally broken — yet the edits touched no Lean source. Diagnosis: `stable` floated v4.30.0 → v4.31.0; `~/.elan` has v4.31.0 but the project-local `./.elan/toolchains/` does not (only a stale `…v4.31.lock` from an interrupted install). `app.py:50` pins `ELAN_HOME=./.elan`, so every `lean` call resolves `stable`→v4.31.0, finds it absent, and **blocks trying to install it** → hang. `_lean_version()` (no `env=`, inherits the pinned ELAN_HOME) times out → `LEAN_VERSION=""`. Then `_ensure_knowledge_base_compiled`'s `toolchain_ok = LEAN_VERSION == "" or stamp == LEAN_VERSION` short-circuits **True**, so the [ARC-009]/[DEC-013] stamp auto-heal is silently skipped and the stale 4.30.0 oleans persist.
+
+**Root cause**: Two compounding faults. (1) `./.elan` never finished installing the toolchain its `stable` default now points to, so `ELAN_HOME=./.elan lean` blocks on an install attempt instead of running. (2) `_lean_version` returning `""` is treated by the cache logic as "toolchain fine" (**fail-open**): a version-probe failure disables the very check meant to catch toolchain drift, and masks the hang behind a generic 60s verify timeout.
+
+**Fix**: User is restoring v4.31.0 into `./.elan` (copy from `~/.elan` or `elan toolchain install stable`, clear the stale `.lock`); ARC-009 then auto-rebuilds the oleans. `MedicalKnowledge.lean` compiles clean+fast under 4.31 (no source incompatibility). The dash edits ([DEC-020]) were committed independently (import-verified, scan-clean).
+
+**Prevention**: Extends [LSN-002]/[LSN-005] with a new failure mode — a 60s verify *timeout* (vs a fast "incompatible header") points at `ELAN_HOME` resolving to an elan home **missing** the active/`stable` toolchain (it blocks on install), not merely a stale olean. Quick probe: compare `ELAN_HOME=$PWD/.elan ./.elan/bin/elan toolchain list` against the active `lean --version`. Worthwhile code follow-up: make `_lean_version`/`_ensure_knowledge_base_compiled` **fail safe** — an undeterminable version should surface the probe failure (or force a bounded recompile), never silently mark the cache toolchain-ok.
+
+---
+
+## [LSN-006] 2026-06-16 — Auditing a character class: literal-glyph grep undercounts (escapes + look-alike codepoints)
+
+**What happened**: Tasked with removing em/en dashes from human-facing UI text, my first grep searched only the literal `—`/`–`/`―` glyphs. It reported ~27 sites and characterized the JA dashes as "wave dash + horizontal bar" — and I asked the user a scoping question on that basis. A fuller scan found **62** human-facing dash-sites: EN guideline bodies in `scenarios.py` encode dashes as Python `—`/`–` **escape sequences** (six ASCII chars in the file, invisible to a glyph grep), and the dominant JA "dash" was `U+2500` **BOX DRAWINGS LIGHT HORIZONTAL** doubled (`──`) — a table-drawing glyph, not a typographic dash.
+
+**Root cause**: Searched for the rendered glyph, not all of its source representations. `\uXXXX` escapes and look-alike glyphs (box-drawing vs em-dash) render identically but are different bytes; `grep '[—–]'` sees neither.
+
+**Fix**: Re-scanned with a Python scanner covering (a) the full dash-family codepoint set incl. `U+2500/2501/301C/FF5E`, (b) `\\u(2013|2014|2015|…)` escape sequences, (c) per-occurrence codepoint + context. Re-confirmed the corrected inventory with the user before editing JA.
+
+**Prevention**: When auditing/replacing a character class across source, enumerate **representations**, not just the target glyph: literal char, `\uXXXX`/`\xXX` escapes, HTML entities, and visually-identical look-alikes (confirm with `ord()`). Generalises [LSN-001] (survey accuracy) and [LSN-004] (grep the literal string). Make bulk string edits assertion-guarded: assert each occurrence count before replacing and abort-all on mismatch (two-pass), so a mis-specified pattern fails loudly instead of silently corrupting or missing.
+
+---
+
 ## [LSN-005] 2026-06-04 — Relocating the project dir silently breaks gitignored local tooling (`.venv`, `.elan/env`); `git status` stays clean
 
 **What happened**: Project moved `…/Documents/pro/lean-cds` → `…/Projects/lean-cds` (same `/run/host/home/eturkes` root — a plain rename, not a container/host split). `git status` was clean, so nothing flagged breakage. Three local artifacts still carried the **old absolute path**: (1) every `.venv/bin/*` console-script shebang + all `activate*` scripts (`#!/…/Documents/pro/…/.venv/bin/python`) — direct `.venv/bin/uvicorn`/`litestar` and `source .venv/bin/activate` broken; (2) `.elan/env`'s `export PATH="…/Documents/pro/…/.elan/bin:$PATH"`; (3) `lean/{en,ja}/*.olean` were *additionally* stale — built v4.29.1, but `stable` had floated to v4.30.0, a re-occurrence of [LSN-002]. **`uv run …` masks (1)**: it re-resolves the venv and ignores the dead shebang, so `uv run python -c "import app"` "works" while the activate script / direct entry-points fail — a partial green that hides the rot.

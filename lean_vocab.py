@@ -65,7 +65,7 @@ _EN_VOCAB: dict[str, VocabEntry] = {
     ),
     "False": VocabEntry(
         role=ROLE_PROPOSITION,
-        plain="`False` — the proposition that is never true",
+        plain="`False`: the proposition that is never true",
     ),
     # ---- Condition predicates (Patient → Prop) -----------------------
     "HasEssentialHypertension": VocabEntry(
@@ -258,7 +258,7 @@ _JA_VOCAB: dict[str, VocabEntry] = {
     ),
     "False": VocabEntry(
         role=ROLE_PROPOSITION,
-        plain="`False` ── 決して真にならない命題",
+        plain="`False`：決して真にならない命題",
     ),
     # ---- Condition predicates («患者» → Prop) ------------------------
     "«本態性高血圧を有する»": VocabEntry(
@@ -404,7 +404,7 @@ _JA_VOCAB: dict[str, VocabEntry] = {
             "ガイドライン2020』の薬物療法安全公理"
         ),
         reads=(
-            "未治療の中等症～重症閉塞性睡眠時無呼吸を有する患者に"
+            "未治療の中等症から重症閉塞性睡眠時無呼吸を有する患者に"
             "対しては、ベンゾジアゼピン系薬剤を原則禁忌とする"
         ),
         shape=(

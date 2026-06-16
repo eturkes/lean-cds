@@ -14,6 +14,21 @@ Format per entry:
 
 ---
 
+## [DEC-020] 2026-06-16 — Apply the new "human-facing hyphens over dashes" rule retroactively to all UI text (EN + JA)
+
+**Context**: CLAUDE.md's UI/UX bullet gained a concrete writing rule — "prefer to use hyphens over other kinds of dashes, enumerate flexibly, and vary comparative constructions" — plus sharpening ("user-facing"→"human-facing", added "smells") and dropping the self-referential "this CLAUDE.md is a good example" clause. The pink-elephant bullet broadened from "constructing systems for yourself" to "writing text you will later read, especially if interpreted as a prompt". Session override: act on any work the edit implies.
+
+**Decision**: Only the dash rule had a retroactive artifact. Applied it to **every human-facing string** (62 dash conversions: 34 EN + 28 JA, 4 files); agent-facing text (comments, docstrings, `.agent/` memory, the `/* */` tour-step comments) is exempt per the bullet's own "tailored towards your ease of use".
+- **EN** → context-fitting punctuation: subtitles/grades/noun-glosses → colon; citations → comma; clause breaks → semicolon/period; the paired-dash aside → parentheses; numeric ranges (`12.5–25`, `0.5–2`) and compounds (`apnea–hypopnea`) → hyphen.
+- **JA** (user chose "Normalize Japanese too") → native punctuation: subtitles/grades/noun-glosses → `：`; appositive asides → `、` or `（）` (avoiding discouraged nested fullwidth parens); citations → direct juxtaposition (`』` already bounds the title); verb-ending glosses → `。`; brand tagline → `は、` restructure. Kept the idiomatic `〜` placeholder in 「は〜である」; range `中等症～重症` → `中等症から重症`; numeric en-dash → hyphen.
+Verified: `import app` OK, final dash-scan clean, edits touch no Lean source. (`check_scenarios.py` is independently red on a pre-existing, unrelated toolchain fault — `./.elan` lacks the floated-to v4.31.0 — tracked in SCRATCH pending resolution; not caused by these edits.) The "smells"/"human-facing"/dropped-clause and pink-elephant deltas are forward guidance only (no retroactive artifact; the dropped clause has zero references). A negative→positive sweep of agent-facing prose (which the broadened pink-elephant could suggest) was considered and **parked** as forward-only.
+
+**Alternatives rejected**: Forward-only / no sweep — the override invited the work and the violations were real. Leave JA as-is — rejected by user. Fix JA `──` to a proper 全角ダッシュ (U+2015) — retains a dash, contradicting the rule's anti-dash intent; native punctuation gives a consistent bilingual no-dash voice. Uniform spaced-hyphen substitution — user chose context-fitting punctuation over mechanical replacement.
+
+**Rationale**: The rule targets the human voice of the tiny human-facing surface; stripping em/en dashes there (while leaving agent-facing text dashed for our own ease) matches the bullet's intent. Per-locale native punctuation keeps EN and JA parallel without forcing ASCII typography onto Japanese. Reversible; all edits were assertion-guarded (count-checked before write) per [LSN-006].
+
+---
+
 ## [DEC-019] 2026-06-16 — Revert `.serena/` ignores to the co-located `.serena/.gitignore`; drop the repo-root mirror (supersedes [DEC-017])
 
 **Context**: CLAUDE.md's Headroom bullet was re-edited (same-day successor to [DEC-016]→[DEC-018]). Two deltas: (1) the `.serena/` git directive changed from "add `.serena/memories/` to the repo-root gitignore" to "`.serena/` … comes with its own gitignore file and **can be committed as is**," reversing [DEC-017]'s repo-root mirror. (2) A newly-asserted fact — Serena's memory system "has been **disabled globally**" — dissolving [DEC-016]'s rationale for specially ignoring `memories/`. The do-not-read bullet changed only in wording (`ignored_paths` location made explicit as `.serena/project.yml`); [DEC-018]'s `ignored_paths` = `/uv.lock`, `/LICENSE` is unaffected.

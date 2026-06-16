@@ -52,7 +52,7 @@ class Scenario:
 _EN_SCENARIO_A = Scenario(
     id="scenario-a",
     title="Hypertension vs. Severe Dehydration",
-    subtitle="Thiazide diuretic — indicated and contraindicated",
+    subtitle="Thiazide diuretic: indicated and contraindicated",
     patient_summary=(
         "72-year-old patient with a 15-year history of "
         "<strong class=\"cds-cond\">essential hypertension</strong> "
@@ -66,7 +66,7 @@ _EN_SCENARIO_A = Scenario(
     ),
     guideline_a=Guideline(
         source="2017 ACC/AHA Guideline for the Prevention, Detection, "
-               "Evaluation, and Management of High Blood Pressure in Adults — "
+               "Evaluation, and Management of High Blood Pressure in Adults, "
                "Section 8.1.6 (Choice of Initial Medication)",
         body=(
             "In adults with confirmed "
@@ -74,7 +74,7 @@ _EN_SCENARIO_A = Scenario(
             "an estimated 10-year atherosclerotic cardiovascular disease "
             "risk of \u226510%, initiation of pharmacologic therapy with a "
             "<strong class=\"cds-int\">thiazide-type diuretic</strong> "
-            "(chlorthalidone 12.5\u201325 mg orally once daily preferred) "
+            "(chlorthalidone 12.5-25 mg orally once daily preferred) "
             "is <strong class=\"cds-ind\">indicated</strong> as one of four "
             "co-equal first-line agent classes for long-term blood pressure "
             "control (Class I recommendation, Level of Evidence A). "
@@ -86,11 +86,11 @@ _EN_SCENARIO_A = Scenario(
         ),
     ),
     guideline_b=Guideline(
-        source="KDIGO Clinical Practice Guideline for Acute Kidney Injury — "
+        source="KDIGO Clinical Practice Guideline for Acute Kidney Injury, "
                "Section 3.4 (Use of Diuretics in AKI)",
         body=(
             "In any patient exhibiting clinical evidence of "
-            "<strong class=\"cds-cond\">severe dehydration</strong> \u2014 "
+            "<strong class=\"cds-cond\">severe dehydration</strong> ("
             "including frank "
             "<strong class=\"cds-find\">hypotension</strong>, "
             "<strong class=\"cds-find\">sinus tachycardia</strong>, "
@@ -98,13 +98,13 @@ _EN_SCENARIO_A = Scenario(
             "an elevated "
             "<strong class=\"cds-find\">BUN-to-creatinine ratio</strong> "
             "(&gt;20:1), and laboratory or physical findings of end-organ "
-            "hypoperfusion \u2014 the initiation or continuation of any "
+            "hypoperfusion), the initiation or continuation of any "
             "<strong class=\"cds-int\">diuretic therapy</strong> is "
             "<strong class=\"cds-con\">contraindicated</strong>. "
             "Administration of diuretics in this hemodynamic context "
             "carries an unacceptable risk of precipitating circulatory "
             "collapse, ischemic acute kidney injury, and accelerated "
-            "multi-organ dysfunction (Grade 1B \u2014 strong recommendation, "
+            "multi-organ dysfunction (Grade 1B: strong recommendation, "
             "moderate-quality evidence)."
         ),
     ),
@@ -136,7 +136,7 @@ _EN_SCENARIO_A = Scenario(
 _EN_SCENARIO_B = Scenario(
     id="scenario-b",
     title="Diabetic Ketoacidosis vs. Severe Hypokalemia",
-    subtitle="Intravenous insulin — indicated and contraindicated",
+    subtitle="Intravenous insulin: indicated and contraindicated",
     patient_summary=(
         "34-year-old patient with type 1 diabetes mellitus presenting with "
         "polyuria, Kussmaul respirations, "
@@ -149,7 +149,7 @@ _EN_SCENARIO_B = Scenario(
         "<strong class=\"cds-find\">serum potassium of 2.9 mEq/L</strong>."
     ),
     guideline_a=Guideline(
-        source="ADA Standards of Care in Diabetes — Section 16: "
+        source="ADA Standards of Care in Diabetes, Section 16: "
                "Diabetes Care in the Hospital (Hyperglycemic Crises)",
         body=(
             "For adult patients meeting diagnostic criteria for "
@@ -170,7 +170,7 @@ _EN_SCENARIO_B = Scenario(
         ),
     ),
     guideline_b=Guideline(
-        source="ADA Standards of Care in Diabetes — Section 16: "
+        source="ADA Standards of Care in Diabetes, Section 16: "
                "DKA Management Algorithm (Potassium Safety Gate)",
         body=(
             "In any patient presenting with "
@@ -185,7 +185,7 @@ _EN_SCENARIO_B = Scenario(
             "<strong class=\"cds-cond\">hypokalemia</strong> carries an "
             "imminent risk of life-threatening ventricular arrhythmias, "
             "respiratory muscle paralysis, and cardiac arrest (ADA evidence "
-            "level A \u2014 risk of harm)."
+            "level A: risk of harm)."
         ),
     ),
     lean_filename="ScenarioB.lean",
@@ -217,7 +217,7 @@ _EN_SCENARIO_B = Scenario(
 _EN_SCENARIO_C = Scenario(
     id="scenario-c",
     title="Acute Panic Disorder vs. Severe Obstructive Sleep Apnea",
-    subtitle="Benzodiazepine — indicated and contraindicated",
+    subtitle="Benzodiazepine: indicated and contraindicated",
     patient_summary=(
         "58-year-old patient with a recent polysomnography-confirmed "
         "diagnosis of "
@@ -231,7 +231,7 @@ _EN_SCENARIO_C = Scenario(
     ),
     guideline_a=Guideline(
         source="APA Practice Guideline for the Treatment of Patients With "
-               "Panic Disorder — Acute Episode Management",
+               "Panic Disorder, Acute Episode Management",
         body=(
             "For adults experiencing an "
             "<strong class=\"cds-cond\">acute, severe panic episode</strong> "
@@ -239,7 +239,7 @@ _EN_SCENARIO_C = Scenario(
             "depersonalization, and an impending sense of doom unresponsive "
             "to non-pharmacologic measures, "
             "<strong class=\"cds-int\">short-acting benzodiazepines</strong> "
-            "(e.g., lorazepam 0.5\u20132 mg orally or intravenously) are "
+            "(e.g., lorazepam 0.5-2 mg orally or intravenously) are "
             "<strong class=\"cds-ind\">indicated</strong> as recommended "
             "pharmacotherapy for rapid symptomatic relief and prevention of "
             "progression to a sustained anxiety crisis (APA recommendation "
@@ -248,12 +248,12 @@ _EN_SCENARIO_C = Scenario(
     ),
     guideline_b=Guideline(
         source="AASM Clinical Practice Guideline for the Treatment of Adult "
-               "Obstructive Sleep Apnea — Sedative Avoidance Recommendation",
+               "Obstructive Sleep Apnea, Sedative Avoidance Recommendation",
         body=(
             "In adults with a confirmed diagnosis of "
             "<strong class=\"cds-cond\">moderate-to-severe obstructive "
             "sleep apnea</strong> "
-            "(<strong class=\"cds-find\">apnea\u2013hypopnea index "
+            "(<strong class=\"cds-find\">apnea-hypopnea index "
             "\u226515 events/hour</strong>) who are "
             "<strong class=\"cds-find\">not yet established on effective "
             "positive airway pressure therapy</strong>, the use of "
@@ -299,7 +299,7 @@ _EN_SCENARIO_C = Scenario(
 _JA_SCENARIO_A = Scenario(
     id="scenario-a",
     title="高血圧症 対 重症脱水",
-    subtitle="サイアザイド系利尿薬 ── 適応かつ禁忌",
+    subtitle="サイアザイド系利尿薬：適応かつ禁忌",
     patient_summary=(
         "15年来の<strong class=\"cds-cond\">本態性高血圧</strong>"
         "の既往を有する72歳の患者。急性胃腸炎に伴い救急外来を受診し、"
@@ -311,7 +311,7 @@ _JA_SCENARIO_A = Scenario(
         "の臨床所見を呈している。"
     ),
     guideline_a=Guideline(
-        source="日本高血圧学会『高血圧治療ガイドライン2019（JSH2019）』── "
+        source="日本高血圧学会『高血圧治療ガイドライン2019（JSH2019）』"
                "第5章「降圧薬」積極的適応のない高血圧の第一選択薬",
         body=(
             "確定診断された<strong class=\"cds-cond\">本態性高血圧</strong>"
@@ -328,17 +328,17 @@ _JA_SCENARIO_A = Scenario(
         ),
     ),
     guideline_b=Guideline(
-        source="日本腎臓学会ほか合同『AKI（急性腎障害）診療ガイドライン2016』── "
+        source="日本腎臓学会ほか合同『AKI（急性腎障害）診療ガイドライン2016』"
                "第3章 CQ「利尿薬の AKI 予防・治療における推奨」",
         body=(
             "<strong class=\"cds-cond\">重症脱水</strong>"
-            "の臨床的所見 ── すなわち明らかな"
+            "の臨床的所見、すなわち明らかな"
             "<strong class=\"cds-find\">低血圧</strong>、"
             "<strong class=\"cds-find\">洞性頻脈</strong>、"
             "<strong class=\"cds-find\">乏尿</strong>"
             "（&lt;0.5 mL/kg/時）、"
             "<strong class=\"cds-find\">BUN/Cr 比の上昇</strong>"
-            "（&gt;20:1）、ならびに末梢臓器灌流低下を示す検査・身体所見 ── "
+            "（&gt;20:1）、ならびに末梢臓器灌流低下を示す検査・身体所見"
             "を呈する患者においては、いかなる"
             "<strong class=\"cds-int\">利尿薬療法</strong>"
             "の開始または継続も"
@@ -376,7 +376,7 @@ _JA_SCENARIO_A = Scenario(
 _JA_SCENARIO_B = Scenario(
     id="scenario-b",
     title="糖尿病性ケトアシドーシス 対 重症低カリウム血症",
-    subtitle="経静脈インスリン ── 適応かつ禁忌",
+    subtitle="経静脈インスリン：適応かつ禁忌",
     patient_summary=(
         "1型糖尿病を有する34歳の患者。多尿、Kussmaul 呼吸、"
         "<strong class=\"cds-find\">血漿グルコース 612 mg/dL</strong>、"
@@ -389,7 +389,7 @@ _JA_SCENARIO_B = Scenario(
         "を呈している。"
     ),
     guideline_a=Guideline(
-        source="日本糖尿病学会『糖尿病診療ガイドライン2024』── "
+        source="日本糖尿病学会『糖尿病診療ガイドライン2024』"
                "第20-1項「糖尿病性ケトアシドーシスの診断と治療」",
         body=(
             "<strong class=\"cds-cond\">糖尿病性ケトアシドーシス</strong>"
@@ -410,7 +410,7 @@ _JA_SCENARIO_B = Scenario(
         ),
     ),
     guideline_b=Guideline(
-        source="日本糖尿病学会『糖尿病診療ガイドライン2024』── "
+        source="日本糖尿病学会『糖尿病診療ガイドライン2024』"
                "第20-1項 DKA 治療アルゴリズム「血清カリウム管理」",
         body=(
             "<strong class=\"cds-cond\">DKA</strong> を呈する患者で、"
@@ -424,7 +424,7 @@ _JA_SCENARIO_B = Scenario(
             "<strong class=\"cds-cond\">低カリウム血症</strong>"
             "の状態下でインスリンが惹起する細胞内カリウム移動は、"
             "致死的な心室性不整脈、呼吸筋麻痺、ならびに心停止の差し迫った"
-            "リスクを伴う（推奨グレード A、エビデンスレベル 1 ── 害）。"
+            "リスクを伴う（推奨グレード A、エビデンスレベル 1：害）。"
         ),
     ),
     lean_filename="ScenarioB.lean",
@@ -457,7 +457,7 @@ _JA_SCENARIO_B = Scenario(
 _JA_SCENARIO_C = Scenario(
     id="scenario-c",
     title="急性パニック症 対 重症閉塞性睡眠時無呼吸",
-    subtitle="ベンゾジアゼピン ── 適応かつ禁忌",
+    subtitle="ベンゾジアゼピン：適応かつ禁忌",
     patient_summary=(
         "終夜睡眠ポリグラフ検査で確定診断された"
         "<strong class=\"cds-cond\">重症閉塞性睡眠時無呼吸</strong>"
@@ -470,14 +470,14 @@ _JA_SCENARIO_C = Scenario(
     ),
     guideline_a=Guideline(
         source="日本不安症学会・日本神経精神薬理学会 合同『パニック症の"
-               "診療ガイドライン（2025年版）』── 急性期薬物療法",
+               "診療ガイドライン（2025年版）』急性期薬物療法",
         body=(
             "成人における"
             "<strong class=\"cds-cond\">急性かつ重度のパニック発作</strong>"
-            "── 自律神経過活動、離人感、ならびに切迫した破局感を特徴と"
-            "し、非薬物療法に反応しないもの ── に対しては、"
+            "（自律神経過活動、離人感、ならびに切迫した破局感を特徴と"
+            "し、非薬物療法に反応しないもの）に対しては、"
             "<strong class=\"cds-int\">高力価ベンゾジアゼピン</strong>"
-            "（例：ロラゼパム 0.5\u20132 mg 経口または静注、"
+            "（例：ロラゼパム 0.5-2 mg 経口または静注、"
             "アルプラゾラム、クロナゼパム）が、迅速な症状緩和ならびに"
             "持続的な不安発作への進展予防のための第一選択薬物療法として"
             "<strong class=\"cds-ind\">適応</strong>される"
@@ -487,7 +487,7 @@ _JA_SCENARIO_C = Scenario(
     ),
     guideline_b=Guideline(
         source="日本呼吸器学会『睡眠時無呼吸症候群（SAS）の診療"
-               "ガイドライン2020』── ベンゾジアゼピン使用に関する"
+               "ガイドライン2020』ベンゾジアゼピン使用に関する"
                "薬物療法安全声明",
         body=(
             "<strong class=\"cds-cond\">中等症から重症の閉塞性睡眠時無呼吸</strong>"
@@ -502,7 +502,7 @@ _JA_SCENARIO_C = Scenario(
             "低酸素血症および高炭酸血症に対する覚醒反応を鈍化させ、"
             "無呼吸の遷延化、著明な酸素飽和度低下、ならびに致死的な"
             "夜間呼吸不全リスクの著しい上昇と関連する"
-            "（推奨度 2、エビデンスレベル B ── 害）。"
+            "（推奨度 2、エビデンスレベル B：害）。"
         ),
     ),
     lean_filename="ScenarioC.lean",
