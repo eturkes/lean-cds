@@ -14,6 +14,15 @@ Format per entry:
 
 ---
 
+## [DEC-021] 2026-06-17 — CLAUDE.md H1 renamed to "Alignment - Remember at all times"; cosmetic, no retroactive artifact
+
+**Context**: Sole CLAUDE.md delta this session was the H1 line (`# CLAUDE.md` → `# Alignment - Remember at all times`); no bullet added, removed, or reworded. Session override: act on any work the edit implies (cf. [DEC-016]..[DEC-020], where each CLAUDE.md edit drove a real artifact — this one does not).
+**Decision**: No-op beyond committing the rename. Grep confirms nothing parses the H1 ("Alignment" appears only in the heading + vendored `.venv`); cross-refs (`INDEX.md`, `.claude/commands/session-prompt.md`) key on the filename `CLAUDE.md`, describing it as "operating philosophy"/"authoritative" — still accurate, left unchanged.
+**Alternatives rejected**: Propagate the new title into the cross-ref descriptions for "consistency" — churn that reduces clarity (they reference the file, not its heading) and invites drift. Log no DEC at all — rejected to preserve the CLAUDE.md-edit audit chain and record the null-result so a future session need not re-assess.
+**Rationale**: The title is thematic emphasis ("Remember at all times" ≈ alignment-doc framing), not a semantic directive, so it has no downstream artifact. ASCII hyphen already satisfies [DEC-020]'s dash rule (CLAUDE.md is agent-facing, exempt regardless).
+
+---
+
 ## [DEC-020] 2026-06-16 — Apply the new "human-facing hyphens over dashes" rule retroactively to all UI text (EN + JA)
 
 **Context**: CLAUDE.md's UI/UX bullet gained a concrete writing rule — "prefer to use hyphens over other kinds of dashes, enumerate flexibly, and vary comparative constructions" — plus sharpening ("user-facing"→"human-facing", added "smells") and dropping the self-referential "this CLAUDE.md is a good example" clause. The pink-elephant bullet broadened from "constructing systems for yourself" to "writing text you will later read, especially if interpreted as a prompt". Session override: act on any work the edit implies.
