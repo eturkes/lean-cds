@@ -14,6 +14,18 @@ Format per entry:
 
 ---
 
+## [DEC-018] 2026-06-16 — Sync Serena `ignored_paths` with the non-gitignored do-not-read set; keep `.serena/.gitignore` tracked
+
+**Context**: CLAUDE.md's Headroom/200K bullets were re-edited (same-day successor to [DEC-016]/[DEC-017]). Two deltas bear on repo state: (1) a generalised **do-not-read** doctrine — a set *distinct from* `.gitignore`, enforced via `permissions.deny Read()`, with the new clause "add any non-gitignored do-not-read entry to Serena's `ignored_paths` and keep those surfaces in sync"; `ignored_paths` was empty. (2) The `.serena/` track list narrowed in prose from "`project.yml` and `.gitignore`" to "`project.yml`", which read literally suggests untracking `.serena/.gitignore`.
+
+**Decision**: (1) Set `.serena/project.yml` `ignored_paths` to `/uv.lock`, `/LICENSE` — the only `permissions.deny Read()` entries that are tracked (not gitignored) **and** would otherwise be surfaced by Serena. Root-anchored `/` mirrors the deny-rule style ([DEC-014]). (2) Keep `.serena/.gitignore` tracked (user-confirmed: the nested file serves a legitimate purpose; CLAUDE.md-designated Serena ignores live in the repo-root `.gitignore`) — [DEC-017]'s tracking state stands; the prose drop is simplification, not an untrack directive.
+
+**Alternatives rejected**: Add `.git` to `ignored_paths` — non-gitignored + Read-denied, but Serena already auto-excludes VCS dirs, so listing it changes nothing Serena surfaces; sync here is *semantic* (no do-not-read path reaches Serena), not literal 1:1. Untrack `.serena/.gitignore` to match the literal wording — rejected by user; would also need a redundant repo-root ignore to hide it.
+
+**Rationale**: Gitignored do-not-read paths are already honoured by Serena (`ignore_all_files_in_gitignore: true`); `ignored_paths` need only carry the non-gitignored remainder, keeping the three surfaces (`permissions.deny`, repo-root `.gitignore`, Serena `ignored_paths`) semantically in sync without duplication. Config-only; reversible.
+
+---
+
 ## [DEC-017] 2026-06-16 — Move `.serena/` ignore rules to repo-root `.gitignore` (supersedes [DEC-016] mechanism)
 
 **Context**: CLAUDE.md's Headroom paragraph was rewritten to require that `.serena/`'s `cache/`, `project.local.yml`, and `memories/` live in **the repo-root `.gitignore`** (plus Read-denies), while `project.yml` and `.gitignore` stay Git-tracked. [DEC-016] had centralised those ignores in the co-located, Serena-owned `.serena/.gitignore` and explicitly rejected the repo-root option — the updated wording reverses that choice.
