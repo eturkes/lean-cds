@@ -24,6 +24,13 @@ lake-packages/
 # so a stale committed copy can never mislead with wrong line numbers ([LSN-004]).
 .agent/NAVMAP.md
 
+# Headroom's Serena LSP owns .serena/: project.yml + its .gitignore are tracked;
+# the cache, machine-local config, and unused memories/ are ignored here at the
+# repo root so they survive Serena regenerating its own .gitignore ([DEC-017]).
+.serena/cache/
+.serena/project.local.yml
+.serena/memories/
+
 # Project-local elan install (Lean 4 toolchain)
 .elan/
 

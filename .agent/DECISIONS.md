@@ -14,6 +14,18 @@ Format per entry:
 
 ---
 
+## [DEC-017] 2026-06-16 — Move `.serena/` ignore rules to repo-root `.gitignore` (supersedes [DEC-016] mechanism)
+
+**Context**: CLAUDE.md's Headroom paragraph was rewritten to require that `.serena/`'s `cache/`, `project.local.yml`, and `memories/` live in **the repo-root `.gitignore`** (plus Read-denies), while `project.yml` and `.gitignore` stay Git-tracked. [DEC-016] had centralised those ignores in the co-located, Serena-owned `.serena/.gitignore` and explicitly rejected the repo-root option — the updated wording reverses that choice.
+
+**Decision**: (1) Added `.serena/cache/`, `.serena/project.local.yml`, `.serena/memories/` to repo-root `.gitignore` — now the authoritative ignore. (2) Reverted [DEC-016]'s `/memories` addition to `.serena/.gitignore`, returning that tracked file to Serena's auto-generated content (`/cache`, `/project.local.yml`). Tracking of `.serena/.gitignore` + `.serena/project.yml` and the three `Read()` denies ([DEC-016]) are already correct — unchanged.
+
+**Alternatives rejected**: Keep [DEC-016]'s co-located mechanism — contradicts the updated CLAUDE.md. Add repo-root rules yet leave `/memories` in the co-located file — a redundant line that drifts every time Serena regenerates `.serena/.gitignore` (Serena writes only `/cache` + `/project.local.yml`).
+
+**Rationale**: Repo-root rules are immune to Serena rewriting its own `.gitignore`, fixing the latent drift [DEC-016] accepted; the tracked `.serena/.gitignore` now equals Serena-native output, so regeneration yields no spurious diff. Paths stay ignored throughout — no tracking regression. Reversible.
+
+---
+
 ## [DEC-016] 2026-06-15 — Track `.serena/project.yml`; gitignore + Read-deny the rest of Headroom's `.serena/`
 
 **Context**: CLAUDE.md gained a directive: Headroom (the read-compression wrapper) introduces `.serena/`, where `project.yml` is the tracked LSP config and `cache/`, `project.local.yml`, `memories/` "should be ignored both by you and Git." The dir was entirely untracked (`?? .serena/`); Serena's auto-generated `.serena/.gitignore` covered `/cache` + `/project.local.yml` but **not** `/memories`. Nothing was Read-denied.
