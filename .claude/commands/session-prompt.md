@@ -1,32 +1,18 @@
----
-description: Boot a fresh lean-cds work session. Bare `/session-prompt` runs the roadmap; `/session-prompt <TASK>` overrides it with a one-off objective.
-argument-hint: [TASK]
-disable-model-invocation: true
----
+Continue this project (fresh session). `CLAUDE.md`: operating contract.
+`.agent/roadmap.md`: canonical plan and status. `.agent/memory.md`:
+carried-forward learnings and gotchas. Load those three first, in that order,
+then read whatever the next step implicates; on a brand-new project the `.agent/`
+files may be absent, so creating them is your first contribution.
 
-# Session boot — lean-cds
+Act on the task below:
+- Non-empty ⇒ it is your sole task this session; do exactly it and override the
+  roadmap (touch the roadmap only if the task directs it).
+- Empty ⇒ take the next open step from `.agent/roadmap.md`.
 
-You are (re)starting work on **lean-cds**: a Lean 4 / Python / Litestar PoC for verifiable clinical decision support (bilingual JA/EN, JA default).
+Verify a known-good state (build, tests, defined gates) before and after. Pace
+work with `.agent/compaction.sh` to land cleanly before the window fills. Per
+cohesive unit: record durable learnings in `.agent/memory.md`, advance
+`.agent/roadmap.md`, and make one scoped commit covering the work and those
+updates. Ask me whenever scope, design, or intent is ambiguous.
 
-## 1. Bootstrap (always)
-
-Read, in order:
-
-1. `CLAUDE.md` (repo root) — universal operating philosophy; authoritative. This prompt does not restate it.
-2. `.agent/INDEX.md` — memory-system map; it directs you to `ARCHITECTURE.md`, `DECISIONS.md`, `LESSONS.md`, and `SCRATCH.md` (read `SCRATCH.md` only if continuing a prior session).
-
-Project operational notes:
-
-- Python deps via `uv`. Lean toolchain at `./.elan/bin/lean` (preferred) or `$HOME/.elan/bin/lean`.
-- Verify cheaply via execution: `uv run python -c "import app"`, `uv run python scripts/check_scenarios.py` (kernel-typechecks all 6 scenarios).
-- Always grep `[LSN-` in `.agent/LESSONS.md` before non-obvious choices.
-
-## 2. This session's objective
-
-$ARGUMENTS
-
-**If the objective above is blank**, no override was given — proceed through the roadmap as usual. `SPEC.md` is the authoritative build plan. Follow its §0 *Agent operating contract*: from repository state and the §11.3 build-unit table (dependency order), select the next uncompleted unit, load **only** its §11.4 reading slice plus earlier accepted artifacts (full-spec loading is reserved for spec-maintenance work — `SPEC.md` is ~3.5k lines), implement that one deliverable, run its acceptance gate, commit the artifacts, and end.
-
-**Otherwise**, the text above is a one-session override (typically a meta/tooling task): make it the sole focus of this session and defer the roadmap. Still honor `CLAUDE.md`, and log any non-trivial decision or observed mistake to `.agent/` (`DECISIONS.md` / `LESSONS.md`) per `INDEX.md`.
-
-If you find a better bootstrap pattern, propose `[DEC-NNN]` and update this command file (`.claude/commands/session-prompt.md`).
+Task (may be empty): $ARGUMENTS

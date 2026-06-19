@@ -21,12 +21,12 @@ lake-packages/
 *.ilean
 
 # Generated agent nav index (regenerate: scripts/gen_navmap.sh) — kept out of git
-# so a stale committed copy can never mislead with wrong line numbers ([LSN-004]).
+# so a stale committed copy can never mislead with wrong line numbers.
 .agent/NAVMAP.md
 
 # .serena/ is self-managed by its own nested .serena/.gitignore (/cache,
 # /project.local.yml) and committed as is — no repo-root rules. memories/ needs
-# none: Serena's memory system is disabled globally (.agent/ is the memory store) ([DEC-019]).
+# none: Serena's memory system is disabled globally (.agent/ is the memory store).
 
 # Project-local elan install (Lean 4 toolchain)
 .elan/

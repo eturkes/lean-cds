@@ -60,7 +60,7 @@ def _lean_version() -> str:
     """Full ``lean --version`` line (incl. build commit) identifying the active toolchain.
 
     Oleans are locked to this exact build; a change invalidates cached ``.olean``
-    artifacts ([LSN-002], [LSN-005]). Empty string if lean is unavailable — the
+    artifacts. Empty string if lean is unavailable — the
     missing-compiler error then surfaces downstream at compile time."""
     try:
         completed = subprocess.run(
@@ -109,8 +109,8 @@ def _ensure_knowledge_base_compiled(locale: str) -> str | None:
 
     Stale := source newer than the artifacts (mtime) **or** the artifacts were
     built against a different Lean toolchain than the active one (``.olean.stamp``
-    mismatch). The toolchain check auto-heals the "incompatible header" class
-    ([LSN-002], [LSN-005]): oleans are toolchain-locked, so a floated ``stable``
+    mismatch). The toolchain check auto-heals the "incompatible header" class:
+    oleans are toolchain-locked, so a floated ``stable``
     channel silently invalidates mtime-fresh caches. When the live version is
     undeterminable (lean missing), fall back to mtime-only so a transient outage
     does not force a doomed recompile."""
