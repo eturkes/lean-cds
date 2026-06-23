@@ -23,5 +23,5 @@ Carried-forward learnings and gotchas. Only what the code/Git history can't tell
 
 ## Pointers
 - `.agent/NAVMAP.md` — generated symbol/route index (gitignored). Regenerate after structural changes: `scripts/gen_navmap.sh`.
-- `.agent/compaction.sh` — context-usage monitor; check it as you approach 80 %.
+- `.agent/context.sh` — context-usage gauge (`pct used/window`); check as you approach 80%.
 - Add a scenario: create `lean/{en,ja}/ScenarioX.lean` (import MedicalKnowledge; axioms; `theorem absurd : False`) and register it in `scenarios.py` (`SCENARIOS_BY_LOCALE`), mirroring the A/B/C pattern.
