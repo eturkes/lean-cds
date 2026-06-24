@@ -1,6 +1,6 @@
 # memory
 
-Carried-forward learnings and gotchas. Only what the code/Git history can't tell you; the code is the source of truth (no architecture doc by design — a prior one drifted from `app.py`). Append durable facts; prune the obsolete.
+Carried-forward lessons and decisions. Only what the code/Git history can't tell you; the code is the source of truth (no architecture doc by design — a prior one drifted from `app.py`). Append durable facts; prune the obsolete.
 
 ## Verify (the gate)
 - `uv run python scripts/check_scenarios.py` → every scenario must report CollisionVerified, exit 0. This is the known-good gate to run before and after work.
