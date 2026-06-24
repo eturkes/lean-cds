@@ -6,5 +6,5 @@ Run it: `uv run litestar run`, then open <http://127.0.0.1:8000>. Verify the pro
 
 - Agent operating contract: [`CLAUDE.md`](CLAUDE.md)
 - Plan and status: [`.agent/roadmap.md`](.agent/roadmap.md)
-- Carried-forward learnings: [`.agent/memory.md`](.agent/memory.md)
+- Carried-forward lessons and decisions: [`.agent/memory.md`](.agent/memory.md)
 - License: Apache 2.0 ([`LICENSE`](LICENSE))
